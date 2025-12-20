@@ -23,7 +23,7 @@
 - `templates/` - Django templates
   - `admin/fobi_embed.html`
   - `override_simple_theme/` - Theme override templates
-  - `unfold/layouts/sekleton.html`
+  - `unfold/layouts/skeleton.html`
 - `static/` - Static files directory (empty, but structure preserved)
 
 ## Package Features
