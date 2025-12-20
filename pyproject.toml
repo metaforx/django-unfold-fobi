@@ -1,0 +1,59 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "unfold-fobi"
+version = "0.1.0"
+description = "Django Unfold admin integration for django-fobi"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [
+    {name = "Your Name", email = "your.email@example.com"},
+]
+keywords = ["django", "fobi", "unfold", "admin", "forms"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Framework :: Django",
+    "Framework :: Django :: 5.0",
+    "Framework :: Django :: 5.1",
+    "Framework :: Django :: 5.2",
+]
+[project.urls]
+Homepage = "https://github.com/yourusername/unfold-fobi"
+Documentation = "https://github.com/yourusername/unfold-fobi#readme"
+Repository = "https://github.com/yourusername/unfold-fobi"
+Issues = "https://github.com/yourusername/unfold-fobi/issues"
+
+[tool.hatch.build.targets.sdist]
+type = "sdist"
+packages = ["src/unfold_fobi"]
+
+[tool.hatch.build.targets.wheel]
+type = "wheel"
+packages = ["src/unfold_fobi"]
+
+[tool.hatch.build]
+exclude = [
+    "**/__pycache__",
+    "**/.DS_Store",
+    "**/*.pyc",
+    "**/*.pyo",
+    "**/*.pyd",
+]
+
+[tool.black]
+line-length = 100
+target-version = ['py310', 'py311', 'py312']
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
