@@ -24,16 +24,6 @@ from unfold.widgets import (
     UnfoldBooleanSwitchWidget,
     UnfoldAdminNullBooleanSelectWidget,
 )
-from django.forms import (
-    CheckboxInput,
-    NumberInput,
-    PasswordInput,
-    RadioSelect,
-    SearchInput,
-    Select,
-    SelectMultiple,
-    TelInput,
-)
 
 
 class _SplitDateTimeStringValueMixin:
@@ -207,7 +197,7 @@ def apply_unfold_widgets_to_form(form_instance):
                 set_widget(field, UnfoldAdminSplitDateTimeVerticalWidgetCompat)
             elif widget_type == forms.Select:
                 set_widget(field, UnfoldAdminSelectWidget)
-            elif widget_type == SelectMultiple:
+            elif widget_type == forms.SelectMultiple:
                 set_widget(field, UnfoldAdminSelectMultipleWidget)
             elif widget_type == forms.RadioSelect:
                 # Keep RadioSelect as is - crispy forms will style it
