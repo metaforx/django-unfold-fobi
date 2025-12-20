@@ -1,0 +1,164 @@
+{% load i18n fobi_tags crispy_forms_tags unfold_fobi_tags %}
+
+{% comment %}
+<div class="alert-box secondary alert-box-larger">
+    {% blocktrans %}Fields marked with <span class="required-field">*</span> are required{% endblocktrans %}
+</div>
+{% endcomment %}
+
+{# Provide form_classes for Unfold crispy forms template pack #}
+{% get_form_classes as form_classes %}
+
+{% block form_non_field_and_hidden_errors %}
+    {% get_form_hidden_fields_errors form as form_hidden_fields_errors %}
+    {% if form.non_field_errors or form_hidden_fields_errors %}
+        {% include fobi_theme.form_non_field_and_hidden_errors_snippet_template %}
+    {% endif %}
+{% endblock form_non_field_and_hidden_errors %}
+
+{# Include widget media so date/time widgets get their assets #}
+{{ form.media }}
+
+{# Render hidden fields (e.g., positions) #}
+{% for hidden in form.hidden_fields %}
+    {{ hidden }}
+{% endfor %}
+
+{# Render each visible field in a card with crispy forms styling #}
+{% for field in form.visible_fields %}
+    <div class="form-row w-full mb-4" style="cursor: move;">
+        <div class="bg-white border border-base-200 rounded-default shadow-xs dark:bg-base-900 dark:border-base-800 w-full flex flex-col">
+            <div class="p-6 flex-grow">
+                {# This renders the field with Unfold crispy styling #}
+                {% include "unfold_crispy/field.html" with field=field form_show_labels=True wrapper_class="mb-0" %}
+            </div>
+
+            <div class="form-row-actions border-t border-base-200 dark:border-base-800 px-6 py-4 hidden">
+                {# JS will move your .list-inline actions here #}
+            </div>
+        </div>
+    </div>
+{% endfor %}
+
+{# Custom CSS and JavaScript to style and position action links #}
+<style>
+.form-row .help-text-wrapper {
+    font-size: 0.875rem;
+    color: var(--color-font-subtle-light);
+}
+
+.dark .form-row .help-text-wrapper {
+    color: var(--color-font-subtle-dark);
+}
+
+.form-row {
+    position: relative;
+}
+
+.form-row > .bg-white,
+.form-row.ui-sortable-helper > .bg-white {
+    position: relative;
+}
+
+/* Inline actions pinned to the top-right of the card */
+.form-row .list-inline {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    display: flex;
+    gap: 0.5rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    z-index: 10;
+}
+
+.form-row .list-inline li {
+    margin: 0;
+    padding: 0;
+}
+
+.form-row .list-inline li a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    text-decoration: none;
+    background-color: var(--color-base-0);
+    border: 1px solid var(--color-base-200);
+    border-radius: var(--rounded-default, 0.75rem);
+    box-shadow: var(--shadow-xs, 0 1px 2px rgba(15, 23, 42, 0.08));
+    font-size: 0; /* hide link text, keep icon visible */
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease, outline-color 0.2s ease;
+}
+
+.form-row .list-inline li a[href*="edit"] {
+    color: var(--color-primary-700);
+}
+
+.form-row .list-inline li a[href*="edit"]:hover {
+    color: var(--color-primary-800);
+    border-color: var(--color-base-300);
+    background-color: var(--color-base-50, color-mix(in oklab, var(--color-primary-500) 8%, transparent));
+}
+
+.form-row .list-inline li a[href*="edit"]::before {
+    content: "edit";
+    font-family: "Material Symbols Outlined";
+    font-size: 1.125rem;
+    line-height: 1;
+}
+
+.form-row .list-inline li a[href*="delete"] {
+    color: var(--color-red-600);
+}
+
+.form-row .list-inline li a[href*="delete"]:hover {
+    color: var(--color-red-700);
+    border-color: var(--color-red-200);
+    background-color: color-mix(in oklab, var(--color-red-500) 10%, transparent);
+}
+
+.form-row .list-inline li a[href*="delete"]::before {
+    content: "delete";
+    font-family: "Material Symbols Outlined";
+    font-size: 1.125rem;
+    line-height: 1;
+}
+
+.form-row .list-inline li a:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: -2px;
+}
+
+.form-row .list-inline li a span.glyphicon {
+    display: none;
+}
+
+.dark .form-row .list-inline li a {
+    background-color: var(--color-base-900);
+    border-color: var(--color-base-700);
+    box-shadow: var(--shadow-xs, 0 1px 2px rgba(0, 0, 0, 0.35));
+}
+
+.dark .form-row .list-inline li a[href*="edit"] {
+    color: var(--color-primary-200);
+}
+
+.dark .form-row .list-inline li a[href*="edit"]:hover {
+    border-color: var(--color-primary-400);
+    background-color: color-mix(in oklab, var(--color-primary-500) 14%, transparent);
+}
+
+.dark .form-row .list-inline li a[href*="delete"] {
+    color: var(--color-red-500);
+}
+
+.dark .form-row .list-inline li a[href*="delete"]:hover {
+    border-color: var(--color-red-600);
+    background-color: color-mix(in oklab, var(--color-red-500) 18%, transparent);
+}
+</style>
