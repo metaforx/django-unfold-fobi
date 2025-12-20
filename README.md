@@ -1,6 +1,6 @@
 # unfold-fobi
 
-Django Unfold admin integration for django-fobi form builder.
+Django Unfold admin integration for django-fobi form builder. 
 
 ## Description
 
