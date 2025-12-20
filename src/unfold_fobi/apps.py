@@ -3,6 +3,35 @@ from django import forms
 from collections import OrderedDict
 
 
+def patch_form_init(form_class, apply_fn):
+    """
+    Helper to patch a form class's __init__ method to apply Unfold widgets.
+    
+    Args:
+        form_class: The form class to patch
+        apply_fn: Function to call after form initialization (e.g., apply_unfold_widgets_to_form)
+    
+    Returns:
+        True if patching was successful, False if already patched or failed
+    """
+    if not form_class or hasattr(form_class, '_unfold_widgets_applied'):
+        return False
+    
+    try:
+        original_init = form_class.__init__
+        
+        def new_init(self, *args, **kwargs):
+            """Patched __init__ that applies Unfold widgets after form initialization."""
+            original_init(self, *args, **kwargs)
+            apply_fn(self)
+        
+        form_class.__init__ = new_init
+        form_class._unfold_widgets_applied = True
+        return True
+    except (AttributeError, TypeError):
+        return False
+
+
 class UnfoldFobiConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'unfold_fobi'
@@ -55,58 +84,25 @@ class UnfoldFobiConfig(AppConfig):
             
             # Patch FormElementEntryFormSet
             if hasattr(FormElementEntryFormSet, 'form'):
-                original_form_class = FormElementEntryFormSet.form
-                if original_form_class and not hasattr(original_form_class, '_unfold_widgets_applied'):
-                    original_init = original_form_class.__init__
-                    
-                    def make_new_init(orig_init):
-                        def new_init(self, *args, **kwargs):
-                            orig_init(self, *args, **kwargs)
-                            unfold_forms.apply_unfold_widgets_to_form(self)
-                        return new_init
-                    
-                    original_form_class.__init__ = make_new_init(original_init)
-                    original_form_class._unfold_widgets_applied = True
+                patch_form_init(
+                    FormElementEntryFormSet.form,
+                    unfold_forms.apply_unfold_widgets_to_form
+                )
             
             # Patch FormWizardFormEntryFormSet
             if hasattr(FormWizardFormEntryFormSet, 'form'):
-                original_form_class = FormWizardFormEntryFormSet.form
-                if original_form_class and not hasattr(original_form_class, '_unfold_widgets_applied'):
-                    original_init = original_form_class.__init__
-                    
-                    def make_new_init(orig_init):
-                        def new_init(self, *args, **kwargs):
-                            orig_init(self, *args, **kwargs)
-                            unfold_forms.apply_unfold_widgets_to_form(self)
-                        return new_init
-                    
-                    original_form_class.__init__ = make_new_init(original_init)
-                    original_form_class._unfold_widgets_applied = True
+                patch_form_init(
+                    FormWizardFormEntryFormSet.form,
+                    unfold_forms.apply_unfold_widgets_to_form
+                )
         except (AttributeError, TypeError, ImportError):
             # Formset classes might not exist or have different structure
             pass
         
         for form_class in form_classes_to_patch:
             try:
-                # Only patch if not already patched
-                if not hasattr(form_class, '_unfold_widgets_applied'):
-                    # Store the original __init__ - capture it in closure with default arg
-                    original_init = form_class.__init__
-                    
-                    # Create a new __init__ that calls the original and then applies widgets
-                    # Use default argument to capture original_init in closure
-                    def make_new_init(orig_init):
-                        def new_init(self, *args, **kwargs):
-                            # Call the original __init__ - this preserves all super() calls
-                            orig_init(self, *args, **kwargs)
-                            # Apply Unfold widgets after form is fully initialized
-                            unfold_forms.apply_unfold_widgets_to_form(self)
-                        return new_init
-                    
-                    # Bind the new method to the class
-                    form_class.__init__ = make_new_init(original_init)
-                    form_class._unfold_widgets_applied = True
-            except (AttributeError, TypeError, ImportError) as e:
+                patch_form_init(form_class, unfold_forms.apply_unfold_widgets_to_form)
+            except (AttributeError, TypeError, ImportError):
                 # Form class might not exist or have different structure
                 # Silently skip if we can't patch it
                 pass
@@ -179,18 +175,8 @@ class UnfoldFobiConfig(AppConfig):
                 def patched_get_form(self, request, obj=None, **kwargs):
                     """Patched get_form that applies Unfold widgets to form element entry forms."""
                     form_class = original_get_form(self, request, obj=obj, **kwargs)
-                    if form_class and not hasattr(form_class, '_unfold_widgets_applied'):
-                        # Patch the form class's __init__ to apply widgets
-                        original_init = form_class.__init__
-                        
-                        def make_new_init(orig_init):
-                            def new_init(self, *args, **kwargs):
-                                orig_init(self, *args, **kwargs)
-                                unfold_forms.apply_unfold_widgets_to_form(self)
-                            return new_init
-                        
-                        form_class.__init__ = make_new_init(original_init)
-                        form_class._unfold_widgets_applied = True
+                    if form_class:
+                        patch_form_init(form_class, unfold_forms.apply_unfold_widgets_to_form)
                     return form_class
                 
                 fobi_admin.FormElementEntryAdmin.get_form = patched_get_form
@@ -202,18 +188,8 @@ class UnfoldFobiConfig(AppConfig):
                 def patched_get_form(self, request, obj=None, **kwargs):
                     """Patched get_form that applies Unfold widgets to form handler entry forms."""
                     form_class = original_get_form(self, request, obj=obj, **kwargs)
-                    if form_class and not hasattr(form_class, '_unfold_widgets_applied'):
-                        # Patch the form class's __init__ to apply widgets
-                        original_init = form_class.__init__
-                        
-                        def make_new_init(orig_init):
-                            def new_init(self, *args, **kwargs):
-                                orig_init(self, *args, **kwargs)
-                                unfold_forms.apply_unfold_widgets_to_form(self)
-                            return new_init
-                        
-                        form_class.__init__ = make_new_init(original_init)
-                        form_class._unfold_widgets_applied = True
+                    if form_class:
+                        patch_form_init(form_class, unfold_forms.apply_unfold_widgets_to_form)
                     return form_class
                 
                 fobi_admin.FormHandlerEntryAdmin.get_form = patched_get_form
@@ -272,17 +248,7 @@ class UnfoldFobiConfig(AppConfig):
                     if form:
                         # If form is a class, we need to patch its __init__
                         if isinstance(form, type) and issubclass(form, forms.Form):
-                            if not hasattr(form, '_unfold_widgets_applied'):
-                                original_init = form.__init__
-                                
-                                def make_new_init(orig_init):
-                                    def new_init(self, *args, **kwargs):
-                                        orig_init(self, *args, **kwargs)
-                                        unfold_forms.apply_unfold_widgets_to_form(self)
-                                    return new_init
-                                
-                                form.__init__ = make_new_init(original_init)
-                                form._unfold_widgets_applied = True
+                            patch_form_init(form, unfold_forms.apply_unfold_widgets_to_form)
                         # If form is an instance, apply widgets directly
                         elif isinstance(form, forms.BaseForm):
                             unfold_forms.apply_unfold_widgets_to_form(form)
