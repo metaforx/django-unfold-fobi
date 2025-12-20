@@ -32,8 +32,8 @@ def admin_site(request):
 
     match = getattr(request, "resolver_match", None)
     if match:
-        url_name = match.url_name or ""
-        content_title = FOBI_TITLES.get(url_name)
+        view_name = match.view_name or ""
+        content_title = FOBI_TITLES.get(view_name)
         if content_title:
             context.setdefault("content_title", content_title)
 

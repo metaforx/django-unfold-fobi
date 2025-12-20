@@ -30,7 +30,7 @@
 
 - Modern `src/` layout for better testing and development
 - Setuptools-based build system (PEP 517/518 compliant)
-- Templates and static files included via `MANIFEST.in` and `package-data`
+- Templates and static files included via `MANIFEST.in` and `package_data`
 - Ready for distribution via PyPI
 
 ## Installation
