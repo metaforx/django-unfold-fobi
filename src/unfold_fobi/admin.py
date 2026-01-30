@@ -1,7 +1,9 @@
 # admin.py
 from django.contrib import admin
+from django.db import models
 from django.urls import path, reverse
 from django.utils.html import format_html
+from django.utils.translation import gettext_lazy as _
 from unfold.admin import ModelAdmin
 from fobi.forms import FormEntryForm
 from django.utils.dateparse import parse_datetime
@@ -15,11 +17,13 @@ class FormEntryProxyAdmin(ModelAdmin):
     
     This replaces the dashboard view with a standard admin list view.
     """
-    list_display = ['name_link', 'slug', 'is_public', 'is_cloneable', 'created', 'updated']
-    list_filter = ['is_public', 'is_cloneable', 'created', 'updated']
-    search_fields = ['name', 'slug']
-    readonly_fields = ['created', 'updated']
-    list_display_links = ['name_link']  # Make name clickable
+    list_display = ["name_link", "slug", "is_public", "created", "updated"]
+    list_filter = ["is_public", "created", "updated"]
+    search_fields = ["name", "slug"]
+    readonly_fields = ["created", "updated"]
+    list_display_links = ["name_link"]  # Make name clickable
+    compressed_fields = True
+    warn_unsaved_form = True
 
     def get_form(self, request, obj=None, **kwargs):
         """Use Fobi's FormEntryForm and inject request for validation/widgets."""
@@ -49,8 +53,94 @@ class FormEntryProxyAdmin(ModelAdmin):
         """Display name as link to custom edit view."""
         edit_url = reverse('admin:unfold_fobi_formentryproxy_edit', args=[obj.pk])
         return format_html('<a href="{}">{}</a>', edit_url, obj.name)
-    name_link.short_description = 'Name'
+    name_link.short_description = _("Name")
     name_link.admin_order_field = 'name'
+
+    def _collect_editable_fields(self):
+        return [
+            field
+            for field in self.model._meta.fields
+            if getattr(field, "editable", False)
+        ]
+
+    def get_fieldsets(self, request, obj=None):
+        form_fields = set(FormEntryForm.base_fields)
+        editable_fields = [
+            field for field in self._collect_editable_fields()
+            if field.name in form_fields
+        ]
+        remaining = [field.name for field in editable_fields]
+        extra_fields = [
+            name for name in FormEntryForm.base_fields
+            if name not in remaining
+        ]
+
+        def take(names):
+            selected = [name for name in names if name in remaining]
+            for name in selected:
+                remaining.remove(name)
+            return selected
+
+        date_fields = [
+            field.name
+            for field in editable_fields
+            if isinstance(field, (models.DateField, models.DateTimeField))
+            and field.name in remaining
+        ]
+        for name in date_fields:
+            remaining.remove(name)
+
+        basic_fields = take(["name", "slug", "title", "description"])
+        visibility_fields = take(
+            ["is_public", "is_cloneable", "is_current", "is_private"]
+        )
+        success_fields = take(["success_page_title", "success_page_message"])
+        appearance_fields = take(
+            ["form_template_name", "form_css_class", "form_js_class"]
+        )
+        ownership_fields = take(
+            ["user", "owner", "created_by", "updated_by", "user_id"]
+        )
+
+        fieldsets = []
+        if basic_fields:
+            fieldsets.append(
+                (_("Basic information"), {"fields": basic_fields})
+            )
+        if visibility_fields:
+            fieldsets.append(
+                (_("Visibility"), {"fields": visibility_fields})
+            )
+        if success_fields:
+            fieldsets.append(
+                (_("Success page"), {"fields": success_fields})
+            )
+        if appearance_fields:
+            fieldsets.append(
+                (_("Appearance"), {"fields": appearance_fields})
+            )
+        if ownership_fields:
+            fieldsets.append(
+                (_("Ownership"), {"fields": ownership_fields})
+            )
+        if date_fields:
+            fieldsets.append(
+                (
+                    _("Active dates"),
+                    {"fields": ["active_date_from", "active_date_to"]},
+                )
+            )
+        if remaining or extra_fields:
+            remaining.extend(
+                [name for name in extra_fields if name not in remaining]
+            )
+            fieldsets.append(
+                (_("Advanced"), {"fields": remaining})
+            )
+
+        if fieldsets:
+            return fieldsets
+        return super().get_fieldsets(request, obj)
     
     def get_urls(self):
         """Add custom URLs for create, import, and wizards."""
@@ -84,7 +174,7 @@ class FormEntryProxyAdmin(ModelAdmin):
     def changelist_view(self, request, extra_context=None):
         """Override changelist to add custom buttons."""
         extra_context = extra_context or {}
-        extra_context['title'] = 'Forms'
+        extra_context["title"] = _("Forms")
         return super().changelist_view(request, extra_context)
     
     def response_change(self, request, obj):
