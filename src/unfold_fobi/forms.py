@@ -178,7 +178,7 @@ def apply_unfold_widgets_to_form(form_instance):
                 set_widget(field, UnfoldAdminTextInputWidget)
             elif widget_type == forms.NumberInput:
                 set_widget(field, UnfoldAdminIntegerFieldWidget)
-            elif widget_type == forms.RangeInput:
+            elif hasattr(forms, "RangeInput") and widget_type == forms.RangeInput:
                 # RangeInput for numeric ranges (if available)
                 try:
                     set_widget(field, UnfoldAdminIntegerRangeWidget)

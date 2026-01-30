@@ -3,6 +3,8 @@ from django.contrib import admin
 from django.urls import path, reverse
 from django.utils.html import format_html
 from unfold.admin import ModelAdmin
+from fobi.forms import FormEntryForm
+from django.utils.dateparse import parse_datetime
 from .models import FormEntryProxy
 from .views import FormEntryCreateView, FormEntryEditView, FormEntryImportView, FormWizardsDashboardView
 
@@ -18,6 +20,30 @@ class FormEntryProxyAdmin(ModelAdmin):
     search_fields = ['name', 'slug']
     readonly_fields = ['created', 'updated']
     list_display_links = ['name_link']  # Make name clickable
+
+    def get_form(self, request, obj=None, **kwargs):
+        """Use Fobi's FormEntryForm and inject request for validation/widgets."""
+        kwargs["form"] = FormEntryForm
+        form_class = super().get_form(request, obj, **kwargs)
+
+        class RequestForm(form_class):
+            def __init__(self, *args, **form_kwargs):
+                form_kwargs["request"] = request
+                super().__init__(*args, **form_kwargs)
+
+            def clean(self):
+                cleaned = super().clean()
+                # Defensive: ensure DateTimeField values are datetimes, not strings.
+                for name, field in self.fields.items():
+                    if field.__class__.__name__ == "DateTimeField":
+                        value = cleaned.get(name)
+                        if isinstance(value, str):
+                            parsed = parse_datetime(value.strip())
+                            if parsed is not None:
+                                cleaned[name] = parsed
+                return cleaned
+
+        return RequestForm
     
     def name_link(self, obj):
         """Display name as link to custom edit view."""
@@ -65,3 +91,14 @@ class FormEntryProxyAdmin(ModelAdmin):
         """Override to redirect to custom edit view after save."""
         from django.shortcuts import redirect
         return redirect('admin:unfold_fobi_formentryproxy_edit', form_entry_id=obj.pk)
+
+    def response_add(self, request, obj, post_url_continue=None):
+        """Redirect add flow to the builder edit view after save."""
+        from django.shortcuts import redirect
+        return redirect('admin:unfold_fobi_formentryproxy_edit', form_entry_id=obj.pk)
+
+    def save_model(self, request, obj, form, change):
+        """Ensure creator is set when using the native admin add view."""
+        if not obj.user_id:
+            obj.user = request.user
+        super().save_model(request, obj, form, change)
