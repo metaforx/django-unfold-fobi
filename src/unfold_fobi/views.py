@@ -9,7 +9,6 @@ from django.views.generic import RedirectView
 from unfold.views import UnfoldModelAdminViewMixin
 
 from fobi.models import FormEntry
-from fobi.contrib.apps.drf_integration.dynamic import get_declared_fields
 from fobi.views.class_based import (
     CreateFormEntryView as FobiCreateFormEntryView,
     EditFormEntryView as FobiEditFormEntryView,
@@ -98,7 +97,10 @@ def get_form_fields(request, slug):
     try:
         form_entry = FormEntry.objects.get(slug=slug, is_public=True)
 
-        # Get the dynamic form fields from fobi DRF integration
+        # Import lazily to avoid DRF compatibility errors at startup.
+        from fobi.contrib.apps.drf_integration.dynamic import get_declared_fields
+
+        # Get the dynamic form fields from fobi DRF integration.
         # get_declared_fields returns a tuple: (fields_dict, metadata_dict)
         fields_result = get_declared_fields(form_entry)
 
