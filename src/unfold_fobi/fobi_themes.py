@@ -21,6 +21,7 @@ class UnfoldSimpleTheme(SimpleTheme):
     media_css = (
         "simple/css/fobi.simple.css",
         "simple/css/fobi.simple.edit.css",
+        "unfold_fobi/css/fobi_unfold.css",
         #"jquery-ui/css/django-admin-theme/jquery-ui-1.10.4.custom.min.css",
     )
 
