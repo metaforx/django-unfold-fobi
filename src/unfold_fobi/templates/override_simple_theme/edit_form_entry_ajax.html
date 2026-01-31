@@ -18,7 +18,7 @@
         <nav id="tabs-dropdown" class="absolute bg-white border border-base-200 flex flex-col -mr-px py-1 right-0 rounded-default shadow-lg top-10 w-52 z-50 dark:bg-base-800 dark:border-base-700 *:max-h-[30px] *:flex *:flex-row *:items-center *:mx-1 *:px-3 *:py-2 *:rounded-default *:text-left *:hover:bg-base-100 *:hover:text-base-700 *:dark:hover:bg-base-700 *:dark:hover:text-base-200" style="display: none;"></nav>
       </div>
 
-      <div class="flex ml-auto mt-2 md:mt-0 items-center">
+      <div class="flex ml-auto mt-2 md:mt-0 items-center" x-data="{showActions: false}">
         <ul class="fobi-actions bg-white container hidden flex-col font-medium mx-auto left-0 right-0 lg:flex lg:flex-row lg:mb-0 lg:mt-0 max-lg:absolute max-lg:top-16 dark:bg-base-900" x-bind:class="{'max-lg:flex': showActions}">
           <li class="max-lg:-mt-px max-lg:first:rounded-t-default lg:-ml-px hover:text-primary-600 dark:hover:text-primary-500 dark:border-base-700 border-base-200 max-lg:last:rounded-b-default border">
             <a class="cursor-default flex grow items-center gap-2 px-3 py-2 text-left whitespace-nowrap" aria-disabled="true">
