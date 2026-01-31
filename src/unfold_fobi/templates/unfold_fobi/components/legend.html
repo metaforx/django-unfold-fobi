@@ -1,10 +1,5 @@
 {% load i18n %}
-{% if id %}
-  <legend id="{{ id }}" class="border-b border-base-200 font-semibold mb-5 -mx-3 pb-3 px-3 text-[15px] text-font-important-light dark:text-font-important-dark dark:border-base-800 w-full">
-    {{ label }}
-  </legend>
-{% else %}
-  <legend class="border-b border-base-200 font-semibold mb-5 -mx-3 pb-3 px-3 text-[15px] text-font-important-light dark:text-font-important-dark dark:border-base-800 w-full">
-    {{ label }}
-  </legend>
-{% endif %}
+<legend 
+  class="border border-base-300 border-dashed mb-4 p-3 rounded dark:border-base-700">
+  {{ label }}
+</legend>

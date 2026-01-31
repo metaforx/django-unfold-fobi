@@ -1,6 +1,6 @@
 {% load i18n fobi_tags %}
 
-<div class="row" id="tabs-alpine" x-data="{ activeTab: 'tab-form-elements' }">
+<div class="row" id="tabs-alpine" x-data="{ activeTab: 'tab-form-elements' }" x-init="activeTab = 'tab-form-elements'">
   <div id="tabs-wrapper" class="flex items-start flex-col mb-4 md:flex-row md:items-center">
     <div class="flex flex-row grow">
       <ul id="tabs-items" class="tab-links bg-base-100 flex flex-row font-medium gap-1 p-1 rounded-default text-important dark:border-base-700 md:w-auto dark:bg-white/[.04] *:flex *:flex-row *:font-medium *:whitespace-nowrap *:items-center *:px-2.5 *:py-[5px] *:rounded-default *:transition-colors *:hover:bg-base-700/[.04] *:dark:hover:bg-white/[.04] [&>.active]:bg-white [&>.active]:shadow-xs [&>.active]:hover:bg-white [&>.active]:dark:bg-base-900 [&>.active]:dark:hover:bg-base-900">
@@ -51,15 +51,6 @@
       </div>
     </div>
   </div>
-  <script>
-    (function () {
-      if (window.location.hash) {
-        const cleanUrl = window.location.pathname + window.location.search;
-        window.history.replaceState(null, "", cleanUrl);
-      }
-    })();
-  </script>
-
   <div class="col col-form-elements" id="tab-form-elements" x-show="activeTab === 'tab-form-elements'">
     <!-- Form element plugins -->
     <div class="flex flex-col gap-4">
