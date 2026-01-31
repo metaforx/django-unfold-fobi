@@ -4,16 +4,19 @@ Unfold custom views wrapping fobi class-based views.
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from django.contrib import messages
+from django.contrib import admin, messages
+from django.contrib.admin.views.main import ChangeList
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.utils.datastructures import MultiValueDictKeyError
+from django.utils.html import format_html, format_html_join
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import RedirectView
 from unfold.views import UnfoldModelAdminViewMixin
 
 from fobi.forms import FormElementEntryFormSet
-from fobi.models import FormEntry
+from fobi.models import FormEntry, FormHandlerEntry
 from fobi.views.class_based import (
     CreateFormEntryView as FobiCreateFormEntryView,
     EditFormEntryView as FobiEditFormEntryView,
@@ -28,6 +31,131 @@ class FormEntryCreateView(UnfoldModelAdminViewMixin, FobiCreateFormEntryView):
 class FormEntryEditView(UnfoldModelAdminViewMixin, FobiEditFormEntryView):
     title = _("Edit form")
     permission_required = ("fobi.change_formentry",)
+
+    class _FormHandlerChangeListAdmin(admin.ModelAdmin):
+        list_display = ("handler_name", "handler_actions")
+        list_display_links = None
+        actions = None
+        list_select_related = ("form_entry",)
+
+        def __init__(self, model, admin_site, form_entry=None):
+            super().__init__(model, admin_site)
+            self.form_entry = form_entry
+            self._request = None
+
+        def get_queryset(self, request):
+            qs = super().get_queryset(request)
+            if self.form_entry:
+                qs = qs.filter(form_entry=self.form_entry)
+            return qs
+
+        @admin.display(description=_("Handler"))
+        def handler_name(self, obj):
+            request = self._request
+            plugin = obj.get_plugin(request=request)
+            name = obj.plugin_name
+            if callable(name):
+                name = name()
+            if obj.plugin_data and plugin:
+                return format_html(
+                    "{} <a class=\"ml-2 inline-flex items-center justify-center h-6 w-6 rounded-full border border-base-200 text-xs text-font-subtle-light dark:border-base-700 dark:text-font-subtle-dark\" href=\"javascript:;\" data-toggle=\"popover\" data-content=\"{}\" role=\"button\" title=\"{}\">?</a>",
+                    name,
+                    format_html("{}", plugin.plugin_data_repr or ""),
+                    _("Info"),
+                )
+            return name
+
+        @admin.display(description=_("Actions"))
+        def handler_actions(self, obj):
+            request = self._request
+            plugin = obj.get_plugin(request=request)
+            actions = []
+            if obj.plugin_data:
+                actions.append(
+                    (
+                        reverse_lazy(
+                            "fobi.edit_form_handler_entry",
+                            kwargs={"form_handler_entry_id": obj.pk},
+                        ),
+                        format_html(
+                            "<span class=\"material-symbols-outlined text-base\">edit</span>"
+                        ),
+                        _("Edit"),
+                        "border-base-200 bg-white text-font-default-light hover:border-base-300 hover:text-primary-600 dark:border-base-700 dark:bg-base-900 dark:text-font-default-dark dark:hover:text-primary-500",
+                    )
+                )
+            actions.append(
+                (
+                    reverse_lazy(
+                        "fobi.delete_form_handler_entry",
+                        kwargs={"form_handler_entry_id": obj.pk},
+                    ),
+                    format_html(
+                        "<span class=\"material-symbols-outlined text-base\">delete</span>"
+                    ),
+                    _("Delete"),
+                    "border-red-200 bg-red-50 text-red-700 hover:border-red-300 hover:text-red-800 dark:border-red-600/40 dark:bg-red-500/10 dark:text-red-400",
+                )
+            )
+
+            if plugin:
+                for url, label, icon in plugin.get_custom_actions(
+                    obj.form_entry, request
+                ):
+                    actions.append(
+                        (
+                            url,
+                            format_html("<span class=\"{}\"></span>", icon),
+                            label,
+                            "border-base-200 bg-white text-font-default-light hover:border-base-300 hover:text-primary-600 dark:border-base-700 dark:bg-base-900 dark:text-font-default-dark dark:hover:text-primary-500",
+                        )
+                    )
+
+            return format_html(
+                "<div class=\"flex flex-wrap gap-2\">{}</div>",
+                format_html_join(
+                    "",
+                    "<a href=\"{}\" class=\"inline-flex items-center gap-2 rounded-default border px-3 py-1.5 text-sm font-medium shadow-xs transition {}\">{}{}</a>",
+                    (
+                        (url, class_name, mark_safe(icon_html), label)
+                        for url, icon_html, label, class_name in actions
+                    ),
+                ),
+            )
+
+    def _build_handler_changelist(self, request):
+        if not getattr(self, "object", None):
+            return None
+        handler_admin = self._FormHandlerChangeListAdmin(
+            FormHandlerEntry, admin.site, form_entry=self.object
+        )
+        handler_admin._request = request
+        changelist = ChangeList(
+            request,
+            FormHandlerEntry,
+            handler_admin.list_display,
+            handler_admin.list_display_links,
+            handler_admin.list_filter,
+            handler_admin.date_hierarchy,
+            handler_admin.search_fields,
+            handler_admin.list_select_related,
+            handler_admin.list_per_page,
+            handler_admin.list_max_show_all,
+            handler_admin.list_editable,
+            handler_admin,
+            handler_admin.sortable_by,
+            handler_admin.search_help_text,
+        )
+        changelist.formset = None
+        return changelist
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        handler_changelist = self._build_handler_changelist(self.request)
+        context["handler_changelist"] = handler_changelist
+        if handler_changelist is not None:
+            context["opts"] = handler_changelist.opts
+        return context
 
     @staticmethod
     def _positions_are_valid(post_data):
