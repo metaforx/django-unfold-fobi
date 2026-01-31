@@ -1,13 +1,13 @@
 {% load i18n fobi_tags %}
 
-<div class="row" id="tabs">
+<div class="row" id="tabs-alpine" x-data="{ activeTab: 'tab-form-elements' }">
   <div id="tabs-wrapper" class="flex items-start flex-col mb-4 md:flex-row md:items-center">
     <div class="flex flex-row grow">
       <ul id="tabs-items" class="tab-links bg-base-100 flex flex-row font-medium gap-1 p-1 rounded-default text-important dark:border-base-700 md:w-auto dark:bg-white/[.04] *:flex *:flex-row *:font-medium *:whitespace-nowrap *:items-center *:px-2.5 *:py-[5px] *:rounded-default *:transition-colors *:hover:bg-base-700/[.04] *:dark:hover:bg-white/[.04] [&>.active]:bg-white [&>.active]:shadow-xs [&>.active]:hover:bg-white [&>.active]:dark:bg-base-900 [&>.active]:dark:hover:bg-base-900">
-        <li><a href="#tab-form-elements">{% trans "Elements" %}</a></li>
-        <li><a href="#tab-form-handlers">{% trans "Handlers" %}</a></li>
-        <li><a href="#tab-form-properties">{% trans "Properties" %}</a></li>
-        <li><a href="#tab-form-service">{% trans "Service" %}</a></li>
+        <li x-bind:class="{'active': activeTab === 'tab-form-elements'}"><a href="#" x-on:click.prevent="activeTab = 'tab-form-elements'">{% trans "Elements" %}</a></li>
+        <li x-bind:class="{'active': activeTab === 'tab-form-handlers'}"><a href="#" x-on:click.prevent="activeTab = 'tab-form-handlers'">{% trans "Handlers" %}</a></li>
+        <li x-bind:class="{'active': activeTab === 'tab-form-properties'}"><a href="#" x-on:click.prevent="activeTab = 'tab-form-properties'">{% trans "Properties" %}</a></li>
+        <li x-bind:class="{'active': activeTab === 'tab-form-service'}"><a href="#" x-on:click.prevent="activeTab = 'tab-form-service'">{% trans "Service" %}</a></li>
       </ul>
 
       <div class="hidden ml-2 relative">
@@ -51,15 +51,21 @@
       </div>
     </div>
   </div>
+  <script>
+    (function () {
+      if (window.location.hash) {
+        const cleanUrl = window.location.pathname + window.location.search;
+        window.history.replaceState(null, "", cleanUrl);
+      }
+    })();
+  </script>
 
-  <div class="col col-form-elements" id="tab-form-elements">
+  <div class="col col-form-elements" id="tab-form-elements" x-show="activeTab === 'tab-form-elements'">
     <!-- Form element plugins -->
-    <div>
-      <h2 id="form_elements">{% trans "Change form elements" %}</h2>
-    </div>
-
-    <div class="panel panel-default">
-      <div class="panel-body">
+    <div class="flex flex-col gap-4">
+      {% include "unfold_fobi/components/legend.html" with label=_("Change form elements") id="form_elements" %}
+      <div class="panel panel-default">
+        <div class="panel-body">
         <form id="fobi-form" method="post" action="{{ request.path }}?active_tab=tab-form-elements" novalidate="novalidate" class="{% block form_elements_html_class %}form-horizontal{% endblock form_elements_html_class %}" {% block form_elements_extra_attrs %}{% endblock form_elements_extra_attrs %}>
           <div>
             <fieldset class="module aligned">
@@ -152,21 +158,20 @@
             }
           })();
         </script>
+        </div>
       </div>
     </div>
 
   </div><!-- /#tab-form-elements -->
 
   
-  <div class="col col-form-handlers" id="tab-form-handlers">
+  <div class="col col-form-handlers" id="tab-form-handlers" x-show="activeTab === 'tab-form-handlers'">
 
     <!-- Form handler plugins -->
-    <div>
-      <h2 id="form_handlers">{% trans "Change form handlers" %}</h2>
-    </div>
-
-    <div class="panel panel-default">
-      <div class="panel-body">
+    <div class="flex flex-col gap-4">
+      {% include "unfold_fobi/components/legend.html" with label=_("Change form handlers") id="form_handlers" %}
+      <div class="panel panel-default">
+        <div class="panel-body">
         <ul class="nav pull-right">
           <li class="dropdown">
             <a class="dropdown-toggle" data-toggle="dropdown" href="javascript:;">
@@ -237,18 +242,18 @@
     </div>
     </div>
         {% endif %}
+        </div>
       </div>
     </div>
   </div><!-- /#tab-form-handlers -->
 
   
-  <div class="col col-form-properties" id="tab-form-properties">
+  <div class="col col-form-properties" id="tab-form-properties" x-show="activeTab === 'tab-form-properties'">
     <!-- Form properties -->
-    <div>
-      <h2 id="form_properties">{% trans "Change form properties" %}</h2>
-    </div>
-    <div class="panel panel-default">
-      <div class="panel-body">
+    <div class="flex flex-col gap-4">
+      {% include "unfold_fobi/components/legend.html" with label=_("Change form properties") id="form_properties" %}
+      <div class="panel panel-default">
+        <div class="panel-body">
 
         <form method="post" action="{{ request.path }}?active_tab=tab-form-properties" enctype="multipart/form-data" class="form-horizontal">
           <div>
@@ -262,17 +267,17 @@
           </div>
         </form>
 
+        </div>
       </div>
     </div>
   </div><!-- /#tab-form-properties -->
 
-  <div class="col col-form-service" id="tab-form-service">
+  <div class="col col-form-service" id="tab-form-service" x-show="activeTab === 'tab-form-service'">
     <!-- Form service -->
-    <div>
-      <h2 id="form_service">{% trans "Service" %}</h2>
-    </div>
-    <div class="panel panel-default">
-      <div class="panel-body">
+    <div class="flex flex-col gap-4">
+      {% include "unfold_fobi/components/legend.html" with label=_("Service") id="form_service" %}
+      <div class="panel panel-default">
+        <div class="panel-body">
 
         <div class="module">
 
@@ -316,6 +321,7 @@
 
         </div>
 
+        </div>
       </div>
     </div>
   </div><!-- /#tab-form-service -->
