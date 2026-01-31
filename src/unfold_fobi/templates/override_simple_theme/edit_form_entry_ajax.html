@@ -19,20 +19,35 @@
       </div>
 
       <div class="flex ml-auto mt-2 md:mt-0 items-center">
-        <label class="sr-only" for="add-form-element-select">{% trans "Add form element" %}</label>
-        <div class="grow relative max-w-2xl">
-          <select id="add-form-element-select" class="appearance-none border border-base-200 bg-white font-medium rounded-default shadow-xs text-font-default-light text-sm focus:outline-2 focus:-outline-offset-2 focus:outline-primary-600 dark:bg-base-900 dark:border-base-700 dark:text-font-default-dark px-3 py-2 pr-10">
-            <option value="">{% trans "Add form element" %}</option>
-            {% for group, plugins in user_form_element_plugins.items %}
-              <optgroup label="{{ group }}">
-                {% for form_element_uid, form_element_name in plugins %}
-                  <option value="{% url 'fobi.add_form_element_entry' form_entry.pk form_element_uid %}">{{ form_element_name }}</option>
+        <ul class="fobi-actions bg-white container hidden flex-col font-medium mx-auto left-0 right-0 lg:flex lg:flex-row lg:mb-0 lg:mt-0 max-lg:absolute max-lg:top-16 dark:bg-base-900" x-bind:class="{'max-lg:flex': showActions}">
+          <li class="max-lg:-mt-px max-lg:first:rounded-t-default lg:-ml-px hover:text-primary-600 dark:hover:text-primary-500 dark:border-base-700 border-base-200 max-lg:last:rounded-b-default border">
+            <a class="cursor-default flex grow items-center gap-2 px-3 py-2 text-left whitespace-nowrap" aria-disabled="true">
+              <span class="material-symbols-outlined">hub</span>
+              {% trans "Available Form Fields" %}
+            </a>
+          </li>
+          <li class="text-white max-lg:-mt-px bg-primary-600 max-lg:first:rounded-t-default lg:-ml-px dark:border-primary-500 border-base-200 max-lg:last:rounded-b-default border-primary-700 border" x-data="{actionDropdownOpen: false}" x-ref="actionDropdownAvailableFields">
+            <a class="cursor-pointer flex grow items-center gap-2 px-3 py-2 text-left whitespace-nowrap" x-on:click="actionDropdownOpen = !actionDropdownOpen" x-bind:class="{'': actionDropdownOpen }">
+              {% trans "Add" %}
+              <span class="border-l border-base-200 flex items-center select-none self-stretch ml-auto -mr-1 pl-2 border-primary-700 dark:border-primary-500">
+                <span class="material-symbols-outlined ml-auto rotate-90 transition-transform" x-bind:class="{'-rotate-90!': actionDropdownOpen }">
+                  chevron_right
+                </span>
+              </span>
+            </a>
+            <template x-teleport="body">
+              <nav x-anchor.bottom-end.offset.4="$refs.actionDropdownAvailableFields" class="absolute bg-white border border-base-200 flex flex-col -mr-px py-1 right-0 rounded-default shadow-lg top-10 w-52 z-50 dark:bg-base-800 dark:border-base-700" x-transition x-show="actionDropdownOpen" x-on:click.outside="actionDropdownOpen = false">
+                {% for group, plugins in user_form_element_plugins.items %}
+                  {% for form_element_uid, form_element_name in plugins %}
+                    <a href="{% url 'fobi.add_form_element_entry' form_entry.pk form_element_uid %}" class="flex items-center font-normal gap-2 max-h-[30px] mx-1 px-3 py-2 rounded-default text-left hover:bg-base-100 hover:text-base-700 dark:hover:bg-base-700 dark:hover:text-base-200">
+                      <span class="grow truncate">{{ form_element_name }}</span>
+                    </a>
+                  {% endfor %}
                 {% endfor %}
-              </optgroup>
-            {% endfor %}
-          </select>
-          <span class="material-symbols-outlined absolute pointer-events-none mr-[12px] right-0 text-base-400 top-1/2 -translate-y-1/2">expand_more</span>
-        </div>
+              </nav>
+            </template>
+          </li>
+        </ul>
       </div>
     </div>
   </div>

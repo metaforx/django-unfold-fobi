@@ -3,12 +3,6 @@ $(document).ready(function () {
         return;
     }
 
-    $('#add-form-element-select').on('change', function () {
-        const url = $(this).val();
-        if (url) {
-            window.location.href = url;
-        }
-    });
 
     function destroyJqueryTabs() {
         if ($.fn.tabs && $('#tabs').data('ui-tabs')) {
