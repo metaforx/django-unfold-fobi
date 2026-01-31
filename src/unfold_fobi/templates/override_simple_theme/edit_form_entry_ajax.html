@@ -1,6 +1,6 @@
-{% load i18n fobi_tags unfold_list %}
+{% load i18n fobi_tags unfold_list unfold_fobi_tags %}
 
-<div class="row" id="tabs-alpine" x-data="{ activeTab: 'tab-form-elements' }" x-init="activeTab = 'tab-form-elements'">
+<div class="row" id="tabs-alpine" x-data="{ activeTab: 'tab-form-elements' }" x-init="activeTab = localStorage.getItem('unfoldFobiActiveTab') || 'tab-form-elements'; $watch('activeTab', value => localStorage.setItem('unfoldFobiActiveTab', value))">
   <div id="tabs-wrapper" class="flex items-start flex-col mb-4 md:flex-row md:items-center">
     <div class="flex flex-row grow">
       <ul id="tabs-items" class="tab-links bg-base-100 flex flex-row font-medium gap-1 p-1 rounded-default text-important dark:border-base-700 md:w-auto dark:bg-white/[.04] *:flex *:flex-row *:font-medium *:whitespace-nowrap *:items-center *:px-2.5 *:py-[5px] *:rounded-default *:transition-colors *:hover:bg-base-700/[.04] *:dark:hover:bg-white/[.04] [&>.active]:bg-white [&>.active]:shadow-xs [&>.active]:hover:bg-white [&>.active]:dark:bg-base-900 [&>.active]:dark:hover:bg-base-900">
@@ -26,27 +26,16 @@
               {% trans "Available Form Fields" %}
             </a>
           </li>
-          <li class="text-white max-lg:-mt-px bg-primary-600 max-lg:first:rounded-t-default lg:-ml-px dark:border-primary-500 border-base-200 max-lg:last:rounded-b-default border-primary-700 border" x-data="{actionDropdownOpen: false}" x-ref="actionDropdownAvailableFields">
-            <a class="cursor-pointer flex grow items-center gap-2 px-3 py-2 text-left whitespace-nowrap" x-on:click="actionDropdownOpen = !actionDropdownOpen" x-bind:class="{'': actionDropdownOpen }">
-              {% trans "Add" %}
-              <span class="border-l border-base-200 flex items-center select-none self-stretch ml-auto -mr-1 pl-2 border-primary-700 dark:border-primary-500">
-                <span class="material-symbols-outlined ml-auto rotate-90 transition-transform" x-bind:class="{'-rotate-90!': actionDropdownOpen }">
-                  chevron_right
-                </span>
-              </span>
-            </a>
-            <template x-teleport="body">
-              <nav x-anchor.bottom-end.offset.4="$refs.actionDropdownAvailableFields" class="absolute bg-white border border-base-200 flex flex-col -mr-px py-1 right-0 rounded-default shadow-lg top-10 w-52 z-50 dark:bg-base-800 dark:border-base-700" x-transition x-show="actionDropdownOpen" x-on:click.outside="actionDropdownOpen = false">
-                {% for group, plugins in user_form_element_plugins.items %}
-                  {% for form_element_uid, form_element_name in plugins %}
-                    <a href="{% url 'fobi.add_form_element_entry' form_entry.pk form_element_uid %}" class="flex items-center font-normal gap-2 max-h-[30px] mx-1 px-3 py-2 rounded-default text-left hover:bg-base-100 hover:text-base-700 dark:hover:bg-base-700 dark:hover:text-base-200">
-                      <span class="grow truncate">{{ form_element_name }}</span>
-                    </a>
-                  {% endfor %}
-                {% endfor %}
-              </nav>
-            </template>
-          </li>
+          {% captureas element_items %}
+            {% for group, plugins in user_form_element_plugins.items %}
+              {% for form_element_uid, form_element_name in plugins %}
+                <a href="{% url 'fobi.add_form_element_entry' form_entry.pk form_element_uid %}" class="flex items-center font-normal gap-2 max-h-[30px] mx-1 px-3 py-2 rounded-default text-left hover:bg-base-100 hover:text-base-700 dark:hover:bg-base-700 dark:hover:text-base-200">
+                  <span class="grow truncate">{{ form_element_name }}</span>
+                </a>
+              {% endfor %}
+            {% endfor %}
+          {% endcaptureas %}
+          {% include "unfold_fobi/components/action_dropdown.html" with label=_("Add") dropdown_ref="actionDropdownAvailableFields" items=element_items %}
         </ul>
       </div>
     </div>
@@ -163,22 +152,28 @@
       {% include "unfold_fobi/components/legend.html" with label=_("Change form handlers") id="form_handlers" %}
       <div class="panel panel-default">
         <div class="panel-body">
-        <ul class="nav pull-right">
-          <li class="dropdown">
-            <a class="dropdown-toggle" data-toggle="dropdown" href="javascript:;">
-              {% trans "Add form handler" %} <span class="caret"></span>
-            </a>
-            <ul class="dropdown-menu">
-              {% for form_handler_uid, form_handler_name in user_form_handler_plugins %}
-              <li><a href="{% url 'fobi.add_form_handler_entry' form_entry.pk form_handler_uid %}">{{ form_handler_name }}</a></li>
-              {% endfor %}
+        {% if user_form_handler_plugins %}
+          <div class="flex justify-end">
+            <ul class="fobi-actions bg-white container hidden flex-col font-medium mx-auto left-0 right-0 lg:flex lg:flex-row lg:mb-0 lg:mt-0 max-lg:absolute max-lg:top-16 dark:bg-base-900" x-bind:class="{'max-lg:flex': showActions}">
+              <li class="max-lg:-mt-px max-lg:first:rounded-t-default lg:-ml-px hover:text-primary-600 dark:hover:text-primary-500 dark:border-base-700 border-base-200 max-lg:last:rounded-b-default border">
+                <a class="cursor-default flex grow items-center gap-2 px-3 py-2 text-left whitespace-nowrap" aria-disabled="true">
+                  <span class="material-symbols-outlined">hub</span>
+                  {% trans "Available Form Handlers" %}
+                </a>
+              </li>
+              {% captureas handler_items %}
+                {% for form_handler_uid, form_handler_name in user_form_handler_plugins %}
+                  <a href="{% url 'fobi.add_form_handler_entry' form_entry.pk form_handler_uid %}" class="flex items-center font-normal gap-2 max-h-[30px] mx-1 px-3 py-2 rounded-default text-left hover:bg-base-100 hover:text-base-700 dark:hover:bg-base-700 dark:hover:text-base-200">
+                    <span class="grow truncate">{{ form_handler_name }}</span>
+                  </a>
+                {% endfor %}
+              {% endcaptureas %}
+              {% include "unfold_fobi/components/action_dropdown.html" with label=_("Add") dropdown_ref="actionDropdownAvailableHandlers" items=handler_items %}
             </ul>
-          </li>
-        </ul>
+          </div>
+        {% endif %}
 
-        <div class="clearfix"></div>
-
-        {% if handler_changelist %}
+        {% if handler_changelist and handler_changelist.result_list %}
           {% unfold_result_list handler_changelist %}
         {% endif %}
         </div>

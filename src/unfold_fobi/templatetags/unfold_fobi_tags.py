@@ -41,3 +41,31 @@ def get_form_classes():
         'select': 'select',
         'textarea': 'textarea',
     }
+
+
+class CaptureAsNode(template.Node):
+    def __init__(self, nodelist, var_name):
+        self.nodelist = nodelist
+        self.var_name = var_name
+
+    def render(self, context):
+        context[self.var_name] = self.nodelist.render(context)
+        return ""
+
+
+@register.tag
+def captureas(parser, token):
+    """
+    Capture template block into a context variable.
+
+    Usage:
+        {% captureas var_name %}...{% endcaptureas %}
+    """
+    bits = token.split_contents()
+    if len(bits) != 2:
+        raise template.TemplateSyntaxError(
+            "captureas tag requires a single variable name."
+        )
+    nodelist = parser.parse(("endcaptureas",))
+    parser.delete_first_token()
+    return CaptureAsNode(nodelist, bits[1])
