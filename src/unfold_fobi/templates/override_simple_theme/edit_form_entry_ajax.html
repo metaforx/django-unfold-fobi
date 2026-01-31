@@ -70,13 +70,88 @@
 
               {{ form_element_entry_formset.management_form }}
             </fieldset>
-
-            <div class="submit-row">
-              <input type="submit" name="ordering" class="bg-primary-600 border border-transparent cursor-pointer font-medium px-3 py-2 rounded-default text-white" value="{% trans "Save ordering" %}"/>
-            </div>
+            <input type="hidden" name="ordering" value="1" />
           </div>
         </form>
+        <script>
+          (function () {
+            const form = document.getElementById("fobi-form");
+            if (!form) return;
 
+            const orderingInput = form.querySelector('input[name="ordering"]');
+            let lastSerialized = null;
+            let submitTimer = null;
+
+            const updatePositions = () => {
+              const rows = form.querySelectorAll(".form-row");
+              let index = 0;
+              rows.forEach((row) => {
+                const positionInput = row.querySelector('input[name$="-position"]');
+                if (!positionInput) return;
+                index += 1;
+                positionInput.value = String(index);
+              });
+            };
+
+            const serializePositions = () => {
+              const inputs = form.querySelectorAll('input[name$="-position"]');
+              if (!inputs.length) return "";
+              return Array.from(inputs).map((input) => input.value).join("|");
+            };
+
+            const submitOrdering = () => {
+              updatePositions();
+              const current = serializePositions();
+              if (!current || current === lastSerialized) return;
+              lastSerialized = current;
+              if (orderingInput) orderingInput.value = "1";
+              if (form.requestSubmit) {
+                form.requestSubmit();
+              } else {
+                form.submit();
+              }
+            };
+
+            const scheduleSubmit = () => {
+              if (submitTimer) {
+                window.clearTimeout(submitTimer);
+              }
+              submitTimer = window.setTimeout(submitOrdering, 250);
+            };
+
+            const bindSortable = () => {
+              if (!window.jQuery) return false;
+              const $ = window.jQuery;
+              const $sortable = $(form).is(".ui-sortable")
+                ? $(form)
+                : $(form).find(".ui-sortable");
+              if (!$sortable.length) return false;
+              $sortable.on("sortstop update sortupdate", scheduleSubmit);
+              form.addEventListener("change", (event) => {
+                const target = event.target;
+                if (
+                  target &&
+                  target.matches &&
+                  target.matches('input[name$="-position"]')
+                ) {
+                  scheduleSubmit();
+                }
+              });
+              return true;
+            };
+
+            if (bindSortable()) return;
+
+            if ("MutationObserver" in window && window.jQuery) {
+              const observer = new MutationObserver(() => {
+                if (bindSortable()) observer.disconnect();
+              });
+              observer.observe(form, { childList: true, subtree: true });
+            } else {
+              window.setTimeout(bindSortable, 300);
+            }
+          })();
+        </script>
       </div>
     </div>
 

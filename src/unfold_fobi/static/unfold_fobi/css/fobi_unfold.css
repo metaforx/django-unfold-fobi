@@ -35,15 +35,3 @@ html.dark #nav-sidebar .border-base-700 {
 html.dark #nav-sidebar .bg-base-100 {
     background-color: color-mix(in oklab, #ffffff 6%, transparent) !important;
 }
-
-@media (min-width: 64rem) {
-    .fobi-actions > li:first-child {
-        border-top-left-radius: var(--border-radius, 6px);
-        border-bottom-left-radius: var(--border-radius, 6px);
-    }
-
-    .fobi-actions > li:last-child {
-        border-top-right-radius: var(--border-radius, 6px);
-        border-bottom-right-radius: var(--border-radius, 6px);
-    }
-}

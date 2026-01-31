@@ -4,10 +4,15 @@ Unfold custom views wrapping fobi class-based views.
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
+from django.contrib import messages
+from django.shortcuts import redirect
+from django.urls import reverse_lazy
+from django.utils.datastructures import MultiValueDictKeyError
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import RedirectView
 from unfold.views import UnfoldModelAdminViewMixin
 
+from fobi.forms import FormElementEntryFormSet
 from fobi.models import FormEntry
 from fobi.views.class_based import (
     CreateFormEntryView as FobiCreateFormEntryView,
@@ -23,6 +28,88 @@ class FormEntryCreateView(UnfoldModelAdminViewMixin, FobiCreateFormEntryView):
 class FormEntryEditView(UnfoldModelAdminViewMixin, FobiEditFormEntryView):
     title = _("Edit form")
     permission_required = ("fobi.change_formentry",)
+
+    @staticmethod
+    def _positions_are_valid(post_data):
+        positions = []
+        for key, value in post_data.items():
+            if not key.endswith("-position"):
+                continue
+            try:
+                positions.append(int(value))
+            except (TypeError, ValueError):
+                return False
+        if not positions:
+            return False
+        total = len(positions)
+        return sorted(positions) == list(range(1, total + 1))
+
+    def post(self, request, *args, **kwargs):
+        """
+        Handle ordering posts with a custom success message.
+        """
+        if "ordering" not in request.POST:
+            return super().post(request, *args, **kwargs)
+
+        if not self._positions_are_valid(request.POST):
+            messages.error(
+                request,
+                _(
+                    "Errors occurred while trying to change the "
+                    "elements ordering!"
+                ),
+            )
+            return redirect(
+                reverse_lazy(
+                    "fobi.edit_form_entry",
+                    kwargs={"form_entry_id": self.kwargs.get(self.pk_url_kwarg)},
+                )
+            )
+
+        self.object = self.get_object(queryset=self._get_queryset(request))
+        form_element_entry_formset = FormElementEntryFormSet(
+            request.POST,
+            request.FILES,
+            queryset=self.object.formelemententry_set.all(),
+        )
+        try:
+            if form_element_entry_formset.is_valid():
+                form_element_entry_formset.save()
+                return redirect(
+                    reverse_lazy(
+                        "fobi.edit_form_entry",
+                        kwargs={"form_entry_id": self.object.pk},
+                    )
+                )
+            messages.error(
+                request,
+                _(
+                    "Errors occurred while trying to change the "
+                    "elements ordering!"
+                ),
+            )
+            return redirect(
+                reverse_lazy(
+                    "fobi.edit_form_entry",
+                    kwargs={"form_entry_id": self.object.pk},
+                )
+            )
+        except MultiValueDictKeyError:
+            messages.error(
+                request,
+                _(
+                    "Errors occurred while trying to change the "
+                    "elements ordering!"
+                ),
+            )
+            return redirect(
+                reverse_lazy(
+                    "fobi.edit_form_entry",
+                    kwargs={"form_entry_id": self.object.pk},
+                )
+            )
+
+        return super().post(request, *args, **kwargs)
 
 
 class FormWizardsDashboardView(UnfoldModelAdminViewMixin, RedirectView):
