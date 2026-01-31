@@ -21,16 +21,28 @@ from fobi.views.class_based import (
     CreateFormEntryView as FobiCreateFormEntryView,
     EditFormEntryView as FobiEditFormEntryView,
 )
+from .forms import FormEntryFormWithCloneable
+from .forms import FormEntryFormWithCloneable
 
 
 class FormEntryCreateView(UnfoldModelAdminViewMixin, FobiCreateFormEntryView):
     title = _("Create form")
     permission_required = ("fobi.add_formentry",)
+    form_class = FormEntryFormWithCloneable
+
+    def get_form_class(self):
+        return self.form_class
+    form_class = FormEntryFormWithCloneable
 
 
 class FormEntryEditView(UnfoldModelAdminViewMixin, FobiEditFormEntryView):
     title = _("Edit form")
     permission_required = ("fobi.change_formentry",)
+    form_class = FormEntryFormWithCloneable
+
+    def get_form_class(self):
+        return self.form_class
+    form_class = FormEntryFormWithCloneable
 
     class _FormHandlerChangeListAdmin(admin.ModelAdmin):
         list_display = ("handler_name", "handler_actions")

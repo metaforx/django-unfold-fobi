@@ -3,7 +3,7 @@ Custom form mixin to automatically use Unfold widgets for fobi forms.
 """
 from django import forms
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Fieldset
+from crispy_forms.layout import Layout, Fieldset, Row, Column
 from unfold.widgets import (
     UnfoldAdminCheckboxSelectMultiple,
     UnfoldAdminDateWidget,
@@ -250,6 +250,115 @@ class UnfoldFormMixin:
     """
     
     def __init__(self, *args, **kwargs):
+        kwargs.pop("request", None)
         super().__init__(*args, **kwargs)
         # Apply Unfold widgets to all fields at instantiation time
         apply_unfold_widgets_to_form(self)
+
+
+def _layout_contains_field(layout, field_name):
+    for item in layout:
+        if item == field_name:
+            return True
+        if hasattr(item, "fields"):
+            if _layout_contains_field(item.fields, field_name):
+                return True
+    return False
+
+
+def _append_field_to_layout(layout, field_name):
+    if hasattr(layout, "append"):
+        layout.append(field_name)
+        return True
+    if hasattr(layout, "fields"):
+        layout.fields.append(field_name)
+        return True
+    return False
+
+
+def ensure_field_in_helper_layout(form, field_name):
+    helper = getattr(form, "helper", None)
+    layout = getattr(helper, "layout", None) if helper else None
+    if not layout or _layout_contains_field(layout, field_name):
+        return
+
+    last_fieldset = None
+    for item in layout:
+        if hasattr(item, "fields"):
+            last_fieldset = item
+
+    if last_fieldset:
+        _append_field_to_layout(last_fieldset, field_name)
+    else:
+        _append_field_to_layout(layout, field_name)
+
+
+def align_visibility_fields_in_layout(form):
+    helper = getattr(form, "helper", None)
+    layout = getattr(helper, "layout", None) if helper else None
+    if not layout:
+        return
+
+    target_fieldset = None
+    for item in layout:
+        if hasattr(item, "fields"):
+            target_fieldset = item
+            break
+
+    if not target_fieldset:
+        return
+
+    fields = list(getattr(target_fieldset, "fields", []))
+    if "is_public" not in fields or "is_cloneable" not in fields:
+        return
+
+    new_fields = []
+    seen_cloneable = False
+    for field in fields:
+        if field == "is_public":
+            new_fields.append(
+                Row(
+                    Column("is_public"),
+                    Column("is_cloneable"),
+                    css_class=(
+                        "datetime flex flex-col gap-2 max-w-2xl "
+                        "lg:flex-row lg:group-[.field-row]:flex-row "
+                        "lg:group-[.field-row]:items-center "
+                        "lg:group-[.field-tabular]:flex-row "
+                        "lg:group-[.field-tabular]:items-center"
+                    ),
+                )
+            )
+            seen_cloneable = True
+            continue
+        if field == "is_cloneable":
+            if seen_cloneable:
+                continue
+        new_fields.append(field)
+
+    target_fieldset.fields = new_fields
+
+
+class FormEntryFormWithCloneable(forms.ModelForm):
+    """
+    Ensure is_cloneable is included and rendered in Unfold views.
+    """
+
+    class Meta:
+        from fobi.forms import FormEntryForm as FobiFormEntryForm
+
+        model = FobiFormEntryForm._meta.model
+        fields = getattr(FobiFormEntryForm._meta, "fields", None) or "__all__"
+        exclude = getattr(FobiFormEntryForm._meta, "exclude", None)
+
+    def __init__(self, *args, **kwargs):
+        kwargs.pop("request", None)
+        super().__init__(*args, **kwargs)
+
+        if "is_cloneable" not in self.fields:
+            field = self._meta.model._meta.get_field("is_cloneable")
+            self.fields["is_cloneable"] = field.formfield()
+
+        apply_unfold_widgets_to_form(self)
+        ensure_field_in_helper_layout(self, "is_cloneable")
+        align_visibility_fields_in_layout(self)

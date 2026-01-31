@@ -13,6 +13,8 @@ from fobi.forms import FormEntryForm
 from fobi.utils import prepare_form_entry_export_data
 from django.utils.dateparse import parse_datetime
 from .models import FormEntryProxy
+from .services import clone_form_entry
+from .forms import FormEntryFormWithCloneable
 from .views import FormEntryCreateView, FormEntryEditView, FormEntryImportView, FormWizardsDashboardView
 
 @admin.register(FormEntryProxy)
@@ -29,11 +31,11 @@ class FormEntryProxyAdmin(ModelAdmin):
     list_display_links = ["name_link"]  # Make name clickable
     compressed_fields = True
     warn_unsaved_form = True
-    actions = ["export_selected_forms"]
+    actions = ["export_selected_forms", "clone_selected_forms"]
 
     def get_form(self, request, obj=None, **kwargs):
         """Use Fobi's FormEntryForm and inject request for validation/widgets."""
-        kwargs["form"] = FormEntryForm
+        kwargs["form"] = FormEntryFormWithCloneable
         form_class = super().get_form(request, obj, **kwargs)
 
         class RequestForm(form_class):
@@ -70,11 +72,16 @@ class FormEntryProxyAdmin(ModelAdmin):
         ]
 
     def get_fieldsets(self, request, obj=None):
-        form_fields = set(FormEntryForm.base_fields)
+        form_fields = set(FormEntryFormWithCloneable.base_fields)
         editable_fields = [
             field for field in self._collect_editable_fields()
             if field.name in form_fields
         ]
+        if "is_cloneable" not in form_fields:
+            for field in self._collect_editable_fields():
+                if field.name == "is_cloneable":
+                    editable_fields.append(field)
+                    break
         remaining = [field.name for field in editable_fields]
         extra_fields = [
             name for name in FormEntryForm.base_fields
@@ -114,6 +121,11 @@ class FormEntryProxyAdmin(ModelAdmin):
                 (_("Basic information"), {"fields": basic_fields})
             )
         if visibility_fields:
+            if "is_public" in visibility_fields and "is_cloneable" in visibility_fields:
+                visibility_fields = [
+                    ("is_public", "is_cloneable"),
+                    *[name for name in visibility_fields if name not in ("is_public", "is_cloneable")],
+                ]
             fieldsets.append(
                 (_("Visibility"), {"fields": visibility_fields})
             )
@@ -207,6 +219,30 @@ class FormEntryProxyAdmin(ModelAdmin):
         return response
 
     export_selected_forms.short_description = _("Export selected forms (JSON)")
+
+    @admin.action(description=_("Clone selected forms"))
+    def clone_selected_forms(self, request, queryset):
+        created = 0
+        skipped = 0
+        for form_entry in queryset:
+            if not form_entry.is_cloneable:
+                skipped += 1
+                continue
+            clone_form_entry(form_entry)
+            created += 1
+
+        if skipped:
+            messages.warning(
+                request,
+                _("Skipped {count} form(s) because cloning is disabled.").format(
+                    count=skipped
+                ),
+            )
+        if created > 0:
+            messages.success(
+                request,
+                _("Cloned {count} form(s).").format(count=created),
+            )
 
     def delete_queryset(self, request, queryset):
         for obj in queryset:

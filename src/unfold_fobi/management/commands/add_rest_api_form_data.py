@@ -41,7 +41,7 @@ def _sample_value_for_field(field_info, index):
         d = date(1990, 1, 1) + timedelta(days=index * 100)
         return d.isoformat()
     if field_type == "NullBooleanField":
-        return (index % 3) == 0  # True/False/None pattern
+        return (True, False, None)[index % 3]  # True/False/None pattern
     if field_type == "ChoiceField" or field_type == "TypedChoiceField":
         choices = field_info.get("choices", [])
         if isinstance(choices, list) and choices:

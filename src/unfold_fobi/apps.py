@@ -51,7 +51,13 @@ class UnfoldFobiConfig(AppConfig):
         
         # Import fobi admin to register admin classes with Unfold
         from unfold_fobi import fobi_admin  # noqa
-        
+
+        # Register DRF integration db_store handler so PUT /api/fobi-form-entry/{slug}/ saves to SavedFormDataEntry
+        try:
+            import fobi.contrib.apps.drf_integration.form_handlers.db_store.fobi_integration_form_handlers  # noqa: F401
+        except ImportError:
+            pass
+
         # Import here to avoid circular imports
         from unfold_fobi import forms as unfold_forms
         from fobi import forms as fobi_forms
@@ -282,4 +288,19 @@ class UnfoldFobiConfig(AppConfig):
                     fobi_base.BasePlugin.get_initialised_create_form_or_404 = patched_get_initialised_create
         except (AttributeError, TypeError, ImportError):
             # BasePlugin might not exist or have different structure
+            pass
+
+        # Ensure db_store handler is attached when a form is saved (so REST API submissions are stored)
+        try:
+            from django.db.models.signals import post_save
+            from django.dispatch import receiver
+            from fobi.models import FormEntry, FormHandlerEntry
+
+            @receiver(post_save, sender=FormEntry)
+            def ensure_db_store_handler(sender, instance, **kwargs):
+                FormHandlerEntry.objects.get_or_create(
+                    form_entry=instance,
+                    plugin_uid="db_store",
+                )
+        except (ImportError, AttributeError):
             pass
