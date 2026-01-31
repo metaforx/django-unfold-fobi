@@ -16,6 +16,7 @@ class UnfoldSimpleTheme(SimpleTheme):
     form_properties_snippet_template_name = 'override_simple_theme/snippets/form_properties_snippet.html'
     form_snippet_template_name = 'override_simple_theme/snippets/form_snippet.html'
     form_wizard_properties_snippet_template_name = 'override_simple_theme/snippets/form_wizard_properties_snippet.html'
+    edit_form_entry_ajax_template = 'override_simple_theme/edit_form_entry_ajax.html'
     create_form_entry_ajax_template = 'override_simple_theme/create_form_entry_ajax.html'
 
     media_css = (
@@ -31,6 +32,7 @@ class UnfoldSimpleTheme(SimpleTheme):
         "js/jquery.slugify.js",
         "js/fobi.core.js",
         "simple/js/fobi.simple.edit.js",
+        "unfold_fobi/js/fobi_unfold.js",
     )
 
 theme_registry.register(UnfoldSimpleTheme, force=True)
