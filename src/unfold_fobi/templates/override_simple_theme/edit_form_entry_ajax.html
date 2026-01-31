@@ -7,7 +7,6 @@
         <li x-bind:class="{'active': activeTab === 'tab-form-elements'}"><a href="#" x-on:click.prevent="activeTab = 'tab-form-elements'">{% trans "Elements" %}</a></li>
         <li x-bind:class="{'active': activeTab === 'tab-form-handlers'}"><a href="#" x-on:click.prevent="activeTab = 'tab-form-handlers'">{% trans "Handlers" %}</a></li>
         <li x-bind:class="{'active': activeTab === 'tab-form-properties'}"><a href="#" x-on:click.prevent="activeTab = 'tab-form-properties'">{% trans "Properties" %}</a></li>
-        <li x-bind:class="{'active': activeTab === 'tab-form-service'}"><a href="#" x-on:click.prevent="activeTab = 'tab-form-service'">{% trans "Service" %}</a></li>
       </ul>
 
       <div class="hidden ml-2 relative">
@@ -206,57 +205,4 @@
     </div>
   </div><!-- /#tab-form-properties -->
 
-  <div class="col col-form-service" id="tab-form-service" x-show="activeTab === 'tab-form-service'">
-    <!-- Form service -->
-    <div class="flex flex-col gap-4">
-      {% include "unfold_fobi/components/legend.html" with label=_("Service") id="form_service" %}
-      <div class="panel panel-default">
-        <div class="panel-body">
-
-        <div class="module">
-
-          <table class="table table-striped">
-            <tbody>
-
-              <tr>
-                <td>
-
-                  <div>
-                    <h3>{% trans "Export your form as JSON" %}</h3>
-                    <p>{% trans "Export your form into JSON format and import it again any time!" %}</p>
-                    <p>
-                      <a class="btn btn-primary" href="{% url 'fobi.export_form_entry' form_entry.pk %}" role="button">
-                        <span class="custom-icon custom-icon-export"></span> {% trans "Export form" %}
-                      </a>
-                    </p>
-                  </div>
-
-                </td>
-              </tr>
-
-              <tr>
-                <td>
-
-                  <div>
-                    <h3>{% trans "Delete your form" %}</h3>
-                    <p>{% trans "Once deleted, can't be undone!" %}</p>
-                    <p>
-                      <a class="btn btn-primary" href="{% url 'fobi.delete_form_entry' form_entry.pk %}" role="button">
-                        <span class="custom-icon custom-icon-remove"></span> {% trans "Delete form" %}
-                      </a>
-                    </p>
-                  </div>
-
-                </td>
-              </tr>
-
-            </tbody>
-          </table>
-
-        </div>
-
-        </div>
-      </div>
-    </div>
-  </div><!-- /#tab-form-service -->
 </div>

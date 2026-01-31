@@ -1,11 +1,16 @@
 # admin.py
-from django.contrib import admin
+import json
+
+from django.contrib import admin, messages
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
+from django.http import HttpResponse
 from django.urls import path, reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from unfold.admin import ModelAdmin
 from fobi.forms import FormEntryForm
+from fobi.utils import prepare_form_entry_export_data
 from django.utils.dateparse import parse_datetime
 from .models import FormEntryProxy
 from .views import FormEntryCreateView, FormEntryEditView, FormEntryImportView, FormWizardsDashboardView
@@ -24,6 +29,7 @@ class FormEntryProxyAdmin(ModelAdmin):
     list_display_links = ["name_link"]  # Make name clickable
     compressed_fields = True
     warn_unsaved_form = True
+    actions = ["export_selected_forms"]
 
     def get_form(self, request, obj=None, **kwargs):
         """Use Fobi's FormEntryForm and inject request for validation/widgets."""
@@ -192,3 +198,20 @@ class FormEntryProxyAdmin(ModelAdmin):
         if not obj.user_id:
             obj.user = request.user
         super().save_model(request, obj, form, change)
+
+    def export_selected_forms(self, request, queryset):
+        data = [prepare_form_entry_export_data(entry) for entry in queryset]
+        payload = json.dumps(data, cls=DjangoJSONEncoder)
+        response = HttpResponse(payload, content_type="application/json")
+        response["Content-Disposition"] = 'attachment; filename="form-entries-export.json"'
+        return response
+
+    export_selected_forms.short_description = _("Export selected forms (JSON)")
+
+    def delete_queryset(self, request, queryset):
+        for obj in queryset:
+            obj.delete()
+            messages.info(
+                request,
+                _('The form "{0}" was deleted successfully.').format(obj.name),
+            )
