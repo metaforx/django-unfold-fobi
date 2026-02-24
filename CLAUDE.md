@@ -1,113 +1,116 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file defines how Claude Code should work in this repository.
 
-## Project Overview
+## Project
 
-**unfold-modal** is a Django app package that replaces admin related-object popups with Unfold-styled modals using iframes. It integrates with django-unfold (a Tailwind CSS-based Django admin theme) without modifying Django or Unfold internals.
+`unfold_fobi` integrates `django-fobi` form building into Django Unfold admin.
 
-Key constraints from `plans/IMMUTABLE_BASE_PLAN.md`:
-- No monkeypatching or runtime patching
-- Only override templates listed in Integration Surface
-- Use iframe strategy for v1 with clean seam for future fetch-inject/drawer variants
-- Reuse existing Django dismiss functions (dismissAddRelatedObjectPopup, etc.)
+Primary goal:
+- deliver reusable `unfold_fobi` integration with consistent Unfold UX, correct Django behavior, i18n readiness, and automated verification.
 
-## Musts (Strict)
-- Follow `plans/IMMUTABLE_BASE_PLAN.md` exactly; deviations require human approval.
-- Template overrides are limited to `admin/base_site.html` and `admin/popup_response.html`.
-- No edits to Django or Unfold internals.
-- No inline formset add/remove UI changes (only related fields inside inline forms).
-- Use Hatch for packaging `unfold-modal`.
-- Local tests only; no CI assumptions.
+## Source Of Truth
 
-## UX Constraints
-- ESC closes modal.
-- Modal body scrolls; background does not.
-- Locking background scroll must not cause page jump.
+Read these first, in order:
+1. `plans/IMMUTABLE_BASE_PLAN.md`
+2. `plans/UNFOLD_FOBI_PLAN.md`
+3. active task file in `tasks/` (T01-T07)
 
-## Development Commands
+If there is any conflict, `UNFOLD_FOBI_PLAN.md` goals win.
 
-```bash
-# Run tests
-pytest -q
+## Mandatory Rules
 
-# Start test server (after T01 infrastructure is set up)
-python manage.py runserver
+- Work incrementally; do not rebuild from scratch.
+- Keep changes scoped to `unfold_fobi` integration concerns.
+- Use Django-native patterns (views/forms/admin/permissions/i18n).
+- Use Unfold-native UI patterns (tabs/actions/fieldsets/breadcrumbs/legends/buttons/selects).
+- Keep template overrides minimal and targeted.
+- Preserve existing behavior unless the task explicitly changes it.
+- Never push or merge a feature branch automatically.
+- Push/merge only when explicitly requested by the human reviewer.
 
-# Linting (uses Ruff, follows django-unfold patterns)
-ruff check .
-ruff format .
+## Non-Goals
 
-# Playwright browser tests (after T07 setup)
-pytest --browser chromium
-```
+- No changes to public form rendering/submission outside admin builder scope.
+- No changes to Fobi plugin architecture/business logic.
+- No DB schema redesign (except minimal test-support structures).
+- No URL contract breaks for existing admin/form-builder routes.
+- No broad upstream template forks.
+- No redesign of unrelated admin pages.
+- No new frontend frameworks or third-party UI libraries.
 
-## Architecture
+## Allowed Files
 
-### Integration Surface (allowed modifications only)
-- `admin/base_site.html` - Extend Unfold base; add JS include
-- `admin/popup_response.html` - Replace opener calls with postMessage + fallback
-- `unfold_modal/static/unfold_modal/js/related_modal.js` - Modal JS module
-- `unfold_modal/static/unfold_modal/css/related_modal.css` - Optional styling
+Python:
+- `src/unfold_fobi/admin.py`
+- `src/unfold_fobi/views.py`
+- `src/unfold_fobi/context_processors.py`
+- `src/unfold_fobi/forms.py` (only when required)
+- `src/unfold_fobi/fobi_themes.py`
+- `src/unfold_fobi/apps.py` (only for goal-required cleanup)
 
-### Settings
-- `UNFOLD_MODAL_ENABLED` (default: True)
-- `UNFOLD_MODAL_VARIANT` = "iframe" (reserved for future "fetch")
-- `UNFOLD_MODAL_PRESENTATION` = "modal" (reserved for future "drawer")
+Templates:
+- `src/unfold_fobi/templates/unfold_fobi/*.html`
+- `src/unfold_fobi/templates/override_simple_theme/*.html`
+- `src/unfold_fobi/templates/override_simple_theme/snippets/*.html`
+- `src/unfold_fobi/templates/unfold_fobi/components/*.html`
 
-### Data Flow
-1. User clicks related widget action
-2. JS intercepts `django:show-related` or `django:lookup-related`, prevents default
-3. Opens modal with iframe loading popup URL (`_popup=1`)
-4. On success, `popup_response.html` posts payload via postMessage to parent
-5. Parent calls existing Django dismiss functions to update widget
+Static:
+- `src/unfold_fobi/static/unfold_fobi/js/*`
+- `src/unfold_fobi/static/unfold_fobi/css/*`
 
-### Package Structure
-```
-unfold_modal/
-├── __init__.py
-├── apps.py              # AppConfig with settings defaults
-├── static/
-│   └── unfold_modal/
-│       ├── js/related_modal.js
-│       └── css/related_modal.css
-└── templates/
-    └── admin/
-        ├── base_site.html
-        └── popup_response.html
-pyproject.toml            # Hatch build config (project root)
-```
+Project/test/docs:
+- `tests/*`
+- `pyproject.toml`, `MANIFEST.in`, `README.md`
+- `plans/*`, `tasks/*`
 
-## Compatibility
+## Task Order
 
-- Django 5.x
-- Unfold 0.52.0+
-- Supported widgets: ForeignKey select, ManyToMany select, OneToOne select, raw_id_fields, autocomplete_fields (Select2), inline form related fields
+Follow tasks in strict sequence:
+1. `tasks/T01_test_infrastructure.md`
+2. `tasks/T02_package_scaffold.md`
+3. `tasks/T03_pytest_cases.md`
+4. `tasks/T04_playwright_ui.md`
+5. `tasks/T05_add_view_i18n.md`
+6. `tasks/T06_edit_view_structure_tabs.md`
+7. `tasks/T07_edit_view_actions_grid.md`
 
-## Task Reference
+`T03` and `T04` are verification gates and must be reused after each later implementation step.
 
-Tasks are in `tasks/` directory (T01-T07). Follow in order:
-- T01: Test infrastructure and demo project
-- T02: Package scaffold with Poetry (deps) + Hatch (build)
-- T03: Modal JS core
-- T04: popup_response template override
-- T05: Admin template injection
-- T06: Pytest cases
-- T07: Playwright UI tests
+## Verification
 
-## Git Workflow
+Per task:
+- run `poetry run pytest -q`
+- run Playwright for UI-impacting tasks (`npx playwright test` or pytest-playwright equivalent)
 
-- Create new feature branches from `development`.
-- Feature branches: `feat/<short-name>`
-- Conventional Commits: `feat:`, `fix:`, `chore:`, `docs:`
-- Run tests before committing; commit only after tests pass
+Required coverage:
+- add-view grouping/date fieldset behavior
+- i18n extraction/rendering behavior
+- edit-view tabs/legend/actions/breadcrumbs behavior
+- ordering auto-save behavior
+- no regressions in completed behavior
 
-## Review Workflow
+## Test Server Pattern
 
-Workflow: code → review → fix → merge → stop
-- Code changes on feature branch.
-- Run review using `$unfold-codex-reviewer`.
-- Apply fixes if needed.
-- Re-run review until clean.
-- Merge into `development`.
-- Stop (do not continue on the same branch).
+Use repo-local structure for tests:
+- `tests/server/manage.py`
+- `tests/server/testapp/`
+- SQLite default for local/manual run (`tests/server/db.sqlite3`)
+
+Manual run support is additive; automated tests remain the default verification path.
+
+## Skills
+
+Task files define suggested skills. Default mapping:
+- T01-T05: `$unfold-dev-structured`
+- T06-T07: `$unfold-dev-advanced`
+- review: `$unfold-codex-reviewer`
+- debug fallback: `$unfold-debug-cleanup` or `$unfold-debug-refactor`
+
+## Definition Of Done
+
+All must be true:
+- task acceptance criteria met
+- required tests pass locally
+- pending `UNFOLD_FOBI_PLAN` goals implemented or explicitly deferred with reason
+- docs/config remain consistent with shipped behavior
