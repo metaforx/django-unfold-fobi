@@ -128,12 +128,16 @@ urlpatterns = [
 python manage.py migrate
 ```
 
-## Optional: Unfold Sidebar Links
+## Settings Reference (Unfold Sidebar)
 
 This is the "Forms" navigation block used in `djangocms_test/settings.py`.
-It links to the `unfold_fobi` admin views.
+It links to the `unfold_fobi` admin views and keeps active states aligned with
+Fobi edit/import/wizard routes. Include the `reverse_lazy`/`gettext_lazy` imports.
 
 ```python
+from django.urls import reverse_lazy
+from django.utils.translation import gettext_lazy as _
+
 UNFOLD = {
     "SIDEBAR": {
         "navigation": [
