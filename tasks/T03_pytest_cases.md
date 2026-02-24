@@ -1,30 +1,36 @@
-# Task T03 - Pytest Cases for Early Verification
+# Task T03 - Pytest Baseline for Current Builder Behavior
 
 Goal
-- Establish Django/pytest verification early so every later implementation task can be validated immediately.
+- Establish backend regression tests early for what is already implemented.
+
+Suggested Skills
+- Primary: `$unfold-dev-structured` (well-scoped backend test creation).
+- Debug fallback: `$unfold-debug-cleanup` for flaky/failing test triage.
+- Review: `$unfold-codex-reviewer`.
 
 Dependencies
 - Requires T01-T02 completed.
 
 Scope
-- Add focused pytest coverage for current `unfold_fobi` behavior:
-  - Add view availability and grouped sections baseline.
-  - Edit view routing/permissions baseline.
-  - Presence of existing completed UX behaviors (for example, no "Save ordering").
-- Set up reusable fixtures/helpers for form-builder checks.
-- Organize tests so later tasks (T05-T07) extend assertions instead of rewriting setup.
+- Add focused pytest coverage for current behavior:
+  - Add view loads and fieldsets include grouped sections + date section.
+  - Edit view route resolves and is permission-protected.
+  - Edit template renders tabs container and expected tab labels.
+  - "Save ordering" action is absent; ordering POST path behaves as expected.
+  - Core translated labels/messages exist for custom admin/view strings.
+- Add reusable assertions/helpers for later tasks (T05-T07).
 
 Non-goals
 - No browser automation.
-- No major UI refactor in this task.
+- No refactor of UI code in this task.
 
 Deliverables
-- Pytest modules under `tests/` with stable baseline coverage.
-- Clear test structure ready for incremental additions in subsequent tasks.
+- Pytest modules covering current baseline behavior.
+- Stable fixtures/assertion helpers reused by subsequent tasks.
 
 Acceptance Criteria
-- `pytest -q` passes.
-- Tests are runnable after each following task as a verification gate.
+- `poetry run pytest -q` passes.
+- Tests fail when current baseline contracts regress.
 
 Tests to run
 - `poetry run pytest -q`

@@ -1,30 +1,36 @@
-# Task T02 - Package Hardening (Existing Project)
+# Task T02 - Package Hardening for Current Repo State
 
 Goal
-- Align existing package metadata and distribution config with current `unfold_fobi` reality.
+- Align package/build metadata and docs with the current, already-implemented `unfold_fobi` integration.
 
-Status
-- Package scaffold already exists; this task is refinement, not initial creation.
+Suggested Skills
+- Primary: `$unfold-dev-structured` (docs/metadata/build hardening).
+- Debug fallback: `$unfold-debug-cleanup` for build/test breakage during packaging updates.
+- Review: `$unfold-codex-reviewer`.
+
+Context from code back-check
+- Packaging exists, but metadata includes placeholder author/repository values.
+- Build/runtime docs should reflect actual integration paths and supported flow.
 
 Scope
-- Validate `pyproject.toml` metadata (name, description, URLs, authors, classifiers, dependencies).
-- Ensure build targets include `src/unfold_fobi` and shipped templates/static assets.
-- Verify `MANIFEST.in` and wheel/sdist include required runtime files.
-- Update README install/use sections to match current admin + form-builder flow.
-- Add a minimal import/build smoke check in tests or CI command docs.
+- Update `pyproject.toml` metadata:
+  - authors/URLs/license/classifiers consistency.
+  - runtime dependency declaration sanity.
+- Verify `MANIFEST.in` and hatch build targets ship required templates/static assets.
+- Align README packaging and integration sections with real code paths and routes.
+- Add/verify minimal import/build smoke checks used in local verification.
 
 Non-goals
-- No UI behavior changes.
-- No feature additions beyond packaging/docs correctness.
+- No feature/UI behavior changes.
 
 Deliverables
-- Updated packaging metadata and distribution config.
-- README/package docs aligned with current project behavior.
-- Smoke validation command documented and passing locally.
+- Correct package metadata.
+- Distribution config validated for templates/static inclusion.
+- Updated documentation for current installation/use.
 
 Acceptance Criteria
-- `python -c "import unfold_fobi"` works.
-- `python -m build` succeeds and artifacts include required templates/static files.
+- `python -c "import unfold_fobi"` succeeds.
+- `python -m build` succeeds and artifacts include `templates/` and `static/` content.
 
 Tests to run
 - `poetry run pytest -q`

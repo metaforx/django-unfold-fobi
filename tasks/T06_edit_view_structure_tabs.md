@@ -1,30 +1,41 @@
-# Task T06 - Edit View Structure and Tabs
+# Task T06 - Edit View Structure, Header, Tabs, Breadcrumb Contract
 
 Goal
-- Finalize Unfold-native edit page structure for form builder.
+- Finalize edit-view structure to match Unfold custom-page and tab expectations from `UNFOLD_FOBI_PLAN`.
+
+Suggested Skills
+- Primary: `$unfold-dev-advanced` (cross-template/view/JS refactor and behavior contract work).
+- Debug fallback: `$unfold-debug-refactor` when tab/header/breadcrumb issues require deeper structural debugging.
+- Review: `$unfold-codex-reviewer`.
 
 Dependencies
 - Requires T03-T04 passing before and after changes.
 
+Context from code back-check
+- Edit view already uses Unfold mixin but has legacy tab residue (`tab-links` and dead `#tabs` JS logic).
+- H1 removal and breadcrumb contract are not explicitly guaranteed.
+
 Scope
-- Ensure edit page is rendered as an Unfold custom page pattern.
-- Remove H1 and keep H2/legend placement consistent.
-- Replace remaining legacy/jQuery tab structure with Unfold native tab markup/classes.
-- Ensure active tab state is correctly reflected and accessible.
-- Update breadcrumbs to target structure: `Unfold_Fobi -> Forms (builder) -> <form name>`.
-- Extend T03/T04 tests to cover new structure/tab/breadcrumb behavior.
+- Ensure edit page structure is explicitly Unfold-custom-page compliant.
+- Remove/neutralize H1 title rendering path if still present.
+- Replace remaining tab legacy residue with clean Unfold tab semantics/classes.
+- Ensure active tab state and accessibility attributes are correct.
+- Implement breadcrumb contract:
+  - `Unfold_Fobi -> Forms (builder) -> <form name>`
+- Remove dead tab JS behavior that depends on obsolete DOM patterns.
+- Extend T03/T04 tests for these contracts.
 
 Non-goals
-- No table/grid visual overhaul beyond what is required for tab/layout correctness.
+- Full action-grid redesign (handled in T07).
 
 Deliverables
-- Updated edit-view templates and supporting view context.
-- Updated tests for tab and breadcrumb regressions.
+- Updated edit-view structure/tab/breadcrumb implementation.
+- Regression tests for tab/header/breadcrumb behavior.
 
 Acceptance Criteria
-- Edit page shows correct Unfold tab UX and active state.
-- Breadcrumb chain and active item match expected structure.
-- T03-T04 suites stay green with new assertions.
+- Edit view matches required Unfold structure.
+- Breadcrumbs and active item behave as specified.
+- T03-T04 suites remain green with added assertions.
 
 Tests to run
 - `poetry run pytest -q`

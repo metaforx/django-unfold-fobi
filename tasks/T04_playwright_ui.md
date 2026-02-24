@@ -1,29 +1,34 @@
-# Task T04 - Playwright UI Smoke for Form Building
+# Task T04 - Playwright Smoke Baseline for Builder Screens
 
 Goal
-- Introduce early browser-level smoke coverage so UI regressions are caught during each implementation step.
+- Establish early browser-level regression checks for existing add/edit builder flows.
+
+Suggested Skills
+- Primary: `$unfold-dev-structured` (targeted UI smoke test additions).
+- Debug fallback: `$unfold-debug-cleanup` for selector/timing instability.
+- Review: `$unfold-codex-reviewer`.
 
 Dependencies
 - Requires T01-T03 completed.
 
 Scope
-- Add initial Playwright cases for core builder screens:
-  - Add view loads and key grouped sections are visible.
-  - Edit view loads and main tab/action row renders.
-  - Existing completed interactions remain functional (including ordering UX baseline).
-- Keep tests small and resilient; extend in later tasks as UI evolves.
+- Add smoke tests for:
+  - Add page load and grouped fieldset visibility.
+  - Edit page load and tab row visibility.
+  - Legend/action area rendering in each main tab.
+  - Absence of manual "Save ordering" control.
+- Keep tests resilient and minimal; expand in T06/T07.
 
 Non-goals
-- No full visual regression suite.
+- No visual snapshot suite.
 - No exhaustive matrix yet.
 
 Deliverables
-- Playwright suite integrated with test environment.
-- Stable smoke tests used as continuous gate for T05-T07.
+- Playwright smoke tests integrated with local test stack.
 
 Acceptance Criteria
-- Playwright smoke tests pass locally.
-- Failures clearly indicate broken core builder workflow.
+- Playwright smoke suite passes locally.
+- Failures are actionable and map to builder workflow regressions.
 
 Tests to run
 - `poetry run pytest -q` (if pytest-playwright)
