@@ -197,6 +197,77 @@ UNFOLD = {
 }
 ```
 
+## Development & Testing
+
+### Prerequisites
+
+Install [Poetry](https://python-poetry.org/) for dependency management.
+
+### Setup
+
+```bash
+# Install all dependencies (runtime + dev)
+poetry install
+
+# Run database migrations for the test server
+poetry run python tests/server/manage.py migrate
+```
+
+### Running Tests
+
+```bash
+# Run the full pytest suite
+poetry run pytest -q
+
+# Run with verbose output
+poetry run pytest -v
+
+# Run a specific test file
+poetry run pytest tests/test_smoke.py -v
+```
+
+### Manual Test Server
+
+A local Django test server is included for visual inspection and manual testing.
+
+```bash
+# Apply migrations (creates tests/server/db.sqlite3)
+poetry run python tests/server/manage.py migrate
+
+# Create a superuser for admin login
+poetry run python tests/server/manage.py createsuperuser
+
+# Optionally seed a test form with sample fields
+poetry run python tests/server/manage.py create_test_form
+
+# Start the server
+poetry run python tests/server/manage.py runserver 8080
+```
+
+Then open:
+- Admin: http://localhost:8080/admin/
+- Add form: http://localhost:8080/admin/unfold_fobi/formentryproxy/add/
+- Edit form: http://localhost:8080/admin/unfold_fobi/formentryproxy/edit/1/ (after creating a form)
+
+### Test Server Structure
+
+```
+tests/
+├── conftest.py                 # Shared fixtures (admin_user, form_entry)
+├── test_smoke.py               # Smoke tests (setup, URLs, views, seed data)
+├── e2e/                        # Playwright browser tests (T04)
+│   ├── conftest.py             # Browser fixtures (admin_login)
+│   └── test_placeholder.py    # Scaffold placeholder
+└── server/
+    ├── manage.py               # Django management entry point
+    ├── db.sqlite3              # SQLite DB (created by migrate, gitignored)
+    └── testapp/
+        ├── settings.py         # Full Unfold + Fobi + unfold_fobi config
+        ├── urls.py             # Admin + Fobi + DRF URL wiring
+        ├── wsgi.py
+        └── asgi.py
+```
+
 ## Notes
 
 - `unfold_fobi.apps.UnfoldFobiConfig.ready()` automatically loads the DRF

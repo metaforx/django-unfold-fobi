@@ -26,11 +26,33 @@ classifiers = [
     "Framework :: Django :: 5.1",
     "Framework :: Django :: 5.2",
 ]
+
 [project.urls]
 Homepage = "https://github.com/yourusername/unfold-fobi"
 Documentation = "https://github.com/yourusername/unfold-fobi#readme"
 Repository = "https://github.com/yourusername/unfold-fobi"
 Issues = "https://github.com/yourusername/unfold-fobi/issues"
+
+[tool.poetry]
+name = "unfold-fobi"
+version = "0.1.0"
+description = "Django Unfold admin integration for django-fobi"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = ">=3.10,<4.0"
+Django = ">=5.0,<6.0"
+django-unfold = ">=0.52.0"
+django-fobi = {version = ">=0.19", extras = ["simple"]}
+django-crispy-forms = ">=2.0"
+djangorestframework = ">=3.14"
+
+[tool.poetry.group.dev.dependencies]
+pytest = ">=8.0"
+pytest-django = ">=4.8"
+pytest-playwright = ">=0.5"
+playwright = ">=1.40"
+ruff = ">=0.4"
 
 [tool.hatch.build.targets.sdist]
 type = "sdist"
@@ -48,6 +70,15 @@ exclude = [
     "**/*.pyo",
     "**/*.pyd",
 ]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "testapp.settings"
+pythonpath = ["src", "tests/server"]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-q"
 
 [tool.black]
 line-length = 100
