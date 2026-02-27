@@ -2,7 +2,7 @@
 {% load static admin_urls crispy_forms_tags i18n unfold %}
 
 {# Ensure Unfold navigation renders branding/icon even for Fobi templates #}
-{% block branding %}{{ site_header|default:"Django administration" }}{% endblock %}
+{% block branding %}{% trans "Django administration" as default_branding %}{{ site_header|default:default_branding }}{% endblock %}
 
 {% block extrahead %}
     {{ block.super }}

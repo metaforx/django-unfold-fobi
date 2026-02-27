@@ -62,6 +62,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -107,7 +108,14 @@ if os.environ.get("TESTING"):
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "en"
+LANGUAGES = [
+    ("en", _("English")),
+    ("de", _("German")),
+]
+LOCALE_PATHS = [
+    Path(__file__).resolve().parent.parent.parent.parent / "src" / "unfold_fobi" / "locale",
+]
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
@@ -127,7 +135,11 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = ["unfold_crispy"]
 UNFOLD = {
     "SITE_TITLE": "Unfold Fobi Test",
     "SITE_HEADER": "Unfold Fobi Test",
+    "SHOW_LANGUAGES": True,
     "SIDEBAR": {
+        "show_search": True,
+        "command_search": True,
+        "show_all_applications": True,
         "navigation": [
             {
                 "title": _("Forms"),

@@ -15,12 +15,12 @@ os.environ.setdefault("DJANGO_ALLOW_ASYNC_UNSAFE", "true")
 @pytest.fixture()
 def admin_login(page, live_server, admin_user):
     """Log in as admin via the Django admin login page."""
-    login_url = f"{live_server.url}/admin/login/?next=/admin/"
+    # With i18n_patterns the admin lives under /en/admin/.
+    login_url = f"{live_server.url}/en/admin/login/?next=/en/admin/"
     page.goto(login_url)
     page.fill("#id_username", "admin")
     page.fill("#id_password", "testpass123")
     page.click("[type=submit]")
     # Wait for the exact admin index URL to confirm authenticated redirect.
-    # A glob like "**/admin/" would also match the login URL itself.
-    page.wait_for_url(f"{live_server.url}/admin/", timeout=10000)
+    page.wait_for_url(f"{live_server.url}/en/admin/", timeout=10000)
     return page
