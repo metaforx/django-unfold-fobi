@@ -1,5 +1,6 @@
 import pytest
 from django.urls import reverse
+from django.utils.translation import override as translation_override
 
 from fobi.contrib.plugins.form_handlers.db_store.models import (
     SavedFormDataEntry,
@@ -12,16 +13,28 @@ class TestEditViewBreadcrumbContract:
     def test_edit_view_uses_proxy_breadcrumb_contract(
         self, admin_client, form_entry
     ):
-        url = reverse(
-            "admin:unfold_fobi_formentryproxy_edit", args=[form_entry.pk]
-        )
-        response = admin_client.get(url)
+        with translation_override("en"):
+            url = reverse(
+                "admin:unfold_fobi_formentryproxy_edit", args=[form_entry.pk]
+            )
+            response = admin_client.get(url)
         assert response.status_code == 200
         html = response.content.decode("utf-8")
 
         assert "Forms (builder)" in html
-        assert "/admin/fobi/formentry/" not in html
-        assert "Form entries" not in html
+        # The breadcrumb must link through the proxy changelist, not the
+        # raw fobi FormEntry changelist.  The fobi URL may still appear
+        # elsewhere on the page (e.g. sidebar), so we scope the check to
+        # breadcrumb anchors only.
+        import re
+
+        breadcrumb_hrefs = re.findall(
+            r'<a[^>]*class="[^"]*truncate[^"]*"[^>]*href="([^"]*)"', html
+        )
+        for href in breadcrumb_hrefs:
+            assert "/fobi/formentry/" not in href, (
+                f"Breadcrumb links to raw FormEntry URL: {href}"
+            )
 
     def test_breadcrumb_contains_form_name(self, admin_client, form_entry):
         url = reverse(

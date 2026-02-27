@@ -204,8 +204,21 @@ class FormWizardHandlerAdmin(FobiFormWizardHandlerAdmin, ModelAdmin):
 
 @admin.register(SavedFormDataEntry)
 class SavedFormDataEntryAdmin(FobiSavedFormDataEntryAdmin, ModelAdmin):
-    """SavedFormDataEntry admin using django-unfold."""
-    pass
+    """SavedFormDataEntry admin using django-unfold.
+
+    Non-superuser staff can view entries but cannot modify or delete them.
+    Superusers retain full access.
+    """
+
+    def has_change_permission(self, request, obj=None):
+        if not request.user.is_superuser:
+            return False
+        return super().has_change_permission(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        if not request.user.is_superuser:
+            return False
+        return super().has_delete_permission(request, obj)
 
 
 @admin.register(SavedFormWizardDataEntry)

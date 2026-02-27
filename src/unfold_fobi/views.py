@@ -114,6 +114,15 @@ class FormEntryEditView(UnfoldModelAdminViewMixin, FobiEditFormEntryView):
                 for url, label, icon in plugin.get_custom_actions(
                     obj.form_entry, request
                 ):
+                    # T07: redirect "View entries" to admin filtered
+                    # changelist instead of the frontend /fobi/<id>/ view.
+                    if str(label) == str(_("View entries")):
+                        url = (
+                            reverse_lazy(
+                                "admin:fobi_contrib_plugins_form_handlers_db_store_savedformdataentry_changelist"
+                            )
+                            + f"?form_entry__id__exact={obj.form_entry_id}"
+                        )
                     actions.append(
                         (
                             url,
