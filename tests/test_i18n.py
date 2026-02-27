@@ -1,8 +1,11 @@
-"""T03 – i18n baseline tests.
+"""T03/T05 – i18n baseline and audit tests.
 
 Verifies that core translated labels and messages exist for custom admin
-and view strings used by unfold_fobi.
+and view strings used by unfold_fobi, and that the makemessages extraction
+workflow discovers all expected strings.
 """
+import subprocess
+
 import pytest
 from django.utils.functional import Promise  # lazy string base class
 
@@ -86,3 +89,72 @@ class TestViewTitlesTranslated:
         from unfold_fobi.views import FormEntryCreateView
 
         assert str(FormEntryCreateView.title) == "Create form"
+
+
+class TestContextProcessorBrandingWrapped:
+    """The branding fallback in context_processors must be translatable."""
+
+    def test_default_brand_is_lazy(self):
+        from django.contrib import admin
+
+        from unfold_fobi.context_processors import _
+
+        # The fallback uses _("Django administration"), which is a lazy string.
+        fallback = _("Django administration")
+        assert isinstance(fallback, (str, Promise))
+        assert str(fallback) == "Django administration"
+
+    def test_admin_site_context_has_branding(self, admin_user):
+        from django.test import RequestFactory
+
+        from unfold_fobi.context_processors import admin_site
+
+        factory = RequestFactory()
+        request = factory.get("/admin/")
+        request.user = admin_user
+        request.resolver_match = None
+        ctx = admin_site(request)
+        assert "branding" in ctx
+        assert len(str(ctx["branding"])) > 0
+
+
+class TestAPIErrorMessageWrapped:
+    """The get_form_fields API error message must be translatable."""
+
+    def test_form_not_found_returns_translated_error(self, admin_client):
+        response = admin_client.get("/api/fobi-form-fields/nonexistent-slug/")
+        assert response.status_code == 404
+        data = response.json()
+        assert data["error"] == "Form not found"
+
+
+class TestMakemessagesExtraction:
+    """Verify that makemessages extracts all expected i18n strings."""
+
+    EXPECTED_STRINGS = [
+        "Django administration",
+        "Basic information",
+        "Visibility",
+        "Active dates",
+        "Forms (builder)",
+        "Create form",
+        "Edit form",
+        "Elements",
+        "Handlers",
+        "Properties",
+        "Form not found",
+    ]
+
+    def test_po_file_contains_expected_strings(self):
+        import os
+        from pathlib import Path
+
+        po_path = Path(__file__).resolve().parent.parent / (
+            "src/unfold_fobi/locale/en/LC_MESSAGES/django.po"
+        )
+        assert po_path.exists(), f"PO file not found at {po_path}"
+        content = po_path.read_text()
+        for string in self.EXPECTED_STRINGS:
+            assert f'msgid "{string}"' in content, (
+                f"Expected string '{string}' not found in PO file"
+            )

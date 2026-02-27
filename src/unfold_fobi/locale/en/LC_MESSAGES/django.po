@@ -1,0 +1,164 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-02-27 20:41+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+msgid "Name"
+msgstr ""
+
+msgid "Basic information"
+msgstr ""
+
+msgid "Visibility"
+msgstr ""
+
+msgid "Success page"
+msgstr ""
+
+msgid "Appearance"
+msgstr ""
+
+msgid "Ownership"
+msgstr ""
+
+msgid "Active dates"
+msgstr ""
+
+msgid "Advanced"
+msgstr ""
+
+msgid "Forms"
+msgstr ""
+
+msgid "Export selected forms (JSON)"
+msgstr ""
+
+msgid "Clone selected forms"
+msgstr ""
+
+#, python-brace-format
+msgid "Skipped {count} form(s) because cloning is disabled."
+msgstr ""
+
+#, python-brace-format
+msgid "Cloned {count} form(s)."
+msgstr ""
+
+#, python-brace-format
+msgid "The form \"{0}\" was deleted successfully."
+msgstr ""
+
+msgid "Create form"
+msgstr ""
+
+msgid "Edit form"
+msgstr ""
+
+msgid "Import form"
+msgstr ""
+
+msgid "Create wizard"
+msgstr ""
+
+msgid "Edit wizard"
+msgstr ""
+
+msgid "Wizards"
+msgstr ""
+
+msgid "Import wizard"
+msgstr ""
+
+msgid "Export form"
+msgstr ""
+
+msgid "Export wizard"
+msgstr ""
+
+msgid "Django administration"
+msgstr ""
+
+msgid "Django Unfold admin style"
+msgstr ""
+
+msgid "Forms (builder)"
+msgstr ""
+
+#, python-brace-format
+msgid "Copy of {name}"
+msgstr ""
+
+#, python-brace-format
+msgid "{base} ({suffix})"
+msgstr ""
+
+msgid "Create form entry"
+msgstr ""
+
+msgid "Create form wizard"
+msgstr ""
+
+msgid "Elements"
+msgstr ""
+
+msgid "Handlers"
+msgstr ""
+
+msgid "Properties"
+msgstr ""
+
+msgid "Available Form Fields"
+msgstr ""
+
+msgid "Add"
+msgstr ""
+
+msgid "Change form elements"
+msgstr ""
+
+msgid "Available Form Handlers"
+msgstr ""
+
+msgid "Change form handlers"
+msgstr ""
+
+msgid "Change form properties"
+msgstr ""
+
+msgid "Save"
+msgstr ""
+
+msgid "Handler"
+msgstr ""
+
+msgid "Info"
+msgstr ""
+
+msgid "Actions"
+msgstr ""
+
+msgid "Edit"
+msgstr ""
+
+msgid "Delete"
+msgstr ""
+
+msgid "Errors occurred while trying to change the elements ordering!"
+msgstr ""
+
+msgid "Form not found"
+msgstr ""

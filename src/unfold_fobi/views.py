@@ -372,4 +372,4 @@ def get_form_fields(request, slug):
 
         return Response(form_structure)
     except FormEntry.DoesNotExist:
-        return Response({'error': 'Form not found'}, status=404)
+        return Response({'error': _('Form not found')}, status=404)
