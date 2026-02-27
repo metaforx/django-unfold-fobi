@@ -1,36 +1,36 @@
-# Task T02 - Package Hardening for Current Repo State
+# Task T02 - Package Scaffold (django-unfold-fobi)
 
 Goal
-- Align package/build metadata and docs with the current, already-implemented `unfold_fobi` integration.
-
-Suggested Skills
-- Primary: `$unfold-dev-structured` (docs/metadata/build hardening).
-- Debug fallback: `$unfold-debug-cleanup` for build/test breakage during packaging updates.
-- Review: `$unfold-codex-reviewer`.
-
-Context from code back-check
-- Packaging exists, but metadata includes placeholder author/repository values.
-- Build/runtime docs should reflect actual integration paths and supported flow.
+- Follow the same package scaffold pattern as `~/code/django-unfold-modal`.
+- Use `django-unfold-fobi` as the distribution name for `pip`/Poetry.
+- Keep `unfold_fobi` as the Django app/import path for `INSTALLED_APPS` and Python imports.
 
 Scope
-- Update `pyproject.toml` metadata:
-  - authors/URLs/license/classifiers consistency.
-  - runtime dependency declaration sanity.
-- Verify `MANIFEST.in` and hatch build targets ship required templates/static assets.
-- Align README packaging and integration sections with real code paths and routes.
-- Add/verify minimal import/build smoke checks used in local verification.
+- Set package/build metadata around the name split:
+  - distribution/package name: `django-unfold-fobi`.
+  - Django app module: `unfold_fobi`.
+- Ensure `pyproject.toml` has `[project]` + `[build-system]` (Hatchling) ready for PyPI builds.
+- Keep `tool.poetry` for dependency management (dev/test workflow).
+- Keep app package structure under `src/unfold_fobi/` and AppConfig discovery intact.
+- Update README install/config examples to reflect:
+  - installation with `django-unfold-fobi`;
+  - Django settings usage with `unfold_fobi`.
+- Keep repository URLs explicit and ready for later GitHub rename/alignment.
 
 Non-goals
 - No feature/UI behavior changes.
+- No refactor of runtime module path away from `unfold_fobi`.
 
 Deliverables
-- Correct package metadata.
-- Distribution config validated for templates/static inclusion.
-- Updated documentation for current installation/use.
+- Updated `pyproject.toml` metadata aligned with the naming convention.
+- `README.md` installation and setup examples aligned with the naming convention.
+- Verified package scaffold consistency with the `django-unfold-modal` pattern.
 
 Acceptance Criteria
-- `python -c "import unfold_fobi"` succeeds.
-- `python -m build` succeeds and artifacts include `templates/` and `static/` content.
+- `pip install django-unfold-fobi` / `poetry add django-unfold-fobi` is the documented install path.
+- `python -c "import unfold_fobi"` works in project environment.
+- `INSTALLED_APPS` continues to use `"unfold_fobi"` (not `"django-unfold-fobi"`).
+- Package metadata is valid for build.
 
 Tests to run
 - `poetry run pytest -q`
