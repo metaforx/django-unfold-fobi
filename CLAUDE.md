@@ -14,7 +14,7 @@ Primary goal:
 Read these first, in order:
 1. `plans/IMMUTABLE_BASE_PLAN.md`
 2. `plans/UNFOLD_FOBI_PLAN.md`
-3. active task file in `tasks/` (T01-T07)
+3. active task file in `tasks/` (T01-T09)
 
 If there is any conflict, `UNFOLD_FOBI_PLAN.md` goals win.
 
@@ -73,7 +73,9 @@ Follow tasks in strict sequence:
 4. `tasks/T04_playwright_ui.md`
 5. `tasks/T05_add_view_i18n.md`
 6. `tasks/T06_edit_view_structure_tabs.md`
-7. `tasks/T07_edit_view_actions_grid.md`
+7. `tasks/T07_entries_admin_readonly.md`
+8. `tasks/T08_edit_view_actions_grid.md`
+9. `tasks/T09_django_permission_alignment.md`
 
 `T03` and `T04` are verification gates and must be reused after each later implementation step.
 
@@ -103,7 +105,7 @@ Manual run support is additive; automated tests remain the default verification 
 
 Task files define suggested skills. Default mapping:
 - T01-T05: `$unfold-dev-structured`
-- T06-T07: `$unfold-dev-advanced`
+- T06-T09: `$unfold-dev-advanced`
 - review: `$unfold-codex-reviewer`
 - debug fallback: `$unfold-debug-cleanup` or `$unfold-debug-refactor`
 

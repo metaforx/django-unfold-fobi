@@ -36,6 +36,16 @@ class TestEditViewRoute:
         response = admin_client.get(url)
         assert response.status_code == 200
 
+    def test_change_route_redirects_to_custom_edit(
+        self, admin_client, form_entry
+    ):
+        change_url = reverse(
+            "admin:unfold_fobi_formentryproxy_change", args=[form_entry.pk]
+        )
+        response = admin_client.get(change_url)
+        assert response.status_code == 302
+        assert response.url == get_admin_edit_url(form_entry.pk)
+
 
 class TestEditTemplateTabs:
     """The edit template must render the Alpine.js tabs container."""

@@ -17,7 +17,7 @@ Scope
   - Edit page load and tab row visibility.
   - Legend/action area rendering in each main tab.
   - Absence of manual "Save ordering" control.
-- Keep tests resilient and minimal; expand in T06/T07.
+- Keep tests resilient and minimal; expand in T06/T08.
 
 Non-goals
 - No visual snapshot suite.

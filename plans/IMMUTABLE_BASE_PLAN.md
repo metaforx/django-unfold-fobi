@@ -113,7 +113,9 @@ Pending:
 4. `tasks/T04_playwright_ui.md`
 5. `tasks/T05_add_view_i18n.md`
 6. `tasks/T06_edit_view_structure_tabs.md`
-7. `tasks/T07_edit_view_actions_grid.md`
+7. `tasks/T07_entries_admin_readonly.md`
+8. `tasks/T08_edit_view_actions_grid.md`
+9. `tasks/T09_django_permission_alignment.md`
 
 Execution rule:
 - T03/T04 are verification gates and must be run after each subsequent implementation task.
@@ -132,7 +134,7 @@ Coverage outcomes required:
 
 ## 11. Definition of Done
 All must be true:
-- Tasks T01-T07 completed in order.
+- Tasks T01-T09 completed in order.
 - Pending goals from `UNFOLD_FOBI_PLAN` are implemented or explicitly deferred with reason.
 - Pytest passes locally.
 - Playwright passes locally.

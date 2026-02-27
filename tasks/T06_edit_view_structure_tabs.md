@@ -28,7 +28,7 @@ Scope
 - Extend T03/T04 tests for these contracts.
 
 Non-goals
-- Full action-grid redesign (handled in T07).
+- Full action-grid redesign (handled in T08).
 
 Deliverables
 - Updated edit-view structure/tab/breadcrumb implementation.

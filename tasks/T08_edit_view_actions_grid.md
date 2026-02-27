@@ -1,4 +1,4 @@
-# Task T07 - Edit View Actions Alignment and Grid/Card Completion
+# Task T08 - Edit View Actions Alignment and Grid/Card Completion
 
 Goal
 - Complete remaining action placement and layout styling goals for edit builder.

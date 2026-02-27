@@ -161,10 +161,23 @@ class FormEntryProxyAdmin(ModelAdmin):
         return super().get_fieldsets(request, obj)
     
     def get_urls(self):
-        """Add custom URLs for create, import, and wizards."""
+        """Add custom URLs for builder edit/create/import/wizards views."""
         urls = super().get_urls()
 
+        def redirect_change_to_builder_edit(request, object_id):
+            from django.shortcuts import redirect
+            return redirect(
+                "admin:unfold_fobi_formentryproxy_edit",
+                form_entry_id=object_id,
+            )
+
         custom_urls = [
+            path(
+                "<path:object_id>/change/",
+                self.admin_site.admin_view(redirect_change_to_builder_edit),
+                name="%s_%s_change"
+                % (self.model._meta.app_label, self.model._meta.model_name),
+            ),
             path('edit/<int:form_entry_id>/',
                  self.admin_site.admin_view(
                      FormEntryEditView.as_view(model_admin=self)
