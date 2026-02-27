@@ -162,3 +162,30 @@ msgstr ""
 
 msgid "Form not found"
 msgstr ""
+
+msgid "Active from"
+msgstr ""
+
+msgid "Active until"
+msgstr ""
+
+msgid "Inactive form page title"
+msgstr ""
+
+msgid "Inactive form page body"
+msgstr ""
+
+msgid "Custom message title to display if form is inactive."
+msgstr ""
+
+msgid "Custom message text to display if form is inactive."
+msgstr ""
+
+msgid "Date and time when the form becomes active in the format: 'YYYY-MM-DD HH:MM'. Leave it blank to activate immediately."
+msgstr ""
+
+msgid "Date and time when the form becomes inactive in the format: 'YYYY-MM-DD HH:MM'. Leave it blank to keep active forever."
+msgstr ""
+
+msgid "Updated"
+msgstr ""

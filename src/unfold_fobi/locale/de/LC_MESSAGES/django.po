@@ -160,3 +160,30 @@ msgstr "Beim Ändern der Elementreihenfolge sind Fehler aufgetreten!"
 
 msgid "Form not found"
 msgstr "Formular nicht gefunden"
+
+msgid "Active from"
+msgstr "Aktiv ab"
+
+msgid "Active until"
+msgstr "Aktiv bis"
+
+msgid "Inactive form page title"
+msgstr "Titel der Inaktiv-Seite des Formulars"
+
+msgid "Inactive form page body"
+msgstr "Text der Inaktiv-Seite des Formulars"
+
+msgid "Custom message title to display if form is inactive."
+msgstr "Benutzerdefinierter Nachrichtentitel, der angezeigt wird, wenn das Formular inaktiv ist."
+
+msgid "Custom message text to display if form is inactive."
+msgstr "Benutzerdefinierter Nachrichtentext, der angezeigt wird, wenn das Formular inaktiv ist."
+
+msgid "Date and time when the form becomes active in the format: 'YYYY-MM-DD HH:MM'. Leave it blank to activate immediately."
+msgstr "Datum und Uhrzeit, ab wann das Formular aktiv ist, im Format: 'YYYY-MM-DD HH:MM'. Leer lassen, um es sofort zu aktivieren."
+
+msgid "Date and time when the form becomes inactive in the format: 'YYYY-MM-DD HH:MM'. Leave it blank to keep active forever."
+msgstr "Datum und Uhrzeit, ab wann das Formular inaktiv ist, im Format: 'YYYY-MM-DD HH:MM'. Leer lassen, um es dauerhaft aktiv zu halten."
+
+msgid "Updated"
+msgstr "Aktualisiert"
