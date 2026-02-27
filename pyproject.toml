@@ -1,90 +1,85 @@
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
 [project]
-name = "unfold-fobi"
+name = "django-unfold-fobi"
 version = "0.1.0"
 description = "Django Unfold admin integration for django-fobi"
 readme = "README.md"
-requires-python = ">=3.10"
 license = "MIT"
+requires-python = ">=3.10"
 authors = [
-    {name = "Your Name", email = "your.email@example.com"},
+    { name = "Marc Widmer", email = "marc@pbi.io" },
 ]
 keywords = ["django", "fobi", "unfold", "admin", "forms"]
+dependencies = [
+    "django>=5.0",
+    "django-unfold>=0.52.0",
+    "django-fobi>=0.19",
+    "django-crispy-forms>=2.0",
+    "djangorestframework>=3.14",
+]
 classifiers = [
     "Development Status :: 3 - Alpha",
-    "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
+    "Environment :: Web Environment",
     "Framework :: Django",
     "Framework :: Django :: 5.0",
     "Framework :: Django :: 5.1",
     "Framework :: Django :: 5.2",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/unfold-fobi"
-Documentation = "https://github.com/yourusername/unfold-fobi#readme"
-Repository = "https://github.com/yourusername/unfold-fobi"
-Issues = "https://github.com/yourusername/unfold-fobi/issues"
+Homepage = "https://github.com/metaforx/django-unfold-fobi"
+Repository = "https://github.com/metaforx/django-unfold-fobi"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/unfold_fobi"]
 
 [tool.poetry]
-name = "unfold-fobi"
+name = "django-unfold-fobi"
 version = "0.1.0"
 description = "Django Unfold admin integration for django-fobi"
 package-mode = false
 
 [tool.poetry.dependencies]
-python = ">=3.10,<4.0"
-Django = ">=5.0,<6.0"
+python = ">=3.10"
+django = ">=5.0"
 django-unfold = ">=0.52.0"
 django-fobi = {version = ">=0.19", extras = ["simple"]}
 django-crispy-forms = ">=2.0"
 djangorestframework = ">=3.14"
 
-[tool.poetry.group.dev.dependencies]
+[tool.poetry.group.test.dependencies]
 pytest = ">=8.0"
 pytest-django = ">=4.8"
 pytest-playwright = ">=0.5"
 playwright = ">=1.40"
+
+[tool.poetry.group.dev.dependencies]
 ruff = ">=0.4"
 
-[tool.hatch.build.targets.sdist]
-type = "sdist"
-packages = ["src/unfold_fobi"]
-
-[tool.hatch.build.targets.wheel]
-type = "wheel"
-packages = ["src/unfold_fobi"]
-
-[tool.hatch.build]
-exclude = [
-    "**/__pycache__",
-    "**/.DS_Store",
-    "**/*.pyc",
-    "**/*.pyo",
-    "**/*.pyd",
-]
-
 [tool.pytest.ini_options]
-DJANGO_SETTINGS_MODULE = "testapp.settings"
-pythonpath = ["src", "tests/server"]
+addopts = "--ds=testapp.settings -q"
 testpaths = ["tests"]
+pythonpath = ["src", "tests/server"]
+django_find_project = false
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = "-q"
 
-[tool.black]
-line-length = 100
-target-version = ['py310', 'py311', 'py312']
+[tool.ruff]
+fix = true
+line-length = 88
 
-[tool.isort]
-profile = "black"
-line_length = 100
-
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "C", "B", "UP"]
+ignore = ["E501", "B905", "C901"]

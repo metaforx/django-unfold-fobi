@@ -11,7 +11,7 @@ This README shows the integration steps as they are used in
 1. Install dependencies.
 
 ```bash
-pip install django-unfold django-fobi[simple] django-crispy-forms djangorestframework
+pip install django-unfold-fobi
 ```
 
 2. Add apps to `INSTALLED_APPS` (order matters).
