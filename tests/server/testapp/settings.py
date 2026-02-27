@@ -137,6 +137,9 @@ UNFOLD = {
     "SITE_HEADER": "Unfold Fobi Test",
     "SHOW_LANGUAGES": True,
     "SIDEBAR": {
+        "show_search": True,
+        "command_search": True,
+        "show_all_applications": True,
         "navigation": [
             {
                 "title": _("Forms"),

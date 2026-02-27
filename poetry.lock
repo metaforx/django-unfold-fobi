@@ -296,13 +296,13 @@ django-nine = ">=0.1.13"
 
 [[package]]
 name = "django-unfold"
-version = "0.80.2"
+version = "0.81.0"
 description = "Modern Django admin theme"
 optional = false
 python-versions = "<4.0,>=3.10"
 files = [
-    {file = "django_unfold-0.80.2-py3-none-any.whl", hash = "sha256:9e9d98eb6bcbc58769a7e17b104fa17be88672fb0379e8ca26a4f978564b1b0b"},
-    {file = "django_unfold-0.80.2.tar.gz", hash = "sha256:6d9baa1694f9c3f8c451ea6e00537375ae1c7832d3ad0110d0f576bd47dae3d1"},
+    {file = "django_unfold-0.81.0-py3-none-any.whl", hash = "sha256:7a800fcf7ac438ae473ffa51cdfbb22ef0e6e8455dad84ce1e1846ddd21deac9"},
+    {file = "django_unfold-0.81.0.tar.gz", hash = "sha256:4746a2e78210d174c556b8dcf6cbc87642b86282a37406d820d6c1b4f6c160be"},
 ]
 
 [package.dependencies]
@@ -942,4 +942,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<4.0"
-content-hash = "cbc2bd1deba3e7fc787f262d7054a7c3fd8541ad745de800c75ea1445cf2a1fd"
+content-hash = "c97d4d6f5a9b1deb33f7f57d6659c0cbd54b4d2959fa60a4920b52edd0f8237b"
