@@ -1,8 +1,10 @@
-"""T03 – Edit-view baseline tests.
+"""T03/T06 – Edit-view baseline and structure tests.
 
 Verifies:
 - Edit route resolves and is permission-protected.
 - Edit template renders the Alpine.js tabs container with expected tab labels.
+- Tab markup uses clean Unfold semantics without legacy residue (T06).
+- Tab ARIA attributes are correct for accessibility (T06).
 - "Save ordering" button is absent (auto-save via JS instead).
 - Ordering POST path behaves as expected.
 """
@@ -61,6 +63,58 @@ class TestEditTemplateTabs:
         assert 'id="tab-form-elements"' in edit_html
         assert 'id="tab-form-handlers"' in edit_html
         assert 'id="tab-form-properties"' in edit_html
+
+
+class TestTabStructureClean:
+    """T06: Tab markup must use clean Unfold semantics, no legacy residue."""
+
+    @pytest.fixture()
+    def edit_html(self, admin_client, form_entry):
+        url = get_admin_edit_url(form_entry.pk)
+        response = admin_client.get(url)
+        return response.content.decode()
+
+    def test_no_legacy_tab_links_class(self, edit_html):
+        """The tab-links CSS class from legacy jQuery tabs must be removed."""
+        assert 'class="tab-links ' not in edit_html
+
+    def test_no_legacy_col_class_on_tab_panels(self, edit_html):
+        """Legacy 'col' classes must not appear on tab content divs."""
+        assert 'class="col col-form-' not in edit_html
+
+    def test_tablist_role_present(self, edit_html):
+        """The tab list must have role='tablist'."""
+        assert 'role="tablist"' in edit_html
+
+    def test_tab_role_present(self, edit_html):
+        """Tab links must have role='tab'."""
+        assert 'role="tab"' in edit_html
+
+    def test_tabpanel_role_present(self, edit_html):
+        """Tab content panels must have role='tabpanel'."""
+        assert 'role="tabpanel"' in edit_html
+
+    def test_aria_controls_present(self, edit_html):
+        """Tab links must have aria-controls pointing to their panel."""
+        assert 'aria-controls="tab-form-elements"' in edit_html
+        assert 'aria-controls="tab-form-handlers"' in edit_html
+        assert 'aria-controls="tab-form-properties"' in edit_html
+
+    def test_aria_labelledby_references_tab_ids(self, edit_html):
+        """Each tabpanel's aria-labelledby must reference its tab anchor's id."""
+        assert 'aria-labelledby="tab-elements"' in edit_html
+        assert 'aria-labelledby="tab-handlers"' in edit_html
+        assert 'aria-labelledby="tab-properties"' in edit_html
+
+    def test_tab_anchors_have_ids(self, edit_html):
+        """Tab anchor elements must have stable IDs for aria-labelledby."""
+        assert 'id="tab-elements"' in edit_html
+        assert 'id="tab-handlers"' in edit_html
+        assert 'id="tab-properties"' in edit_html
+
+    def test_no_legacy_fobi_unfold_js(self, edit_html):
+        """Dead fobi_unfold.js must not be loaded."""
+        assert "fobi_unfold.js" not in edit_html
 
 
 class TestSaveOrderingAbsent:

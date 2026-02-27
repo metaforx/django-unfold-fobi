@@ -32,7 +32,6 @@ class UnfoldSimpleTheme(SimpleTheme):
         "js/jquery.slugify.js",
         "js/fobi.core.js",
         "simple/js/fobi.simple.edit.js",
-        "unfold_fobi/js/fobi_unfold.js",
     )
 
 theme_registry.register(UnfoldSimpleTheme, force=True)

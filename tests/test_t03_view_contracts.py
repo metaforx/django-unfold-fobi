@@ -6,10 +6,9 @@ from fobi.contrib.plugins.form_handlers.db_store.models import (
 )
 
 
-class TestPendingEditViewContracts:
-    @pytest.mark.xfail(
-        reason="Pending T06: proxy breadcrumb contract is not implemented yet."
-    )
+class TestEditViewBreadcrumbContract:
+    """T06: proxy breadcrumb contract must render correctly."""
+
     def test_edit_view_uses_proxy_breadcrumb_contract(
         self, admin_client, form_entry
     ):
@@ -23,6 +22,14 @@ class TestPendingEditViewContracts:
         assert "Forms (builder)" in html
         assert "/admin/fobi/formentry/" not in html
         assert "Form entries" not in html
+
+    def test_breadcrumb_contains_form_name(self, admin_client, form_entry):
+        url = reverse(
+            "admin:unfold_fobi_formentryproxy_edit", args=[form_entry.pk]
+        )
+        response = admin_client.get(url)
+        html = response.content.decode("utf-8")
+        assert form_entry.name in html
 
     @pytest.mark.xfail(
         reason="Pending T07: edit save action should follow Unfold submit-row convention."

@@ -165,8 +165,14 @@ class FormEntryEditView(UnfoldModelAdminViewMixin, FobiEditFormEntryView):
         context = super().get_context_data(**kwargs)
         handler_changelist = self._build_handler_changelist(self.request)
         context["handler_changelist"] = handler_changelist
-        if handler_changelist is not None:
-            context["opts"] = handler_changelist.opts
+        # Use proxy model opts so Unfold breadcrumbs render as:
+        # Unfold_Fobi → Forms (builder) → <form name>
+        from .models import FormEntryProxy
+
+        context["opts"] = FormEntryProxy._meta
+        if getattr(self, "object", None):
+            self.object.__class__ = FormEntryProxy
+            context["original"] = self.object
         return context
 
     @staticmethod
