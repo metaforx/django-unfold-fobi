@@ -14,6 +14,7 @@ Dependencies
 Context from code back-check
 - Edit view already uses Unfold mixin but has legacy tab residue (`tab-links` and dead `#tabs` JS logic).
 - H1 removal and breadcrumb contract are not explicitly guaranteed.
+- Current breadcrumb trail is still legacy (`Fobi -> Form entries -> <title>`) instead of proxy contract.
 
 Scope
 - Ensure edit page structure is explicitly Unfold-custom-page compliant.
@@ -22,6 +23,7 @@ Scope
 - Ensure active tab state and accessibility attributes are correct.
 - Implement breadcrumb contract:
   - `Unfold_Fobi -> Forms (builder) -> <form name>`
+- Remove legacy breadcrumb links that point to `/admin/fobi/formentry/*` on proxy edit pages.
 - Remove dead tab JS behavior that depends on obsolete DOM patterns.
 - Extend T03/T04 tests for these contracts.
 

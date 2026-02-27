@@ -14,10 +14,12 @@ Dependencies
 Context from code back-check
 - "Add form element" control currently lives in legend/action area, not clearly in top tab/nav row.
 - Handler section still uses changelist-style rendering; target is Unfold grid/card presentation.
+- Edit page save control does not yet match Unfold submit-row convention for final action placement.
 
 Scope
 - Move/align "Add form element" control to required tab/nav row placement.
 - Ensure all edit-view actions use consistent Unfold button/select/dropdown styles.
+- Move/normalize edit save action into Unfold submit-row pattern (same convention as Unfold admin pages).
 - Replace remaining table/changelist-like builder presentation with Unfold-style grid/cards where required.
 - Preserve ordering auto-save behavior and existing functional flows.
 - Extend T03/T04 suites with action/layout regression assertions.
@@ -32,6 +34,7 @@ Deliverables
 
 Acceptance Criteria
 - Action controls and placement match `UNFOLD_FOBI_PLAN` goals.
+- Edit save action is rendered in the expected Unfold submit-row location/style contract.
 - Remaining legacy table-style presentation is removed from scoped builder sections.
 - T03-T04 suites remain green.
 

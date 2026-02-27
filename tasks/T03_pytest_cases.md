@@ -18,6 +18,10 @@ Scope
   - Edit template renders tabs container and expected tab labels.
   - "Save ordering" action is absent; ordering POST path behaves as expected.
   - Core translated labels/messages exist for custom admin/view strings.
+  - DB-store "view entries" route (`/fobi/<form_id>/`) shows submitted rows when data is created via DRF (`PUT /api/fobi-form-entry/<slug>/`).
+- Add pending-contract tests (xfail until T06/T07 implementation):
+  - Edit breadcrumb follows proxy contract (`Unfold_Fobi -> Forms (builder) -> <form title>`), not legacy `Fobi -> Form entries -> ...`.
+  - Edit save action follows Unfold submit-row convention.
 - Add reusable assertions/helpers for later tasks (T05-T07).
 
 Non-goals

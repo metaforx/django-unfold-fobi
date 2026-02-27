@@ -51,8 +51,35 @@ def form_entry(db, admin_user):
         position=1,
     )
     # Add db_store handler
-    FormHandlerEntry.objects.create(
+    FormHandlerEntry.objects.get_or_create(
         form_entry=entry,
         plugin_uid="db_store",
     )
     return entry
+
+
+@pytest.fixture()
+def rest_submitted_form_data(admin_client, form_entry):
+    """Create one saved form entry via DRF PUT endpoint used by the UI flow."""
+    from fobi.contrib.plugins.form_handlers.db_store.models import (
+        SavedFormDataEntry,
+    )
+
+    payload = {"full_name": "Alice Example"}
+    response = admin_client.put(
+        f"/api/fobi-form-entry/{form_entry.slug}/",
+        data=json.dumps(payload),
+        content_type="application/json",
+    )
+    assert response.status_code == 200
+
+    saved_entry = SavedFormDataEntry.objects.filter(
+        form_entry=form_entry
+    ).order_by("-pk").first()
+    assert saved_entry is not None
+
+    return {
+        "payload": payload,
+        "response": response,
+        "saved_entry": saved_entry,
+    }
