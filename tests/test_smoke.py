@@ -37,19 +37,19 @@ class TestAdminURLs:
 
     def test_changelist_url(self):
         url = reverse("admin:unfold_fobi_formentryproxy_changelist")
-        assert url == "/admin/unfold_fobi/formentryproxy/"
+        assert url == "/en/admin/unfold_fobi/formentryproxy/"
 
     def test_add_url(self):
         url = reverse("admin:unfold_fobi_formentryproxy_add")
-        assert url == "/admin/unfold_fobi/formentryproxy/add/"
+        assert url == "/en/admin/unfold_fobi/formentryproxy/add/"
 
     def test_edit_url(self):
         url = reverse("admin:unfold_fobi_formentryproxy_edit", args=[1])
-        assert url == "/admin/unfold_fobi/formentryproxy/edit/1/"
+        assert url == "/en/admin/unfold_fobi/formentryproxy/edit/1/"
 
     def test_create_url(self):
         url = reverse("admin:unfold_fobi_formentryproxy_create")
-        assert url == "/admin/unfold_fobi/formentryproxy/create/"
+        assert url == "/en/admin/unfold_fobi/formentryproxy/create/"
 
 
 class TestAdminViews:

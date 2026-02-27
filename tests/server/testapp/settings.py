@@ -108,7 +108,7 @@ if os.environ.get("TESTING"):
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "en"
 LANGUAGES = [
     ("en", _("English")),
     ("de", _("German")),
@@ -135,6 +135,7 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = ["unfold_crispy"]
 UNFOLD = {
     "SITE_TITLE": "Unfold Fobi Test",
     "SITE_HEADER": "Unfold Fobi Test",
+    "SHOW_LANGUAGES": True,
     "SIDEBAR": {
         "navigation": [
             {

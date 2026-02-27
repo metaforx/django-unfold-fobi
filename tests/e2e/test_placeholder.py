@@ -17,13 +17,13 @@ class TestAddPageSmoke:
 
     def test_add_page_loads(self, admin_login, live_server):
         page = admin_login
-        url = f"{live_server.url}/admin/unfold_fobi/formentryproxy/add/"
+        url = f"{live_server.url}/en/admin/unfold_fobi/formentryproxy/add/"
         page.goto(url)
         assert page.title()  # page rendered
 
     def test_add_page_has_fieldset_groups(self, admin_login, live_server):
         page = admin_login
-        url = f"{live_server.url}/admin/unfold_fobi/formentryproxy/add/"
+        url = f"{live_server.url}/en/admin/unfold_fobi/formentryproxy/add/"
         page.goto(url)
 
         content = page.content()
@@ -40,14 +40,14 @@ class TestEditPageSmoke:
 
     def test_edit_page_loads(self, admin_login, live_server, form_entry):
         page = admin_login
-        url = f"{live_server.url}/admin/unfold_fobi/formentryproxy/edit/{form_entry.pk}/"
+        url = f"{live_server.url}/en/admin/unfold_fobi/formentryproxy/edit/{form_entry.pk}/"
         page.goto(url)
         # The edit page may not set a <title>; verify the tabs container loaded.
         assert page.locator("#tabs-alpine").count() == 1
 
     def test_edit_page_has_tabs_container(self, admin_login, live_server, form_entry):
         page = admin_login
-        url = f"{live_server.url}/admin/unfold_fobi/formentryproxy/edit/{form_entry.pk}/"
+        url = f"{live_server.url}/en/admin/unfold_fobi/formentryproxy/edit/{form_entry.pk}/"
         page.goto(url)
 
         tabs = page.locator("#tabs-alpine")
@@ -55,7 +55,7 @@ class TestEditPageSmoke:
 
     def test_edit_page_has_tab_labels(self, admin_login, live_server, form_entry):
         page = admin_login
-        url = f"{live_server.url}/admin/unfold_fobi/formentryproxy/edit/{form_entry.pk}/"
+        url = f"{live_server.url}/en/admin/unfold_fobi/formentryproxy/edit/{form_entry.pk}/"
         page.goto(url)
 
         tab_items = page.locator("#tabs-items li")
@@ -71,7 +71,7 @@ class TestEditTabLegends:
     @pytest.fixture()
     def edit_page(self, admin_login, live_server, form_entry):
         page = admin_login
-        url = f"{live_server.url}/admin/unfold_fobi/formentryproxy/edit/{form_entry.pk}/"
+        url = f"{live_server.url}/en/admin/unfold_fobi/formentryproxy/edit/{form_entry.pk}/"
         page.goto(url)
         return page
 
@@ -104,7 +104,7 @@ class TestNoSaveOrderingControl:
 
     def test_no_save_ordering_button(self, admin_login, live_server, form_entry):
         page = admin_login
-        url = f"{live_server.url}/admin/unfold_fobi/formentryproxy/edit/{form_entry.pk}/"
+        url = f"{live_server.url}/en/admin/unfold_fobi/formentryproxy/edit/{form_entry.pk}/"
         page.goto(url)
 
         content = page.content().lower()
