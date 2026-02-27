@@ -7,7 +7,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ("fobi", "0016_alter_formelement_id_alter_formelemententry_id_and_more"),
+        ("fobi", "0015_auto_20180130_0013"),
     ]
 
     operations = [
