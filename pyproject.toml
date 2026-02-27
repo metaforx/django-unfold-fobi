@@ -70,7 +70,7 @@ ruff = ">=0.4"
 [tool.pytest.ini_options]
 addopts = "--ds=testapp.settings -q"
 testpaths = ["tests"]
-pythonpath = ["src", "tests/server"]
+pythonpath = ["src", "tests/server", "tests"]
 django_find_project = false
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
