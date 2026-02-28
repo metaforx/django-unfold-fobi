@@ -64,19 +64,19 @@ class FormElementEntryInline(TabularInline):
             kwargs={"form_element_entry_id": obj.pk},
         ) + "?_popup=1"
         return format_html(
-            '<a href="{}" onclick="window.open(this.href,\'fobi_popup\','
-            '\'width=800,height=600,scrollbars=yes\');return false;"'
-            ' class="inline-flex items-center gap-1 text-primary-600 '
-            'hover:text-primary-700 dark:text-primary-500 dark:hover:text-primary-400">'
+            '<a href="{}" id="change_fobi_element_{}" data-popup="yes"'
+            ' class="related-widget-wrapper-link inline-flex items-center gap-1'
+            ' text-primary-600 hover:text-primary-700'
+            ' dark:text-primary-500 dark:hover:text-primary-400">'
             '<span class="material-symbols-outlined text-base">edit</span>{}</a>'
             ' &nbsp; '
-            '<a href="{}" onclick="window.open(this.href,\'fobi_popup\','
-            '\'width=800,height=600,scrollbars=yes\');return false;"'
-            ' class="inline-flex items-center gap-1 text-red-600 '
-            'hover:text-red-700 dark:text-red-500 dark:hover:text-red-400">'
+            '<a href="{}" id="delete_fobi_element_{}" data-popup="yes"'
+            ' class="related-widget-wrapper-link inline-flex items-center gap-1'
+            ' text-red-600 hover:text-red-700'
+            ' dark:text-red-500 dark:hover:text-red-400">'
             '<span class="material-symbols-outlined text-base">delete</span>{}</a>',
-            edit_url, _("Edit"),
-            delete_url, _("Delete"),
+            edit_url, obj.pk, _("Edit"),
+            delete_url, obj.pk, _("Delete"),
         )
 
 
@@ -123,24 +123,24 @@ class FormHandlerEntryInline(TabularInline):
                 kwargs={"form_handler_entry_id": obj.pk},
             ) + "?_popup=1"
             parts.append(format_html(
-                '<a href="{}" onclick="window.open(this.href,\'fobi_popup\','
-                '\'width=800,height=600,scrollbars=yes\');return false;"'
-                ' class="inline-flex items-center gap-1 text-primary-600 '
-                'hover:text-primary-700 dark:text-primary-500 dark:hover:text-primary-400">'
+                '<a href="{}" id="change_fobi_handler_{}" data-popup="yes"'
+                ' class="related-widget-wrapper-link inline-flex items-center gap-1'
+                ' text-primary-600 hover:text-primary-700'
+                ' dark:text-primary-500 dark:hover:text-primary-400">'
                 '<span class="material-symbols-outlined text-base">edit</span>{}</a>',
-                edit_url, _("Edit"),
+                edit_url, obj.pk, _("Edit"),
             ))
         delete_url = reverse(
             "fobi.delete_form_handler_entry",
             kwargs={"form_handler_entry_id": obj.pk},
         ) + "?_popup=1"
         parts.append(format_html(
-            '<a href="{}" onclick="window.open(this.href,\'fobi_popup\','
-            '\'width=800,height=600,scrollbars=yes\');return false;"'
-            ' class="inline-flex items-center gap-1 text-red-600 '
-            'hover:text-red-700 dark:text-red-500 dark:hover:text-red-400">'
+            '<a href="{}" id="delete_fobi_handler_{}" data-popup="yes"'
+            ' class="related-widget-wrapper-link inline-flex items-center gap-1'
+            ' text-red-600 hover:text-red-700'
+            ' dark:text-red-500 dark:hover:text-red-400">'
             '<span class="material-symbols-outlined text-base">delete</span>{}</a>',
-            delete_url, _("Delete"),
+            delete_url, obj.pk, _("Delete"),
         ))
         # Plugin custom actions (e.g. "View entries" for db_store)
         request = getattr(self, "_request", None)

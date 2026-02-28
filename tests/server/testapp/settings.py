@@ -10,6 +10,7 @@ from pathlib import Path
 
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
+from unfold_modal.utils import get_modal_styles, get_modal_scripts
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -24,6 +25,7 @@ SITE_ID = 1
 INSTALLED_APPS = [
     # Unfold must be before django.contrib.admin
     "unfold",
+    "unfold_modal",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -157,4 +159,10 @@ UNFOLD = {
             },
         ],
     },
+    "STYLES": [
+        *get_modal_styles(),
+    ],
+    "SCRIPTS": [
+        *get_modal_scripts(),
+    ],
 }

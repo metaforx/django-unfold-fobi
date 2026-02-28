@@ -57,6 +57,7 @@ django-unfold = ">=0.81.0"
 django-fobi = {version = ">=0.19", extras = ["simple"]}
 django-crispy-forms = ">=2.0"
 djangorestframework = ">=3.14"
+django-unfold-modal = "^0.1.0"
 
 [tool.poetry.group.test.dependencies]
 pytest = ">=8.0"

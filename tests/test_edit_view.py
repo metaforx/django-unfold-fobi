@@ -1,4 +1,4 @@
-"""T10/T10a/T10b/T10c/T10d/T10e – Native change view tests.
+"""T10/T10a/T10b/T10c/T10d/T10e/T10f – Native change view tests.
 
 Verifies:
 - Change route resolves and is permission-protected.
@@ -14,6 +14,7 @@ Verifies:
 - T10c: Multi-element drag-drop reorder persists after save.
 - T10d: Drag handle HTML contract (CSS classes, Alpine directives, icon).
 - T10e: Popup-mode links (_popup=1) and popup response on save.
+- T10f: Unfold modal trigger contract (data-popup, related-widget-wrapper-link).
 """
 
 import pytest
@@ -479,7 +480,7 @@ class TestSortableInline:
 
 
 class TestPopupModeLinks:
-    """T10e: edit/add/delete links must include _popup=1 and window.open onclick."""
+    """T10e/T10f: popup links must have _popup=1 and django admin trigger attributes."""
 
     @pytest.fixture()
     def change_html(self, admin_client, form_entry):
@@ -525,9 +526,47 @@ class TestPopupModeLinks:
         )
         assert f"{delete_url}?_popup=1" in change_html
 
-    def test_popup_links_open_via_window_open(self, change_html):
-        """All popup links must use window.open to prevent dead-end same-tab navigation."""
-        assert "window.open(this.href" in change_html
+
+class TestUnfoldModalTriggerContract:
+    """T10f: popup links must follow Django admin popup contract for unfold-modal."""
+
+    @pytest.fixture()
+    def change_html(self, admin_client, form_entry):
+        url = get_admin_edit_url(form_entry.pk)
+        response = admin_client.get(url)
+        return response.content.decode()
+
+    def test_element_edit_has_data_popup(self, change_html, form_entry):
+        """Element edit link must have data-popup='yes' for event delegation."""
+        element = form_entry.formelemententry_set.first()
+        assert f'id="change_fobi_element_{element.pk}" data-popup="yes"' in change_html
+
+    def test_element_delete_has_data_popup(self, change_html, form_entry):
+        """Element delete link must have data-popup='yes'."""
+        element = form_entry.formelemententry_set.first()
+        assert f'id="delete_fobi_element_{element.pk}" data-popup="yes"' in change_html
+
+    def test_element_edit_has_wrapper_link_class(self, change_html):
+        """Edit links must include related-widget-wrapper-link CSS class."""
+        assert "related-widget-wrapper-link" in change_html
+
+    def test_add_element_has_data_popup(self, change_html):
+        """Add element dropdown links must have data-popup='yes'."""
+        assert 'id="add_fobi_element_text"' in change_html
+        assert 'data-popup="yes"' in change_html
+
+    def test_handler_delete_has_data_popup(self, change_html, form_entry):
+        """Handler delete link must have data-popup='yes'."""
+        from fobi.models import FormHandlerEntry
+
+        handler = FormHandlerEntry.objects.filter(
+            form_entry=form_entry, plugin_uid="db_store"
+        ).first()
+        assert f'id="delete_fobi_handler_{handler.pk}" data-popup="yes"' in change_html
+
+    def test_no_inline_window_open(self, change_html):
+        """Links must NOT use inline window.open — Unfold JS handles popup opening."""
+        assert "window.open(this.href" not in change_html
 
 
 class TestPopupResponse:
