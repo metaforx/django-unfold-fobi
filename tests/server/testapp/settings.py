@@ -125,6 +125,9 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+# Allow same-origin iframe embedding (required for django-unfold-modal)
+X_FRAME_OPTIONS = "SAMEORIGIN"
+
 # --- Fobi ---
 FOBI_THEME = "unfold"
 FOBI_DEFAULT_THEME = "unfold"

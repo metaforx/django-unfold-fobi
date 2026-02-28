@@ -1,4 +1,4 @@
-"""T10/T10a/T10b/T10c/T10d/T10e/T10f – Native change view tests.
+"""T10/T10a/T10b/T10c/T10d/T10e/T10f/T10g – Native change view tests.
 
 Verifies:
 - Change route resolves and is permission-protected.
@@ -15,6 +15,7 @@ Verifies:
 - T10d: Drag handle HTML contract (CSS classes, Alpine directives, icon).
 - T10e: Popup-mode links (_popup=1) and popup response on save.
 - T10f: Unfold modal trigger contract (data-popup, related-widget-wrapper-link).
+- T10g: Iframe X-Frame-Options SAMEORIGIN for popup views.
 """
 
 import pytest
@@ -619,3 +620,84 @@ class TestPopupResponse:
         post_data = self._text_plugin_post_data(element)
         resp = admin_client.post(edit_url, data=post_data)
         assert resp.status_code == 302
+
+
+class TestIframeXFrameOptions:
+    """T10g: popup view responses must allow same-origin iframe embedding."""
+
+    def test_settings_has_sameorigin(self):
+        """Test project must set X_FRAME_OPTIONS = SAMEORIGIN."""
+        from django.conf import settings
+
+        assert getattr(settings, "X_FRAME_OPTIONS", None) == "SAMEORIGIN"
+
+    def test_element_edit_popup_has_sameorigin_header(
+        self, admin_client, form_entry
+    ):
+        """Element edit GET with _popup=1 must return X-Frame-Options: SAMEORIGIN."""
+        element = form_entry.formelemententry_set.first()
+        edit_url = reverse(
+            "fobi.edit_form_element_entry",
+            kwargs={"form_element_entry_id": element.pk},
+        )
+        resp = admin_client.get(edit_url + "?_popup=1")
+        assert resp.status_code == 200
+        assert resp["X-Frame-Options"] == "SAMEORIGIN"
+
+    def test_element_edit_non_popup_inherits_global(
+        self, admin_client, form_entry
+    ):
+        """Non-popup requests use the global X_FRAME_OPTIONS setting."""
+        element = form_entry.formelemententry_set.first()
+        edit_url = reverse(
+            "fobi.edit_form_element_entry",
+            kwargs={"form_element_entry_id": element.pk},
+        )
+        resp = admin_client.get(edit_url)
+        # Middleware sets whatever settings.X_FRAME_OPTIONS is (SAMEORIGIN)
+        assert resp["X-Frame-Options"] == "SAMEORIGIN"
+
+    def test_add_element_popup_has_sameorigin_header(
+        self, admin_client, form_entry
+    ):
+        """Add element GET with _popup=1 must return X-Frame-Options: SAMEORIGIN."""
+        add_url = reverse(
+            "fobi.add_form_element_entry",
+            kwargs={"form_entry_id": form_entry.pk, "form_element_plugin_uid": "text"},
+        )
+        resp = admin_client.get(add_url + "?_popup=1")
+        # May redirect (no-form plugin) or render form — either way, header must be set
+        if resp.status_code == 200:
+            assert resp["X-Frame-Options"] == "SAMEORIGIN"
+        else:
+            # Popup response from intercepted redirect
+            assert resp.status_code == 200 or resp["X-Frame-Options"] == "SAMEORIGIN"
+
+    def test_popup_response_after_save_has_sameorigin_header(
+        self, admin_client, form_entry
+    ):
+        """Intercepted popup response (POST save) must also have SAMEORIGIN."""
+        import json as _json
+
+        element = form_entry.formelemententry_set.first()
+        edit_url = reverse(
+            "fobi.edit_form_element_entry",
+            kwargs={"form_element_entry_id": element.pk},
+        )
+        # Prime session with GET
+        admin_client.get(edit_url + "?_popup=1")
+        # Build post data from plugin_data
+        data = _json.loads(element.plugin_data)
+        post_data = {
+            "name": data.get("name", "full_name"),
+            "label": data.get("label", "Full Name"),
+            "max_length": data.get("max_length", "255"),
+            "required": "1" if data.get("required") else "",
+            "placeholder": data.get("placeholder", ""),
+            "help_text": data.get("help_text", ""),
+            "initial": data.get("initial", ""),
+            "_popup": "1",
+        }
+        resp = admin_client.post(edit_url + "?_popup=1", data=post_data)
+        assert resp.status_code == 200
+        assert resp["X-Frame-Options"] == "SAMEORIGIN"

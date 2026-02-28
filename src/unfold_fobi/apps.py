@@ -152,7 +152,9 @@ class UnfoldFobiConfig(AppConfig):
             else:
                 request.session.pop(SESSION_KEY, None)
             html = render_to_string(POPUP_TEMPLATE)
-            return HttpResponse(html)
+            response = HttpResponse(html)
+            response["X-Frame-Options"] = "SAMEORIGIN"
+            return response
 
         def _is_success_redirect(response):
             """Return True only for fobi success redirects (not login/error)."""
@@ -189,6 +191,10 @@ class UnfoldFobiConfig(AppConfig):
                 )
                 if intercept:
                     return _popup_http_response(request)
+                # T10g: Allow iframe embedding for popup views.
+                # Set SAMEORIGIN so the middleware won't override with DENY.
+                if _is_popup(request):
+                    response["X-Frame-Options"] = "SAMEORIGIN"
                 return response
             return wrapped
 
