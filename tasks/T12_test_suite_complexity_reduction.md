@@ -28,6 +28,17 @@ Suggested Skills
 Phase 0 (Mandatory): Code Organization Before Test Cleanup
 - Create analysis note section for code organization in:
   - `reviews/development-integrated__T12-analysis.md`.
+- Re-check necessity of remaining modules/functions after T11 cleanup, explicitly including:
+  - `context_processors.py` (`admin_site`, title mappings, and any Unfold/Fobi context bridge),
+  - `views.py`, `api/views.py`,
+  - `forms.py`,
+  - `services.py`,
+  - `admin.py` and template override hooks.
+- For each file/function, classify:
+  - `KEEP`,
+  - `SIMPLIFY`,
+  - `REMOVE`,
+  with concrete reason tied to current behavior.
 - Define and apply module boundaries:
   - keep admin/web views in `views.py`,
   - move DRF endpoints to `api/views.py` (and `api/urls.py` as needed),
