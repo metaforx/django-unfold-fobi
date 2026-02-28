@@ -3,6 +3,7 @@
 Goal
 - Organize code structure first (clear separation of API and non-API layers).
 - Then reduce test-suite complexity after structure is stabilized.
+- Include Ruff-based code cleanup as part of the implementation quality gate.
 - Keep strong, high-value integration coverage while removing redundant assertions.
 
 Prerequisite
@@ -48,6 +49,9 @@ Phase 2: Simplification Implementation
 - Prefer fewer broader integration tests over many narrow duplicates.
 - Keep assertions focused on user-visible outcomes and integration contracts.
 - Remove brittle checks that do not protect meaningful behavior.
+- Run Ruff cleanup on changed code paths:
+  - apply safe autofixes where appropriate,
+  - resolve remaining lint issues explicitly.
 
 Phase 3: Coverage Validation
 - Validate retained tests still protect core paths.
@@ -60,17 +64,22 @@ Deliverables
 - `reviews/development-integrated__T12-analysis.md`.
 - Code organization changes separating API and non-API view layers.
 - Simplified test suite with explicit mapping of removed/merged tests.
+- Ruff cleanup updates for touched files/modules.
 - Short before/after metrics:
   - test count,
   - runtime impact,
-  - critical-flow coverage map.
+  - critical-flow coverage map,
+  - Ruff issue count delta (before/after for scoped files).
 
 Acceptance Criteria
 - Redundant tests are reduced with documented rationale.
 - Critical create/submit/playwright integration coverage remains intact.
+- Ruff checks pass for project scope used in this task.
 - `poetry run pytest -q` passes.
 - Playwright coverage for critical user flow passes.
 
 Tests to run
+- `poetry run ruff check src tests`
+- `poetry run ruff format --check src tests`
 - `poetry run pytest -q`
 - `npx playwright test` (or pytest-playwright equivalent for critical scenarios).
