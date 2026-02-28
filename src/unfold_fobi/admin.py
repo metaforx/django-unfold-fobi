@@ -21,7 +21,7 @@ from .services import clone_form_entry
 
 
 class FormElementEntryInline(TabularInline):
-    """Inline showing form elements with editable position and action links."""
+    """Inline showing form elements with sortable drag-and-drop and action links."""
 
     model = FormElementEntry
     fields = ("position", "plugin_uid", "plugin_data_preview", "element_actions")
@@ -30,6 +30,9 @@ class FormElementEntryInline(TabularInline):
     extra = 0
     verbose_name = _("Form element")
     verbose_name_plural = _("Form elements")
+    tab = True
+    ordering_field = "position"
+    hide_ordering_field = True
 
     def has_add_permission(self, request, obj=None):
         return False
@@ -82,6 +85,7 @@ class FormHandlerEntryInline(TabularInline):
     extra = 0
     verbose_name = _("Form handler")
     verbose_name_plural = _("Form handlers")
+    tab = True
 
     def has_add_permission(self, request, obj=None):
         return False

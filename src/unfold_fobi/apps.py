@@ -35,7 +35,80 @@ def patch_form_init(form_class, apply_fn):
 class UnfoldFobiConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'unfold_fobi'
-    
+
+    @staticmethod
+    def _patch_fobi_owner_filtering():
+        """Remove owner filtering from fobi edit/delete views for staff users.
+
+        Fobi hardcodes two layers of owner checks:
+        1. ``_get_queryset`` filters by ``form_entry__user__pk == request.user.pk``
+        2. Permission classes check ``obj.form_entry.user == request.user``
+
+        Both cause 404 / PermissionDenied when an admin who is not the form's
+        original creator tries to edit or delete elements/handlers.  This patch
+        relaxes both checks for ``is_staff`` users.
+        """
+        # --- Layer 1: queryset filtering ---
+        try:
+            from fobi.views.class_based import (
+                EditFormElementEntryView,
+                EditFormHandlerEntryView,
+                AbstractDeletePluginEntryView,
+            )
+        except ImportError:
+            return
+
+        def _make_staff_queryset(original):
+            def _get_queryset(self, request):
+                qs = original(self, request)
+                if request.user.is_staff:
+                    return qs.model._default_manager.select_related(
+                        "form_entry", "form_entry__user"
+                    )
+                return qs
+            return _get_queryset
+
+        for view_cls in (
+            EditFormElementEntryView,
+            EditFormHandlerEntryView,
+            AbstractDeletePluginEntryView,
+        ):
+            if not getattr(view_cls._get_queryset, "_unfold_patched", False):
+                view_cls._get_queryset = _make_staff_queryset(
+                    view_cls._get_queryset
+                )
+                view_cls._get_queryset._unfold_patched = True
+
+        # --- Layer 2: permission classes ---
+        try:
+            from fobi.permissions.default import (
+                EditFormElementEntryPermission,
+                DeleteFormElementEntryPermission,
+                EditFormHandlerEntryPermission,
+                DeleteFormHandlerEntryPermission,
+            )
+        except ImportError:
+            return
+
+        def _make_staff_object_perm(original):
+            def has_object_permission(self, request, view, obj):
+                if request.user.is_staff:
+                    return True
+                return original(self, request, view, obj)
+            return has_object_permission
+
+        for perm_cls in (
+            EditFormElementEntryPermission,
+            DeleteFormElementEntryPermission,
+            EditFormHandlerEntryPermission,
+            DeleteFormHandlerEntryPermission,
+        ):
+            method = perm_cls.has_object_permission
+            if not getattr(method, "_unfold_patched", False):
+                patched = _make_staff_object_perm(method)
+                patched._unfold_patched = True
+                perm_cls.has_object_permission = patched
+
     def ready(self):
         """
         Apply Unfold widgets to fobi forms when the app is ready.
@@ -304,3 +377,9 @@ class UnfoldFobiConfig(AppConfig):
                 )
         except (ImportError, AttributeError):
             pass
+
+        # T10b: Patch fobi edit/delete views to allow staff users to access
+        # entries regardless of form ownership. Fobi hardcodes
+        # `form_entry__user__pk=request.user.pk` in _get_queryset, causing
+        # 404 for admin users who are not the form's original creator.
+        self._patch_fobi_owner_filtering()

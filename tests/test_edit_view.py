@@ -1,4 +1,4 @@
-"""T10/T10a – Native change view tests.
+"""T10/T10a/T10b – Native change view tests.
 
 Verifies:
 - Change route resolves and is permission-protected.
@@ -8,10 +8,16 @@ Verifies:
 - T10a: "Add element" and "Add handler" dropdowns present.
 - T10a: Element position is editable and persisted on save.
 - T10a: Single-use handler plugins are hidden from "Add handler" dropdown.
+- T10b: Element edit works for non-owner admin (no 404).
+- T10b: Inline tabs render for elements and handlers.
+- T10b: Sortable inline attributes present (ordering_field, x-sort).
 """
 
 import pytest
+from django.contrib.auth.models import User
+from django.test import Client
 from django.urls import reverse
+
 from helpers import get_admin_edit_url
 
 
@@ -242,3 +248,105 @@ class TestElementPositionEditing:
 
         element.refresh_from_db()
         assert element.position == 5
+
+
+class TestElementEditNonOwner:
+    """T10b: element edit must not 404 for admin users who are not the form owner."""
+
+    @pytest.fixture()
+    def other_admin(self, db):
+        return User.objects.create_superuser(
+            username="other_admin", email="other@test.local", password="pass"
+        )
+
+    @pytest.fixture()
+    def other_admin_client(self, other_admin):
+        client = Client()
+        client.login(username="other_admin", password="pass")
+        return client
+
+    def test_element_edit_accessible_by_non_owner(
+        self, other_admin_client, form_entry
+    ):
+        """A staff user who did not create the form must be able to edit elements."""
+        element = form_entry.formelemententry_set.first()
+        edit_url = reverse(
+            "fobi.edit_form_element_entry",
+            kwargs={"form_element_entry_id": element.pk},
+        )
+        response = other_admin_client.get(edit_url)
+        assert response.status_code == 200
+
+    def test_element_delete_accessible_by_non_owner(
+        self, other_admin_client, form_entry
+    ):
+        """A staff user who did not create the form must be able to delete elements."""
+        element = form_entry.formelemententry_set.first()
+        delete_url = reverse(
+            "fobi.delete_form_element_entry",
+            kwargs={"form_element_entry_id": element.pk},
+        )
+        response = other_admin_client.get(delete_url)
+        # delete view redirects (302) after deletion, or shows confirmation (200)
+        assert response.status_code in (200, 302)
+
+    def test_handler_delete_accessible_by_non_owner(
+        self, other_admin_client, form_entry
+    ):
+        """A staff user who did not create the form must be able to delete handlers."""
+        from fobi.models import FormHandlerEntry
+
+        handler = FormHandlerEntry.objects.filter(
+            form_entry=form_entry, plugin_uid="db_store"
+        ).first()
+        delete_url = reverse(
+            "fobi.delete_form_handler_entry",
+            kwargs={"form_handler_entry_id": handler.pk},
+        )
+        response = other_admin_client.get(delete_url)
+        assert response.status_code in (200, 302)
+
+
+class TestInlineTabs:
+    """T10b: inlines must render as tabs (Unfold native inline tabs)."""
+
+    @pytest.fixture()
+    def change_html(self, admin_client, form_entry):
+        url = get_admin_edit_url(form_entry.pk)
+        response = admin_client.get(url)
+        return response.content.decode()
+
+    def test_element_inline_tab_present(self, change_html):
+        """Tab navigation must include a tab for form elements."""
+        # Unfold renders tab buttons with the formset prefix as slug
+        assert "formelemententry_set" in change_html
+
+    def test_handler_inline_tab_present(self, change_html):
+        """Tab navigation must include a tab for form handlers."""
+        assert "formhandlerentry_set" in change_html
+
+    def test_inline_uses_x_show_for_tabs(self, change_html):
+        """Inlines must use x-show for tab switching (Unfold native pattern)."""
+        assert "x-show" in change_html
+
+
+class TestSortableInline:
+    """T10b: element inline must use Unfold sortable (drag-and-drop) pattern."""
+
+    @pytest.fixture()
+    def change_html(self, admin_client, form_entry):
+        url = get_admin_edit_url(form_entry.pk)
+        response = admin_client.get(url)
+        return response.content.decode()
+
+    def test_ordering_field_data_attribute(self, change_html):
+        """The element inline table must have data-ordering-field='position'."""
+        assert 'data-ordering-field="position"' in change_html
+
+    def test_sort_directive_present(self, change_html):
+        """The element inline must have Alpine.js x-sort directive."""
+        assert "x-sort" in change_html
+
+    def test_drag_handle_icon(self, change_html):
+        """Drag handle icon must be present for existing elements."""
+        assert "drag_indicator" in change_html
