@@ -63,6 +63,9 @@ Phase 1 (Mandatory): Test Inventory and Value Classification
 
 Phase 2: Simplification Implementation
 - Execute thorough code cleanup based on Phase 0 decisions before test reduction work.
+- In `admin.py`, expose `slug` as a read-only field in native FormEntryProxy admin views:
+  - display-only in admin form,
+  - keep auto-generation behavior unchanged (no manual slug editing).
 - Consolidate duplicate tests with overlapping assertions.
 - Prefer fewer broader integration tests over many narrow duplicates.
 - Keep assertions focused on user-visible outcomes and integration contracts.
@@ -92,6 +95,7 @@ Deliverables
 
 Acceptance Criteria
 - Thorough cleanup is completed for scoped `src/unfold_fobi` modules with documented rationale.
+- `slug` is visible as read-only in FormEntryProxy admin form and remains auto-generated.
 - Redundant tests are reduced with documented rationale.
 - Critical create/submit/playwright integration coverage remains intact.
 - Ruff checks pass for project scope used in this task.
