@@ -1,4 +1,5 @@
 """WSGI config for the unfold_fobi test server."""
+
 import os
 import sys
 

@@ -9,6 +9,7 @@ Usage:
   python manage.py attach_db_store_handler
   python manage.py attach_db_store_handler --form-entry-id=4
 """
+
 from django.core.management.base import BaseCommand
 from fobi.models import FormEntry, FormHandlerEntry
 
@@ -16,7 +17,9 @@ DB_STORE_UID = "db_store"
 
 
 class Command(BaseCommand):
-    help = "Attach the DB store handler to form entries so REST API submissions are saved."
+    help = (
+        "Attach the DB store handler to form entries so REST API submissions are saved."
+    )
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -33,7 +36,9 @@ class Command(BaseCommand):
                 form_entries = [FormEntry.objects.get(pk=form_entry_id)]
             except FormEntry.DoesNotExist:
                 self.stderr.write(
-                    self.style.ERROR(f"FormEntry with pk={form_entry_id} does not exist.")
+                    self.style.ERROR(
+                        f"FormEntry with pk={form_entry_id} does not exist."
+                    )
                 )
                 return
         else:
@@ -54,9 +59,7 @@ class Command(BaseCommand):
                 )
 
         if added == 0:
-            self.stdout.write(
-                "No forms were missing the handler; nothing to do."
-            )
+            self.stdout.write("No forms were missing the handler; nothing to do.")
         else:
             self.stdout.write(
                 self.style.SUCCESS(

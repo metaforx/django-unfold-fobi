@@ -1,4 +1,5 @@
 """Shared pytest fixtures for unfold_fobi tests."""
+
 import json
 import sys
 
@@ -77,9 +78,9 @@ def rest_submitted_form_data(admin_client, form_entry):
     )
     assert response.status_code == 200
 
-    saved_entry = SavedFormDataEntry.objects.filter(
-        form_entry=form_entry
-    ).order_by("-pk").first()
+    saved_entry = (
+        SavedFormDataEntry.objects.filter(form_entry=form_entry).order_by("-pk").first()
+    )
     assert saved_entry is not None
 
     return {

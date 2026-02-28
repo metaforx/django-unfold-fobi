@@ -1,7 +1,6 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 
-
 FOBI_TITLES = {
     "fobi.dashboard": _("Forms"),
     "fobi.create_form_entry": _("Create form"),

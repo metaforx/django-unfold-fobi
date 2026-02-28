@@ -5,6 +5,7 @@ and view strings used by unfold_fobi, that the makemessages extraction
 workflow discovers all expected strings, and that German translations are
 present and activated correctly.
 """
+
 import subprocess
 
 import pytest
@@ -96,7 +97,6 @@ class TestContextProcessorBrandingWrapped:
     """The branding fallback in context_processors must be translatable."""
 
     def test_default_brand_is_lazy(self):
-        from django.contrib import admin
 
         from unfold_fobi.context_processors import _
 
@@ -147,7 +147,6 @@ class TestMakemessagesExtraction:
     ]
 
     def test_po_file_contains_expected_strings(self):
-        import os
         from pathlib import Path
 
         po_path = Path(__file__).resolve().parent.parent / (
@@ -174,7 +173,6 @@ class TestGermanPOFilePresent:
 
     def test_de_mo_file_compiled(self):
         """Compile messages if needed and verify the .mo file is produced."""
-        import subprocess
         from pathlib import Path
 
         mo_path = Path(__file__).resolve().parent.parent / (
@@ -209,12 +207,12 @@ class TestGermanPOFilePresent:
         lines = content.splitlines()
         for i, line in enumerate(lines):
             if line.startswith("msgid ") and line != 'msgid ""':
-                msgid_val = line[len("msgid "):]
+                msgid_val = line[len("msgid ") :]
                 # Check the next line for msgstr
                 if i + 1 < len(lines):
                     msgstr_line = lines[i + 1]
                     if msgstr_line.startswith("msgstr "):
-                        msgstr_val = msgstr_line[len("msgstr "):]
+                        msgstr_val = msgstr_line[len("msgstr ") :]
                         if msgstr_val == '""':
                             pytest.fail(
                                 f"German PO has empty translation for {msgid_val}"
@@ -224,57 +222,21 @@ class TestGermanPOFilePresent:
 class TestGermanTranslationActivation:
     """T05a – verify that German translations activate correctly at runtime."""
 
-    def test_german_translation_for_basic_information(self):
+    @pytest.mark.parametrize(
+        "english,german",
+        [
+            ("Basic information", "Allgemeine Informationen"),
+            ("Forms (builder)", "Formulare (Baukasten)"),
+            ("Form not found", "Formular nicht gefunden"),
+            ("Create form", "Formular erstellen"),
+            ("Django administration", "Django-Verwaltung"),
+        ],
+    )
+    def test_german_translation_activates(self, english, german):
         from django.utils import translation
 
         with translation.override("de"):
             from django.utils.translation import gettext
 
-            result = gettext("Basic information")
-            assert result == "Allgemeine Informationen", (
-                f"Expected 'Allgemeine Informationen', got '{result}'"
-            )
-
-    def test_german_translation_for_forms_builder(self):
-        from django.utils import translation
-
-        with translation.override("de"):
-            from django.utils.translation import gettext
-
-            result = gettext("Forms (builder)")
-            assert result == "Formulare (Baukasten)", (
-                f"Expected 'Formulare (Baukasten)', got '{result}'"
-            )
-
-    def test_german_translation_for_form_not_found(self):
-        from django.utils import translation
-
-        with translation.override("de"):
-            from django.utils.translation import gettext
-
-            result = gettext("Form not found")
-            assert result == "Formular nicht gefunden", (
-                f"Expected 'Formular nicht gefunden', got '{result}'"
-            )
-
-    def test_german_translation_for_create_form(self):
-        from django.utils import translation
-
-        with translation.override("de"):
-            from django.utils.translation import gettext
-
-            result = gettext("Create form")
-            assert result == "Formular erstellen", (
-                f"Expected 'Formular erstellen', got '{result}'"
-            )
-
-    def test_german_translation_for_django_administration(self):
-        from django.utils import translation
-
-        with translation.override("de"):
-            from django.utils.translation import gettext
-
-            result = gettext("Django administration")
-            assert result == "Django-Verwaltung", (
-                f"Expected 'Django-Verwaltung', got '{result}'"
-            )
+            result = gettext(english)
+            assert result == german, f"Expected '{german}', got '{result}'"

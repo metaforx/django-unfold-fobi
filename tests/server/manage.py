@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 """Django's command-line utility for the unfold_fobi test server."""
+
 import os
 import sys
 from pathlib import Path

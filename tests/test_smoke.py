@@ -7,10 +7,9 @@ Verifies that:
 - Admin views respond for authenticated users
 - Seed fixtures create valid data
 """
-import pytest
+
 from django.apps import apps
-from django.test import RequestFactory
-from django.urls import NoReverseMatch, reverse
+from django.urls import reverse
 
 
 class TestDjangoSetup:
@@ -64,9 +63,7 @@ class TestAdminViews:
 
     def test_change_view_accessible(self, admin_client, form_entry):
         """T10: native change view renders 200."""
-        url = reverse(
-            "admin:unfold_fobi_formentryproxy_change", args=[form_entry.pk]
-        )
+        url = reverse("admin:unfold_fobi_formentryproxy_change", args=[form_entry.pk])
         response = admin_client.get(url)
         assert response.status_code == 200
 

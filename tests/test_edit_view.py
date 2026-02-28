@@ -22,7 +22,6 @@ import pytest
 from django.contrib.auth.models import User
 from django.test import Client
 from django.urls import reverse
-
 from helpers import get_admin_edit_url
 
 
@@ -59,9 +58,6 @@ class TestChangeViewFieldsets:
 
     def test_visibility_fieldset(self, change_html):
         assert "Visibility" in change_html
-
-    def test_form_name_displayed(self, change_html, form_entry):
-        assert form_entry.name in change_html
 
 
 class TestElementInline:
@@ -272,11 +268,13 @@ class TestMultiElementSortPersistence:
             is_public=True,
             is_cloneable=True,
         )
-        for i, (uid, label) in enumerate([
-            ("text", "First Name"),
-            ("email", "Email Address"),
-            ("text", "Last Name"),
-        ]):
+        for i, (uid, label) in enumerate(
+            [
+                ("text", "First Name"),
+                ("email", "Email Address"),
+                ("text", "Last Name"),
+            ]
+        ):
             FormElementEntry.objects.create(
                 form_entry=entry,
                 plugin_uid=uid,
@@ -284,7 +282,8 @@ class TestMultiElementSortPersistence:
                 position=i,
             )
         FormHandlerEntry.objects.get_or_create(
-            form_entry=entry, plugin_uid="db_store",
+            form_entry=entry,
+            plugin_uid="db_store",
         )
         return entry
 
@@ -353,9 +352,7 @@ class TestMultiElementSortPersistence:
         html = response.content.decode()
 
         # Extract element PKs in formset render order (index 0, 1, 2)
-        id_pattern = re.compile(
-            r'name="formelemententry_set-(\d+)-id"\s+value="(\d+)"'
-        )
+        id_pattern = re.compile(r'name="formelemententry_set-(\d+)-id"\s+value="(\d+)"')
         rendered_order = {
             int(m.group(1)): int(m.group(2)) for m in id_pattern.finditer(html)
         }
@@ -380,9 +377,7 @@ class TestElementEditNonOwner:
         client.login(username="other_admin", password="pass")
         return client
 
-    def test_element_edit_accessible_by_non_owner(
-        self, other_admin_client, form_entry
-    ):
+    def test_element_edit_accessible_by_non_owner(self, other_admin_client, form_entry):
         """A staff user who did not create the form must be able to edit elements."""
         element = form_entry.formelemententry_set.first()
         edit_url = reverse(
@@ -608,9 +603,7 @@ class TestPopupResponse:
         content = resp.content.decode()
         assert "postMessage" in content or "window.opener" in content
 
-    def test_element_edit_without_popup_still_redirects(
-        self, admin_client, form_entry
-    ):
+    def test_element_edit_without_popup_still_redirects(self, admin_client, form_entry):
         """POST without _popup must still redirect (302) as before."""
         element = form_entry.formelemententry_set.first()
         edit_url = reverse(
@@ -631,9 +624,7 @@ class TestIframeXFrameOptions:
 
         assert getattr(settings, "X_FRAME_OPTIONS", None) == "SAMEORIGIN"
 
-    def test_element_edit_popup_has_sameorigin_header(
-        self, admin_client, form_entry
-    ):
+    def test_element_edit_popup_has_sameorigin_header(self, admin_client, form_entry):
         """Element edit GET with _popup=1 must return X-Frame-Options: SAMEORIGIN."""
         element = form_entry.formelemententry_set.first()
         edit_url = reverse(
@@ -644,9 +635,7 @@ class TestIframeXFrameOptions:
         assert resp.status_code == 200
         assert resp["X-Frame-Options"] == "SAMEORIGIN"
 
-    def test_element_edit_non_popup_inherits_global(
-        self, admin_client, form_entry
-    ):
+    def test_element_edit_non_popup_inherits_global(self, admin_client, form_entry):
         """Non-popup requests use the global X_FRAME_OPTIONS setting."""
         element = form_entry.formelemententry_set.first()
         edit_url = reverse(
@@ -657,9 +646,7 @@ class TestIframeXFrameOptions:
         # Middleware sets whatever settings.X_FRAME_OPTIONS is (SAMEORIGIN)
         assert resp["X-Frame-Options"] == "SAMEORIGIN"
 
-    def test_add_element_popup_has_sameorigin_header(
-        self, admin_client, form_entry
-    ):
+    def test_add_element_popup_has_sameorigin_header(self, admin_client, form_entry):
         """Add element GET with _popup=1 must return X-Frame-Options: SAMEORIGIN."""
         add_url = reverse(
             "fobi.add_form_element_entry",

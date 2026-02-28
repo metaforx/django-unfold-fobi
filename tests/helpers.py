@@ -1,4 +1,5 @@
 """Reusable assertion helpers for unfold_fobi tests (T03+)."""
+
 from django.urls import reverse
 
 
@@ -24,8 +25,7 @@ def assert_fieldsets_contain_group(fieldsets, group_name):
     """
     labels = [str(label) for label, _opts in fieldsets]
     assert group_name in labels, (
-        f"Expected fieldset group '{group_name}' not found. "
-        f"Available groups: {labels}"
+        f"Expected fieldset group '{group_name}' not found. Available groups: {labels}"
     )
 
 

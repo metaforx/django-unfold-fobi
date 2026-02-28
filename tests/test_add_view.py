@@ -3,10 +3,9 @@
 Verifies that the admin add view loads and produces the expected fieldset
 groups, including the active-dates section and visibility inline grouping.
 """
+
 import pytest
 from django.test import RequestFactory
-from django.urls import reverse
-
 from helpers import (
     assert_fieldsets_contain_group,
     assert_fieldsets_group_has_fields,

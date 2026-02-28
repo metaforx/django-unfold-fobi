@@ -5,12 +5,13 @@ Used for:
 - pytest-django automated tests
 - Manual runserver for local development / visual inspection
 """
+
 import os
 from pathlib import Path
 
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
-from unfold_modal.utils import get_modal_styles, get_modal_scripts
+from unfold_modal.utils import get_modal_scripts, get_modal_styles
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -116,7 +117,10 @@ LANGUAGES = [
     ("de", _("German")),
 ]
 LOCALE_PATHS = [
-    Path(__file__).resolve().parent.parent.parent.parent / "src" / "unfold_fobi" / "locale",
+    Path(__file__).resolve().parent.parent.parent.parent
+    / "src"
+    / "unfold_fobi"
+    / "locale",
 ]
 TIME_ZONE = "UTC"
 USE_I18N = True

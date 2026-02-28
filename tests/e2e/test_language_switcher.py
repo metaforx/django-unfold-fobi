@@ -4,7 +4,6 @@ Verifies:
 - Language switcher is visible in the Unfold admin header/sidebar.
 - Admin loads under both /en/ and /de/ language prefixes.
 """
-import pytest
 
 
 class TestLanguageSwitcherVisible:

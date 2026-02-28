@@ -6,7 +6,7 @@ Verifies:
 - The /i18n/setlang/ endpoint changes the active language.
 - UNFOLD SHOW_LANGUAGES setting is enabled.
 """
-import pytest
+
 from django.urls import reverse
 
 
@@ -29,7 +29,9 @@ class TestLanguagePrefixedAdminRoutes:
         """Requests to /admin/ should redirect to a language-prefixed URL."""
         response = admin_client.get("/admin/", follow=False)
         assert response.status_code == 302
-        assert "/en/admin/" in response["Location"] or "/de/admin/" in response["Location"]
+        assert (
+            "/en/admin/" in response["Location"] or "/de/admin/" in response["Location"]
+        )
 
 
 class TestSetLanguageEndpoint:

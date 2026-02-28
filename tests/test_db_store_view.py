@@ -3,7 +3,6 @@
 Verifies that the db_store "view entries" route shows submitted rows when
 data is created via DRF PUT endpoint.
 """
-import pytest
 
 
 class TestDRFSubmission:
