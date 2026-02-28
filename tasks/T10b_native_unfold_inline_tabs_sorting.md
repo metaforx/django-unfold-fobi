@@ -1,4 +1,4 @@
-# Task T10b - Native Change Flow Hardening (Edit 404, Sortable Inlines, Handler Add)
+# Task T10b - Native Change Flow Hardening (Edit 404, Sortable Inlines, Inline Tabs)
 
 Goal
 - Fix current native change-flow blockers while keeping `FormEntryProxy` add/change native.
@@ -9,7 +9,6 @@ Current blockers
   - `http://127.0.0.1:8080/de/admin/fobi/forms/elements/edit/5/`
 - Element sorting is plain integer input; target is native Unfold sortable behavior:
   - `https://unfoldadmin.com/docs/inlines/sortable/`
-- Form handlers cannot be added from native flow.
 - Evaluate using native inline tabs for `Form elements` and `Form handlers`:
   - `https://unfoldadmin.com/docs/tabs/inline/`
 
@@ -42,7 +41,6 @@ Scope
 - Resolve the following:
   - Element edit must work from native change context (no `404`).
   - Elements must support intuitive sorting using Unfold sortable inline if technically compatible.
-  - Handlers add flow must be available from native change context.
   - Inline tabs for elements/handlers should be used if feasible without added complexity.
 
 Implementation requirements
@@ -56,7 +54,7 @@ Implementation requirements
   - If feasible, implement native inline tabs for `Form elements` and `Form handlers`.
   - If not feasible, document exact blocker and fallback with minimal custom UI.
 - Handler add:
-  - Restore add functionality with plugin availability/single-use constraints respected.
+  - Keep current add functionality working with plugin availability/single-use constraints respected.
   - Reuse existing Fobi add handler endpoint/logic where possible.
 
 Non-goals
@@ -67,16 +65,17 @@ Non-goals
 Deliverables
 - `reviews/feat-t10a-native-change-elements-handlers__T10b-analysis.md`.
 - Code changes enabling native-flow element edit + sort and handler add.
+- Code changes enabling native-flow element edit + sort (without regressing handler add).
 - Tests covering:
   - element edit endpoint from native page,
   - sorting persistence,
-  - handler add flow,
+  - handler add flow regression safety,
   - inline tabs presence (or documented fallback contract).
 
 Acceptance Criteria
 - Element edit from native change page no longer returns `404`.
 - Elements can be reordered with native Unfold sortable approach, or a documented justified fallback.
-- Handler add is functional from native change flow.
+- Handler add remains functional from native change flow.
 - Inline tabs for elements/handlers are used when feasible; otherwise fallback is explicitly documented.
 - Native change handling remains primary and complexity does not increase without justification.
 - `poetry run pytest -q` passes for updated scope.
