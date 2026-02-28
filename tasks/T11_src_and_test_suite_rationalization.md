@@ -1,18 +1,15 @@
-# Task T11 - Source/Function Necessity Audit and Test Suite Rationalization
+# Task T11 - Source/Function Necessity Audit and Cleanup (Tests Kept Stable)
 
 Goal
 - Validate whether `unfold_fobi` still needs all current custom code after T10-series integration.
 - Reduce maintenance surface by preferring native Django admin + Unfold behavior.
-- Rebalance test scope toward high-value integration checks (not excessive duplication).
+- Perform cleanup first while keeping current tests stable and passing.
 
 Requested direction
 - Analyze each file and function in `src/unfold_fobi` for necessity.
-- Verify which tests are truly needed now.
-- Keep strong coverage for:
-  - form creation,
-  - REST Framework submit validation/storage path,
-  - Playwright verification that created values appear in expected locations.
-- Add only additional view checks that provide clear regression value.
+- Reduce/remove unnecessary functionality in source code first.
+- Keep existing tests as guardrails during cleanup.
+- Only remove tests that are directly tied to functionality removed in this task.
 
 Suggested Skills
 - Primary: `$unfold-dev-advanced`.
@@ -43,21 +40,11 @@ Phase 1: Refactor Plan (No big-bang rewrite)
 - Prioritize eliminating duplicate logic where Django/Unfold already provides behavior.
 - Keep URL/permission/plugin behavior intact during simplification.
 
-Phase 2: Test Suite Rationalization
-- Inventory current tests and group by user value:
-  - `CRITICAL` (must keep),
-  - `USEFUL` (keep if low cost),
-  - `REDUNDANT` (consolidate/remove).
-- Build a lean baseline test matrix:
-  - Form creation flow (admin/native path).
-  - REST submit flow and saved data verification.
-  - Playwright scenario asserting created data appears where expected.
-  - Additional high-value view checks (recommended):
-    - native change page loads with elements/handlers sections,
-    - element edit open path (popup/modal contract),
-    - sortable elements persistence,
-    - handler custom action visibility (e.g. entries link).
-- Remove/merge tests that only duplicate lower-level assertions without regression value.
+Phase 2: Cleanup Implementation
+- Execute source cleanup in small, safe increments.
+- Remove dead code, duplicate code paths, and unnecessary patching identified in Phase 0.
+- Keep tests unchanged unless a test targets removed functionality.
+- For every removed/changed test, document exact functional reason in task notes.
 
 Scope
 - Code and tests inside repo only.
@@ -71,18 +58,20 @@ Non-goals
 Deliverables
 - `reviews/development-integrated__T11-analysis.md` with per-file/per-function decision table.
 - Implementation PR/commits for approved simplifications.
-- Updated, lean test suite with rationale for removed/consolidated tests.
+- Existing test suite kept passing during cleanup.
+- Minimal test removals only for removed functionality, with rationale.
 - Short before/after complexity summary:
   - custom files/functions removed,
   - monkey patches reduced,
-  - tests reduced/consolidated.
+  - tests removed only when tied to removed features.
 
 Acceptance Criteria
 - Each file/function in `src/unfold_fobi` has explicit keep/remove rationale.
 - Unnecessary custom code is reduced in favor of native Django/Unfold paths.
-- Test suite is slimmer but still covers critical create/submit/render flows.
+- Existing tests remain green after cleanup.
+- Any removed tests are clearly mapped to removed functionality.
 - `poetry run pytest -q` passes.
-- Playwright coverage for key end-to-end path passes.
+- Playwright suite still passes for current behavior.
 
 Tests to run
 - `poetry run pytest -q`
