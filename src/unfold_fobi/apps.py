@@ -515,6 +515,21 @@ class UnfoldFobiConfig(AppConfig):
                     form_entry=instance,
                     plugin_uid="db_store",
                 )
+
+            @receiver(post_save, sender=FormHandlerEntry)
+            def deduplicate_db_store_handler(sender, instance, **kwargs):
+                """Keep only one db_store handler per form entry.
+
+                JSON import can create a form (triggering FormEntry post_save auto-attach)
+                and then import handlers including db_store. In that flow, keep the
+                latest saved db_store row and delete older duplicates.
+                """
+                if instance.plugin_uid != "db_store":
+                    return
+                FormHandlerEntry.objects.filter(
+                    form_entry=instance.form_entry,
+                    plugin_uid="db_store",
+                ).exclude(pk=instance.pk).delete()
         except (ImportError, AttributeError):
             pass
 

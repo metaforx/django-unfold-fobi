@@ -85,6 +85,32 @@ class TestImportJsonAction:
         assert response.status_code == 302
         assert FormEntry.objects.count() == count_before + 1
 
+    def test_import_keeps_single_db_store_handler(
+        self, admin_client, admin_user, form_entry
+    ):
+        """Imported form must end up with exactly one db_store handler."""
+        from fobi.models import FormEntry, FormHandlerEntry
+        from fobi.utils import prepare_form_entry_export_data
+
+        export_data = prepare_form_entry_export_data(form_entry)
+        upload_file = io.BytesIO(json.dumps(export_data).encode("utf-8"))
+        upload_file.name = "form-export.json"
+
+        existing_ids = set(FormEntry.objects.values_list("id", flat=True))
+        url = reverse("admin:unfold_fobi_formentryproxy_import_form_entry_action")
+        response = admin_client.post(url, {"file": upload_file})
+
+        assert response.status_code == 302
+        imported = FormEntry.objects.exclude(id__in=existing_ids).order_by("-id").first()
+        assert imported is not None
+        assert (
+            FormHandlerEntry.objects.filter(
+                form_entry=imported,
+                plugin_uid="db_store",
+            ).count()
+            == 1
+        )
+
     def test_import_action_has_permission_check(self):
         """Import action must declare permissions to prevent privilege escalation."""
         from unfold_fobi.admin import FormEntryProxyAdmin

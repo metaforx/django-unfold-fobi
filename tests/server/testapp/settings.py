@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     "fobi.contrib.apps.drf_integration.form_elements.fields.date",
     "fobi.contrib.apps.drf_integration.form_elements.fields.select",
     "fobi.contrib.apps.drf_integration.form_handlers.db_store",
+    "fobi.contrib.apps.drf_integration.form_handlers.mail",
 ]
 
 MIDDLEWARE = [
