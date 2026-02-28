@@ -73,6 +73,21 @@ class TestAdminViews:
         assert response.status_code == 302
 
 
+class TestRawFobiAdminHidden:
+    """Raw fobi model admins must be hidden in favor of proxy admin."""
+
+    def test_raw_formentry_admin_denied(self, admin_client):
+        url = reverse("admin:fobi_formentry_changelist")
+        response = admin_client.get(url)
+        assert response.status_code == 403
+
+    def test_admin_index_hides_raw_fobi_forms_link(self, admin_client):
+        index = admin_client.get("/en/admin/")
+        html = index.content.decode()
+        assert reverse("admin:fobi_formentry_changelist") not in html
+        assert reverse("admin:unfold_fobi_formentryproxy_changelist") in html
+
+
 class TestSeedData:
     """Verify seed fixtures produce valid test data."""
 

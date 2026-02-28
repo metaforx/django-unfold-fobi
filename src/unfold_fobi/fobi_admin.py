@@ -90,6 +90,32 @@ for model in _models_to_unregister:
         pass
 
 
+class ProxyOnlyFobiAdminMixin:
+    """Hide raw fobi model admins and deny direct access.
+
+    We keep these admin classes registered for compatibility with existing
+    patches/imports, but builder users should work through FormEntryProxyAdmin.
+    """
+
+    def has_module_permission(self, request):
+        return False
+
+    def get_model_perms(self, request):
+        return {}
+
+    def has_view_permission(self, request, obj=None):
+        return False
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
 # Create inline admins using unfold's base classes but with fobi's configuration
 class FormElementEntryInlineAdmin(TabularInline):
     """FormElementEntry inline admin using django-unfold."""
@@ -144,7 +170,7 @@ class FormWizardHandlerEntryInlineAdmin(TabularInline):
 # Re-register admin classes with unfold ModelAdmin base
 # Update FormEntryAdmin to use our new inline classes
 @admin.register(FormEntry)
-class FormEntryAdmin(FobiFormEntryAdmin, ModelAdmin):
+class FormEntryAdmin(ProxyOnlyFobiAdminMixin, FobiFormEntryAdmin, ModelAdmin):
     """FormEntry admin using django-unfold."""
 
     inlines = [FormElementEntryInlineAdmin, FormHandlerEntryInlineAdmin]
@@ -183,49 +209,59 @@ class FormEntryAdmin(FobiFormEntryAdmin, ModelAdmin):
 
 
 @admin.register(FormWizardEntry)
-class FormWizardEntryAdmin(FobiFormWizardEntryAdmin, ModelAdmin):
+class FormWizardEntryAdmin(
+    ProxyOnlyFobiAdminMixin, FobiFormWizardEntryAdmin, ModelAdmin
+):
     """FormWizardEntry admin using django-unfold."""
 
     inlines = [FormWizardFormEntryInlineAdmin, FormWizardHandlerEntryInlineAdmin]
 
 
 @admin.register(FormFieldsetEntry)
-class FormFieldsetEntryAdmin(FobiFormFieldsetEntryAdmin, ModelAdmin):
+class FormFieldsetEntryAdmin(
+    ProxyOnlyFobiAdminMixin, FobiFormFieldsetEntryAdmin, ModelAdmin
+):
     """FormFieldsetEntry admin using django-unfold."""
 
     pass
 
 
 @admin.register(FormElementEntry)
-class FormElementEntryAdmin(FobiFormElementEntryAdmin, ModelAdmin):
+class FormElementEntryAdmin(
+    ProxyOnlyFobiAdminMixin, FobiFormElementEntryAdmin, ModelAdmin
+):
     """FormElementEntry admin using django-unfold."""
 
     pass
 
 
 @admin.register(FormHandlerEntry)
-class FormHandlerEntryAdmin(FobiFormHandlerEntryAdmin, ModelAdmin):
+class FormHandlerEntryAdmin(
+    ProxyOnlyFobiAdminMixin, FobiFormHandlerEntryAdmin, ModelAdmin
+):
     """FormHandlerEntry admin using django-unfold."""
 
     pass
 
 
 @admin.register(FormElement)
-class FormElementAdmin(FobiFormElementAdmin, ModelAdmin):
+class FormElementAdmin(ProxyOnlyFobiAdminMixin, FobiFormElementAdmin, ModelAdmin):
     """FormElement admin using django-unfold."""
 
     pass
 
 
 @admin.register(FormHandler)
-class FormHandlerAdmin(FobiFormHandlerAdmin, ModelAdmin):
+class FormHandlerAdmin(ProxyOnlyFobiAdminMixin, FobiFormHandlerAdmin, ModelAdmin):
     """FormHandler admin using django-unfold."""
 
     pass
 
 
 @admin.register(FormWizardHandler)
-class FormWizardHandlerAdmin(FobiFormWizardHandlerAdmin, ModelAdmin):
+class FormWizardHandlerAdmin(
+    ProxyOnlyFobiAdminMixin, FobiFormWizardHandlerAdmin, ModelAdmin
+):
     """FormWizardHandler admin using django-unfold."""
 
     pass
