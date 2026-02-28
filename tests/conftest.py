@@ -1,9 +1,13 @@
 """Shared pytest fixtures for unfold_fobi tests."""
 import json
+import sys
 
 import pytest
 from django.contrib.auth.models import User
 from django.test import Client
+
+# Prevent __pycache__ writes during test runs.
+sys.dont_write_bytecode = True
 
 
 @pytest.fixture()
