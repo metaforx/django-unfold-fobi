@@ -1,4 +1,4 @@
-"""T10/T10a/T10b – Native change view tests.
+"""T10/T10a/T10b/T10c – Native change view tests.
 
 Verifies:
 - Change route resolves and is permission-protected.
@@ -11,6 +11,7 @@ Verifies:
 - T10b: Element edit works for non-owner admin (no 404).
 - T10b: Inline tabs render for elements and handlers.
 - T10b: Sortable inline attributes present (ordering_field, x-sort).
+- T10c: Multi-element drag-drop reorder persists after save.
 """
 
 import pytest
@@ -248,6 +249,116 @@ class TestElementPositionEditing:
 
         element.refresh_from_db()
         assert element.position == 5
+
+
+class TestMultiElementSortPersistence:
+    """T10c: drag-drop reordering of multiple elements must persist after save."""
+
+    @pytest.fixture()
+    def form_entry_multi(self, db, admin_user):
+        """Form with three elements at positions 0, 1, 2."""
+        import json as _json
+
+        from fobi.models import FormElementEntry, FormEntry, FormHandlerEntry
+
+        entry = FormEntry.objects.create(
+            user=admin_user,
+            name="Multi Element Form",
+            slug="multi-element-form",
+            is_public=True,
+            is_cloneable=True,
+        )
+        for i, (uid, label) in enumerate([
+            ("text", "First Name"),
+            ("email", "Email Address"),
+            ("text", "Last Name"),
+        ]):
+            FormElementEntry.objects.create(
+                form_entry=entry,
+                plugin_uid=uid,
+                plugin_data=_json.dumps({"label": label, "name": f"field_{i}"}),
+                position=i,
+            )
+        FormHandlerEntry.objects.get_or_create(
+            form_entry=entry, plugin_uid="db_store",
+        )
+        return entry
+
+    def test_multi_element_reorder_persisted(self, admin_client, form_entry_multi):
+        """Simulates sortRecords(): each formset row keeps its id, only position changes."""
+        entry = form_entry_multi
+        elements = list(entry.formelemententry_set.order_by("position"))
+        assert len(elements) == 3
+        assert [e.position for e in elements] == [0, 1, 2]
+
+        url = get_admin_edit_url(entry.pk)
+        handler = entry.formhandlerentry_set.first()
+
+        # Real browser behavior: sortRecords keeps each form index paired
+        # with its original element id and only mutates the position input.
+        # Simulate reversing order: A(0→2), B(1→1), C(2→0).
+        new_positions = [2, 1, 0]
+        post_data = {
+            "name": entry.name,
+            "slug": entry.slug,
+            "is_public": "on",
+            "is_cloneable": "on",
+            "formelemententry_set-TOTAL_FORMS": "3",
+            "formelemententry_set-INITIAL_FORMS": "3",
+            "formelemententry_set-MIN_NUM_FORMS": "0",
+            "formelemententry_set-MAX_NUM_FORMS": "0",
+            "formhandlerentry_set-TOTAL_FORMS": "1",
+            "formhandlerentry_set-INITIAL_FORMS": "1",
+            "formhandlerentry_set-MIN_NUM_FORMS": "0",
+            "formhandlerentry_set-MAX_NUM_FORMS": "0",
+            "formhandlerentry_set-0-id": str(handler.pk),
+            "formhandlerentry_set-0-form_entry": str(entry.pk),
+            "_save": "Save",
+        }
+        for idx, elem in enumerate(elements):
+            prefix = f"formelemententry_set-{idx}"
+            post_data[f"{prefix}-id"] = str(elem.pk)
+            post_data[f"{prefix}-form_entry"] = str(entry.pk)
+            post_data[f"{prefix}-position"] = str(new_positions[idx])
+
+        response = admin_client.post(url, data=post_data)
+        assert response.status_code in (200, 302)
+
+        for elem in elements:
+            elem.refresh_from_db()
+        assert elements[0].position == 2  # A: was 0, now last
+        assert elements[1].position == 1  # B: unchanged (middle)
+        assert elements[2].position == 0  # C: was 2, now first
+
+    def test_reordered_elements_render_in_position_order(
+        self, admin_client, form_entry_multi
+    ):
+        """After reorder, inline row 0 must contain the element with lowest position."""
+        import re
+
+        entry = form_entry_multi
+        elements = list(entry.formelemententry_set.order_by("position"))
+        # Swap first and last via DB
+        elements[0].position = 2
+        elements[2].position = 0
+        elements[0].save()
+        elements[2].save()
+
+        url = get_admin_edit_url(entry.pk)
+        response = admin_client.get(url)
+        html = response.content.decode()
+
+        # Extract element PKs in formset render order (index 0, 1, 2)
+        id_pattern = re.compile(
+            r'name="formelemententry_set-(\d+)-id"\s+value="(\d+)"'
+        )
+        rendered_order = {
+            int(m.group(1)): int(m.group(2)) for m in id_pattern.finditer(html)
+        }
+        # Inline row 0 must be the element now at position 0 (originally elements[2])
+        assert rendered_order[0] == elements[2].pk
+        # Inline row 2 must be the element now at position 2 (originally elements[0])
+        assert rendered_order[2] == elements[0].pk
 
 
 class TestElementEditNonOwner:
