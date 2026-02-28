@@ -692,3 +692,25 @@ class TestIframeXFrameOptions:
         resp = admin_client.post(edit_url + "?_popup=1", data=post_data)
         assert resp.status_code == 200
         assert resp["X-Frame-Options"] == "SAMEORIGIN"
+
+
+class TestPopupLayout:
+    """Popup add/edit screens must not render the admin nav sidebar."""
+
+    def test_add_element_popup_hides_nav_sidebar(self, admin_client, form_entry):
+        add_url = reverse(
+            "fobi.add_form_element_entry",
+            kwargs={"form_entry_id": form_entry.pk, "form_element_plugin_uid": "text"},
+        )
+        resp = admin_client.get(add_url + "?_popup=1")
+        assert resp.status_code == 200
+        assert 'id="nav-sidebar"' not in resp.content.decode()
+
+    def test_add_handler_popup_hides_nav_sidebar(self, admin_client, form_entry):
+        add_url = reverse(
+            "fobi.add_form_handler_entry",
+            kwargs={"form_entry_id": form_entry.pk, "form_handler_plugin_uid": "mail"},
+        )
+        resp = admin_client.get(add_url + "?_popup=1")
+        assert resp.status_code == 200
+        assert 'id="nav-sidebar"' not in resp.content.decode()
