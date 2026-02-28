@@ -12,8 +12,9 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from fobi.forms import FormEntryForm
 from fobi.models import FormElementEntry, FormHandlerEntry
-from fobi.utils import prepare_form_entry_export_data
+from fobi.utils import perform_form_entry_import, prepare_form_entry_export_data
 from unfold.admin import ModelAdmin, TabularInline
+from unfold.decorators import action
 
 from .forms import FormEntryFormWithCloneable
 from .models import FormEntryProxy
@@ -218,6 +219,7 @@ class FormEntryProxyAdmin(ModelAdmin):
     compressed_fields = True
     warn_unsaved_form = True
     actions = ["export_selected_forms", "clone_selected_forms"]
+    actions_list = ["import_form_entry_action"]
     inlines = [FormElementEntryInline, FormHandlerEntryInline]
     change_form_template = "admin/unfold_fobi/formentryproxy/change_form.html"
 
@@ -409,6 +411,56 @@ class FormEntryProxyAdmin(ModelAdmin):
         return response
 
     export_selected_forms.short_description = _("Export selected forms (JSON)")
+
+    @action(
+        description=_("Import form (JSON)"),
+        url_path="import-json",
+        icon="file_upload",
+        permissions=("fobi.add_formentry",),
+    )
+    def import_form_entry_action(self, request):
+        """Changelist action: import a form entry from an uploaded JSON file."""
+        from django.template.response import TemplateResponse
+
+        if request.method == "POST" and request.FILES.get("file"):
+            uploaded = request.FILES["file"]
+            try:
+                raw = uploaded.read().decode("utf-8")
+                form_data = json.loads(raw)
+            except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+                messages.error(request, _("Invalid JSON file: {err}").format(err=exc))
+                return TemplateResponse(
+                    request,
+                    "admin/unfold_fobi/formentryproxy/import_action.html",
+                    {"title": _("Import form from JSON")},
+                )
+            # Export produces a JSON array; import expects a single dict.
+            # Handle both formats: unwrap single-item arrays, iterate multi-item.
+            if isinstance(form_data, list):
+                entries = form_data
+            else:
+                entries = [form_data]
+            imported = []
+            for entry_data in entries:
+                imported.append(perform_form_entry_import(request, entry_data))
+            names = ", ".join(e.name for e in imported)
+            messages.success(
+                request,
+                _("Imported {count} form(s): {names}.").format(
+                    count=len(imported), names=names
+                ),
+            )
+            return HttpResponse(
+                status=302,
+                headers={
+                    "Location": reverse("admin:unfold_fobi_formentryproxy_changelist")
+                },
+            )
+        return TemplateResponse(
+            request,
+            "admin/unfold_fobi/formentryproxy/import_action.html",
+            {"title": _("Import form from JSON")},
+        )
 
     @admin.action(description=_("Clone selected forms"))
     def clone_selected_forms(self, request, queryset):

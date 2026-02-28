@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "fobi.contrib.plugins.form_elements.fields.date",
     "fobi.contrib.plugins.form_elements.fields.select",
     "fobi.contrib.plugins.form_handlers.db_store",
+    "fobi.contrib.plugins.form_handlers.mail",
     # DRF integration (optional, mirrors production usage)
     "fobi.contrib.apps.drf_integration",
     "fobi.contrib.apps.drf_integration.form_elements.fields.text",
@@ -131,6 +132,10 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Allow same-origin iframe embedding (required for django-unfold-modal)
 X_FRAME_OPTIONS = "SAMEORIGIN"
+
+# Email (console backend for testing — emails are printed to stdout)
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+DEFAULT_FROM_EMAIL = "test@example.com"
 
 # --- Fobi ---
 FOBI_THEME = "unfold"

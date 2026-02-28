@@ -7,7 +7,7 @@
     {% if change and form_entry %}
     <div class="flex flex-wrap gap-3">
         {% if user_form_element_plugins %}
-        <div x-data="{ open: false }" class="relative">
+        <div x-data="{ open: false }" x-show="activeTab == 'formelemententry_set'" x-cloak class="relative">
             <button type="button" @click="open = !open"
                 class="bg-primary-600 hover:bg-primary-700 text-white px-3 py-2 rounded-default
                        font-medium text-sm inline-flex items-center gap-1.5 transition-colors">
@@ -40,7 +40,7 @@
         {% endif %}
 
         {% if user_form_handler_plugins %}
-        <div x-data="{ open: false }" class="relative">
+        <div x-data="{ open: false }" x-show="activeTab == 'formhandlerentry_set'" x-cloak class="relative">
             <button type="button" @click="open = !open"
                 class="bg-base-600 hover:bg-base-700 dark:bg-base-700 dark:hover:bg-base-600
                        text-white px-3 py-2 rounded-default
