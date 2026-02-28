@@ -171,9 +171,13 @@ class FormHandlerEntryInline(TabularInline):
         request = getattr(self, "_request", None)
         plugin = obj.get_plugin(request=request)
         if plugin:
-            for action_url, label, _icon in plugin.get_custom_actions(
-                obj.form_entry, request
-            ):
+            get_custom_actions = getattr(plugin, "get_custom_actions", None)
+            custom_actions = (
+                get_custom_actions(obj.form_entry, request)
+                if callable(get_custom_actions)
+                else []
+            )
+            for action_url, label, _icon in (custom_actions or []):
                 # T07: redirect "View entries" to admin filtered changelist
                 if str(label) == str(_("View entries")):
                     action_url = (

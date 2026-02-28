@@ -226,3 +226,15 @@ class TestEmailHandlerAvailability:
             },
         )
         assert add_mail_url in html
+
+    def test_change_view_renders_with_mail_handler(self, admin_client, form_entry):
+        """Change view must not fail when a handler has no custom actions."""
+        from fobi.models import FormHandlerEntry
+
+        FormHandlerEntry.objects.get_or_create(
+            form_entry=form_entry,
+            plugin_uid="mail",
+        )
+        url = get_admin_edit_url(form_entry.pk)
+        response = admin_client.get(url)
+        assert response.status_code == 200
