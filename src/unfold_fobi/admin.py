@@ -24,7 +24,7 @@ class FormElementEntryInline(TabularInline):
     """Inline showing form elements with sortable drag-and-drop and action links."""
 
     model = FormElementEntry
-    fields = ("position", "plugin_uid", "plugin_data_preview", "element_actions")
+    fields = ("plugin_uid", "position", "plugin_data_preview", "element_actions")
     readonly_fields = ("plugin_uid", "plugin_data_preview", "element_actions")
     ordering = ("position",)
     extra = 0
