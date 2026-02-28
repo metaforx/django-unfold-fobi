@@ -2,6 +2,7 @@
 
 Goal
 - Organize code structure first (clear separation of API and non-API layers).
+- Perform a thorough code cleanup across `src/unfold_fobi` during this restructuring step.
 - Then reduce test-suite complexity after structure is stabilized.
 - Include Ruff-based code cleanup as part of the implementation quality gate.
 - Keep strong, high-value integration coverage while removing redundant assertions.
@@ -39,6 +40,11 @@ Phase 0 (Mandatory): Code Organization Before Test Cleanup
   - `SIMPLIFY`,
   - `REMOVE`,
   with concrete reason tied to current behavior.
+- Include explicit cleanup targets:
+  - dead/unused functions, filters, tags, and helper classes,
+  - obsolete template overrides/snippets no longer on active routes,
+  - stale imports/compat shims/patch code not needed after T10/T11,
+  - duplicated logic that can be replaced by native Django/Unfold behavior.
 - Define and apply module boundaries:
   - keep admin/web views in `views.py`,
   - move DRF endpoints to `api/views.py` (and `api/urls.py` as needed),
@@ -56,6 +62,7 @@ Phase 1 (Mandatory): Test Inventory and Value Classification
 - For each `MERGE` or `REMOVE_REDUNDANT`, provide explicit reason and replacement coverage mapping.
 
 Phase 2: Simplification Implementation
+- Execute thorough code cleanup based on Phase 0 decisions before test reduction work.
 - Consolidate duplicate tests with overlapping assertions.
 - Prefer fewer broader integration tests over many narrow duplicates.
 - Keep assertions focused on user-visible outcomes and integration contracts.
@@ -74,6 +81,7 @@ Non-goals
 Deliverables
 - `reviews/development-integrated__T12-analysis.md`.
 - Code organization changes separating API and non-API view layers.
+- Thorough cleanup changes across `src/unfold_fobi` with keep/remove rationale.
 - Simplified test suite with explicit mapping of removed/merged tests.
 - Ruff cleanup updates for touched files/modules.
 - Short before/after metrics:
@@ -83,6 +91,7 @@ Deliverables
   - Ruff issue count delta (before/after for scoped files).
 
 Acceptance Criteria
+- Thorough cleanup is completed for scoped `src/unfold_fobi` modules with documented rationale.
 - Redundant tests are reduced with documented rationale.
 - Critical create/submit/playwright integration coverage remains intact.
 - Ruff checks pass for project scope used in this task.
