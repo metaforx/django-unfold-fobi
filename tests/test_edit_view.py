@@ -564,6 +564,10 @@ class TestUnfoldModalTriggerContract:
         """Links must NOT use inline window.open — Unfold JS handles popup opening."""
         assert "window.open(this.href" not in change_html
 
+    def test_popup_bridge_js_loaded_for_add_dropdowns(self, change_html):
+        """Native Unfold dropdown links need popup bridge JS to open related modal."""
+        assert "unfold_fobi/js/admin_popup_actions.js" in change_html
+
 
 class TestPopupResponse:
     """T10e: fobi views must return popup response (not redirect) in popup mode."""

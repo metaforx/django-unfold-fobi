@@ -15,6 +15,7 @@ from fobi.models import FormElementEntry, FormHandlerEntry
 from fobi.utils import perform_form_entry_import, prepare_form_entry_export_data
 from unfold.admin import ModelAdmin, TabularInline
 from unfold.decorators import action
+from unfold.enums import ActionVariant
 
 from .forms import FormEntryFormWithCloneable
 from .models import FormEntryProxy
@@ -225,7 +226,9 @@ class FormEntryProxyAdmin(ModelAdmin):
     actions = ["export_selected_forms", "clone_selected_forms"]
     actions_list = ["import_form_entry_action"]
     inlines = [FormElementEntryInline, FormHandlerEntryInline]
-    change_form_template = "admin/unfold_fobi/formentryproxy/change_form.html"
+
+    class Media:
+        js = ("unfold_fobi/js/admin_popup_actions.js",)
 
     def get_form(self, request, obj=None, **kwargs):
         """Use Fobi's FormEntryForm and inject request for validation/widgets."""
@@ -366,38 +369,123 @@ class FormEntryProxyAdmin(ModelAdmin):
         extra_context["title"] = _("Forms")
         return super().changelist_view(request, extra_context)
 
+    def _get_available_form_handler_plugins(self, request, form_entry):
+        """Return handler plugins available for current user and form constraints."""
+        from fobi.base import form_handler_plugin_registry
+        from fobi.utils import get_user_form_handler_plugins
+
+        all_handlers = get_user_form_handler_plugins(request.user)
+        existing_uids = set(
+            FormHandlerEntry.objects.filter(form_entry=form_entry).values_list(
+                "plugin_uid", flat=True
+            )
+        )
+        available_handlers = []
+        for uid, name in all_handlers:
+            if uid in existing_uids:
+                plugin_cls = form_handler_plugin_registry.get(uid)
+                if plugin_cls and not getattr(plugin_cls, "allow_multiple", True):
+                    continue
+            available_handlers.append((uid, name))
+        return available_handlers
+
+    def _build_native_add_dropdown_actions(self, request, form_entry):
+        """Build two native Unfold dropdown actions for adding elements/handlers."""
+        from fobi.utils import get_user_form_element_plugins_grouped
+
+        actions_detail = []
+
+        element_items = []
+        for _group, plugins in get_user_form_element_plugins_grouped(
+            request.user
+        ).items():
+            for uid, name in plugins:
+                element_items.append(
+                    {
+                        "title": name,
+                        "path": (
+                            reverse(
+                                "fobi.add_form_element_entry",
+                                kwargs={
+                                    "form_entry_id": form_entry.pk,
+                                    "form_element_plugin_uid": uid,
+                                },
+                            )
+                            + "?_popup=1"
+                        ),
+                        "variant": ActionVariant.DEFAULT,
+                        "attrs": {
+                            "id": f"add_fobi_element_{uid}",
+                            "data-popup": "yes",
+                        },
+                    }
+                )
+        if element_items:
+            actions_detail.append(
+                {
+                    "title": _("Add element"),
+                    "icon": "add",
+                    "variant": ActionVariant.PRIMARY,
+                    "method_name": "add_element",
+                    "attrs": {
+                        "x-show": "activeTab == 'formelemententry_set'",
+                        "x-cloak": True,
+                    },
+                    "items": element_items,
+                }
+            )
+
+        handler_items = []
+        for uid, name in self._get_available_form_handler_plugins(request, form_entry):
+            handler_items.append(
+                {
+                    "title": name,
+                    "path": (
+                        reverse(
+                            "fobi.add_form_handler_entry",
+                            kwargs={
+                                "form_entry_id": form_entry.pk,
+                                "form_handler_plugin_uid": uid,
+                            },
+                        )
+                        + "?_popup=1"
+                    ),
+                    "variant": ActionVariant.DEFAULT,
+                    "attrs": {
+                        "id": f"add_fobi_handler_{uid}",
+                        "data-popup": "yes",
+                    },
+                }
+            )
+        if handler_items:
+            actions_detail.append(
+                {
+                    "title": _("Add handler"),
+                    "icon": "add",
+                    "variant": ActionVariant.DEFAULT,
+                    "method_name": "add_handler",
+                    "attrs": {
+                        "x-show": "activeTab == 'formhandlerentry_set'",
+                        "x-cloak": True,
+                    },
+                    "items": handler_items,
+                }
+            )
+
+        return actions_detail
+
     def change_view(self, request, object_id, form_url="", extra_context=None):
-        """Pass available element/handler plugins to the change form template."""
+        """Inject native Unfold dropdown actions for add element/handler."""
         extra_context = extra_context or {}
         obj = self.get_object(request, object_id)
         if obj:
-            from fobi.base import form_handler_plugin_registry
-            from fobi.utils import (
-                get_user_form_element_plugins_grouped,
-                get_user_form_handler_plugins,
-            )
-
-            extra_context["user_form_element_plugins"] = (
-                get_user_form_element_plugins_grouped(request.user)
-            )
             extra_context["form_entry"] = obj
-
-            # Filter out single-use handlers already attached to this form
-            all_handlers = get_user_form_handler_plugins(request.user)
-            existing_uids = set(
-                FormHandlerEntry.objects.filter(form_entry=obj).values_list(
-                    "plugin_uid", flat=True
-                )
+        response = super().change_view(request, object_id, form_url, extra_context)
+        if obj and hasattr(response, "context_data"):
+            response.context_data["actions_detail"] = (
+                self._build_native_add_dropdown_actions(request, obj)
             )
-            available_handlers = []
-            for uid, name in all_handlers:
-                if uid in existing_uids:
-                    plugin_cls = form_handler_plugin_registry.get(uid)
-                    if plugin_cls and not getattr(plugin_cls, "allow_multiple", True):
-                        continue
-                available_handlers.append((uid, name))
-            extra_context["user_form_handler_plugins"] = available_handlers
-        return super().change_view(request, object_id, form_url, extra_context)
+        return response
 
     def save_model(self, request, obj, form, change):
         """Ensure creator is set when using the native admin add view."""
