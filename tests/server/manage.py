@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 """Django's command-line utility for the unfold_fobi test server."""
+
 import os
 import sys
 from pathlib import Path
 
 
 def main():
+    os.environ.setdefault("PYTHONDONTWRITEBYTECODE", "1")
+    sys.dont_write_bytecode = True
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "testapp.settings")
 
     # Ensure src/ and tests/server/ are on sys.path so that

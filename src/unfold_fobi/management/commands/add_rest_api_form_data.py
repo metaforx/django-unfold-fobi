@@ -9,6 +9,7 @@ Usage:
   python manage.py add_rest_api_form_data --form-entry-id=4 --count=10
   python manage.py add_rest_api_form_data --base-url=http://localhost:8080
 """
+
 import json
 import urllib.error
 import urllib.request
@@ -22,7 +23,6 @@ def _sample_value_for_field(field_info, index):
     """Return a valid sample value for the field type (for submission index 0..count-1)."""
     name = field_info.get("name", "")
     field_type = field_info.get("type", "CharField")
-    required = field_info.get("required", False)
 
     if field_type == "EmailField":
         return f"testuser{index + 1}@example.com"
@@ -50,7 +50,11 @@ def _sample_value_for_field(field_info, index):
             if isinstance(first, dict) and "value" in first:
                 values = [c["value"] for c in choices]
             else:
-                values = list(choices) if not isinstance(choices[0], (list, tuple)) else [c[0] for c in choices]
+                values = (
+                    list(choices)
+                    if not isinstance(choices[0], (list, tuple))
+                    else [c[0] for c in choices]
+                )
             return values[index % len(values)] if values else ""
         return "USA"
     if field_type in ("TextField", "TextareaField", "CharField"):
@@ -66,7 +70,9 @@ def _build_payload(fields, index):
 def _get_form_fields(base_url, slug):
     """GET /api/fobi-form-fields/{slug}/ and return parsed JSON."""
     url = f"{base_url.rstrip('/')}/api/fobi-form-fields/{slug}/"
-    req = urllib.request.Request(url, method="GET", headers={"Accept": "application/json"})
+    req = urllib.request.Request(
+        url, method="GET", headers={"Accept": "application/json"}
+    )
     with urllib.request.urlopen(req, timeout=10) as resp:
         return json.loads(resp.read().decode())
 
@@ -122,12 +128,16 @@ class Command(BaseCommand):
         try:
             form_entry = FormEntry.objects.get(pk=form_entry_id)
         except FormEntry.DoesNotExist:
-            self.stderr.write(self.style.ERROR(f"FormEntry with pk={form_entry_id} does not exist."))
+            self.stderr.write(
+                self.style.ERROR(f"FormEntry with pk={form_entry_id} does not exist.")
+            )
             return
 
         slug = form_entry.slug
         self.stdout.write(f"Form: {form_entry.name} (slug={slug}, id={form_entry_id})")
-        self.stdout.write(f"Fetching fields from {base_url}/api/fobi-form-fields/{slug}/ ...")
+        self.stdout.write(
+            f"Fetching fields from {base_url}/api/fobi-form-fields/{slug}/ ..."
+        )
 
         try:
             form_structure = _get_form_fields(base_url, slug)
@@ -139,7 +149,9 @@ class Command(BaseCommand):
             )
             return
         except urllib.error.HTTPError as e:
-            self.stderr.write(self.style.ERROR(f"GET form fields failed: {e.code} {e.reason}"))
+            self.stderr.write(
+                self.style.ERROR(f"GET form fields failed: {e.code} {e.reason}")
+            )
             return
         except Exception as e:
             self.stderr.write(self.style.ERROR(f"Failed to get form fields: {e}"))
@@ -147,7 +159,9 @@ class Command(BaseCommand):
 
         fields = form_structure.get("fields", [])
         if not fields:
-            self.stdout.write(self.style.WARNING("No fields returned; submitting empty payloads."))
+            self.stdout.write(
+                self.style.WARNING("No fields returned; submitting empty payloads.")
+            )
 
         ok = 0
         for i in range(count):
@@ -157,8 +171,12 @@ class Command(BaseCommand):
                 ok += 1
                 self.stdout.write(self.style.SUCCESS(f"  [{i + 1}/{count}] submitted"))
             else:
-                self.stdout.write(self.style.ERROR(f"  [{i + 1}/{count}] failed: {msg}"))
+                self.stdout.write(
+                    self.style.ERROR(f"  [{i + 1}/{count}] failed: {msg}")
+                )
 
         self.stdout.write(
-            self.style.SUCCESS(f"Done: {ok}/{count} submissions sent. Check form entries in admin.")
+            self.style.SUCCESS(
+                f"Done: {ok}/{count} submissions sent. Check form entries in admin."
+            )
         )

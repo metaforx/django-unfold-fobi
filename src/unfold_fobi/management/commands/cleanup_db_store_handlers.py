@@ -5,6 +5,7 @@ Usage:
   python manage.py cleanup_db_store_handlers
   python manage.py cleanup_db_store_handlers --dry-run
 """
+
 from django.core.management.base import BaseCommand
 from django.db.models import Count
 from fobi.models import FormHandlerEntry
@@ -34,12 +35,9 @@ class Command(BaseCommand):
         total_deleted = 0
         for item in duplicates:
             form_entry_id = item["form_entry_id"]
-            handlers = (
-                FormHandlerEntry.objects.filter(
-                    form_entry_id=form_entry_id, plugin_uid=DB_STORE_UID
-                )
-                .order_by("id")
-            )
+            handlers = FormHandlerEntry.objects.filter(
+                form_entry_id=form_entry_id, plugin_uid=DB_STORE_UID
+            ).order_by("id")
             keep = handlers.first()
             to_delete = handlers.exclude(id=keep.id)
             delete_count = to_delete.count()

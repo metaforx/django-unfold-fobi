@@ -92,16 +92,11 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = ["unfold_crispy"]
 ```python
 from django.urls import path, include, re_path
 from django.views.generic import RedirectView
-import unfold_fobi.views
 
 urlpatterns = [
     # DRF integration endpoints (optional)
     path("api/", include("fobi.contrib.apps.drf_integration.urls")),
-    path(
-        "api/fobi-form-fields/<str:slug>/",
-        unfold_fobi.views.get_form_fields,
-        name="fobi-form-fields",
-    ),
+    path("api/", include("unfold_fobi.api.urls")),
 
     # Public Fobi views and handlers
     re_path(r"^fobi/", include("fobi.urls.class_based.view")),

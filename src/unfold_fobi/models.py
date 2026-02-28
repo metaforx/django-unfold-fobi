@@ -1,6 +1,7 @@
 from django.utils.translation import gettext_lazy as _
 from fobi.models import FormEntry
 
+
 class FormEntryProxy(FormEntry):
     class Meta:
         proxy = True

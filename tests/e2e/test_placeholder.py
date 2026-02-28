@@ -4,7 +4,6 @@ Verifies:
 - Add page loads with grouped fieldset visibility.
 - Native change page loads with fieldsets and inlines.
 """
-import pytest
 
 
 class TestAddPageSmoke:
@@ -22,7 +21,12 @@ class TestAddPageSmoke:
         page.goto(url)
 
         content = page.content()
-        for group in ["Basic information", "Visibility", "Success page", "Active dates"]:
+        for group in [
+            "Basic information",
+            "Visibility",
+            "Success page",
+            "Active dates",
+        ]:
             assert group in content, f"Fieldset group '{group}' not visible on add page"
 
 

@@ -1,10 +1,9 @@
 from django.db import transaction
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
-
 from fobi.models import (
-    FormEntry,
     FormElementEntry,
+    FormEntry,
     FormFieldsetEntry,
     FormHandlerEntry,
 )
@@ -44,9 +43,9 @@ def clone_form_entry(source):
             fieldset_map[fieldset.pk] = new_fieldset
 
         elements = []
-        for element in FormElementEntry.objects.filter(
-            form_entry=source
-        ).order_by("position", "pk"):
+        for element in FormElementEntry.objects.filter(form_entry=source).order_by(
+            "position", "pk"
+        ):
             elements.append(
                 FormElementEntry(
                     form_entry=new_form,
@@ -62,9 +61,9 @@ def clone_form_entry(source):
             FormElementEntry.objects.bulk_create(elements)
 
         handlers = []
-        for handler in FormHandlerEntry.objects.filter(
-            form_entry=source
-        ).order_by("plugin_uid", "pk"):
+        for handler in FormHandlerEntry.objects.filter(form_entry=source).order_by(
+            "plugin_uid", "pk"
+        ):
             if handler.plugin_uid == "db_store":
                 continue
             handlers.append(

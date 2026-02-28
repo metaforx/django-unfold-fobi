@@ -21,10 +21,11 @@
   - `__init__.py`
   - `unfold_fobi_tags.py`
 - `templates/` - Django templates
-  - `admin/fobi_embed.html`
-  - `override_simple_theme/` - Theme override templates
+  - `admin/unfold_fobi/` - Native admin change form and popup response
+  - `override_simple_theme/` - Theme override templates for element/handler views
   - `unfold/layouts/skeleton.html`
-- `static/` - Static files directory (empty, but structure preserved)
+- `static/` - Static files
+  - `css/fobi_unfold.css` - Dark mode sidebar fixes
 
 ## Package Features
 

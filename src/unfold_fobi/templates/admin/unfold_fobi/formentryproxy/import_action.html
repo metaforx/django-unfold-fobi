@@ -1,0 +1,37 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Import form from JSON" %}{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto mt-8">
+    <h2 class="text-lg font-semibold mb-4">{% trans "Import form from JSON" %}</h2>
+    <p class="text-sm text-base-500 dark:text-base-400 mb-6">
+        {% trans "Upload a JSON file previously exported via the export action." %}
+    </p>
+    <form method="post" enctype="multipart/form-data" class="space-y-4">
+        {% csrf_token %}
+        <div>
+            <label for="id_file" class="block text-sm font-medium mb-1">
+                {% trans "JSON file" %}
+            </label>
+            <input type="file" name="file" id="id_file" accept=".json,application/json" required
+                   class="block w-full text-sm border border-base-300 dark:border-base-600
+                          rounded-default px-3 py-2 bg-white dark:bg-base-800">
+        </div>
+        <div class="flex gap-3">
+            <button type="submit"
+                    class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2
+                           rounded-default font-medium text-sm transition-colors">
+                {% trans "Import" %}
+            </button>
+            <a href="../"
+               class="bg-base-200 hover:bg-base-300 dark:bg-base-700 dark:hover:bg-base-600
+                      text-base-700 dark:text-base-300 px-4 py-2
+                      rounded-default font-medium text-sm transition-colors inline-flex items-center">
+                {% trans "Cancel" %}
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

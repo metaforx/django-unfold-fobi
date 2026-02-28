@@ -12,8 +12,10 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from fobi.forms import FormEntryForm
 from fobi.models import FormElementEntry, FormHandlerEntry
-from fobi.utils import prepare_form_entry_export_data
+from fobi.utils import perform_form_entry_import, prepare_form_entry_export_data
 from unfold.admin import ModelAdmin, TabularInline
+from unfold.decorators import action
+from unfold.enums import ActionVariant
 
 from .forms import FormEntryFormWithCloneable
 from .models import FormEntryProxy
@@ -55,28 +57,38 @@ class FormElementEntryInline(TabularInline):
     def element_actions(self, obj):
         if not obj.pk:
             return "-"
-        edit_url = reverse(
-            "fobi.edit_form_element_entry",
-            kwargs={"form_element_entry_id": obj.pk},
-        ) + "?_popup=1"
-        delete_url = reverse(
-            "fobi.delete_form_element_entry",
-            kwargs={"form_element_entry_id": obj.pk},
-        ) + "?_popup=1"
+        edit_url = (
+            reverse(
+                "fobi.edit_form_element_entry",
+                kwargs={"form_element_entry_id": obj.pk},
+            )
+            + "?_popup=1"
+        )
+        delete_url = (
+            reverse(
+                "fobi.delete_form_element_entry",
+                kwargs={"form_element_entry_id": obj.pk},
+            )
+            + "?_popup=1"
+        )
         return format_html(
             '<a href="{}" id="change_fobi_element_{}" data-popup="yes"'
             ' class="related-widget-wrapper-link inline-flex items-center gap-1'
-            ' text-primary-600 hover:text-primary-700'
+            " text-primary-600 hover:text-primary-700"
             ' dark:text-primary-500 dark:hover:text-primary-400">'
             '<span class="material-symbols-outlined text-base">edit</span>{}</a>'
-            ' &nbsp; '
+            " &nbsp; "
             '<a href="{}" id="delete_fobi_element_{}" data-popup="yes"'
             ' class="related-widget-wrapper-link inline-flex items-center gap-1'
-            ' text-red-600 hover:text-red-700'
+            " text-red-600 hover:text-red-700"
             ' dark:text-red-500 dark:hover:text-red-400">'
             '<span class="material-symbols-outlined text-base">delete</span>{}</a>',
-            edit_url, obj.pk, _("Edit"),
-            delete_url, obj.pk, _("Delete"),
+            edit_url,
+            obj.pk,
+            _("Edit"),
+            delete_url,
+            obj.pk,
+            _("Delete"),
         )
 
 
@@ -118,37 +130,55 @@ class FormHandlerEntryInline(TabularInline):
             return "-"
         parts = []
         if obj.plugin_data:
-            edit_url = reverse(
-                "fobi.edit_form_handler_entry",
+            edit_url = (
+                reverse(
+                    "fobi.edit_form_handler_entry",
+                    kwargs={"form_handler_entry_id": obj.pk},
+                )
+                + "?_popup=1"
+            )
+            parts.append(
+                format_html(
+                    '<a href="{}" id="change_fobi_handler_{}" data-popup="yes"'
+                    ' class="related-widget-wrapper-link inline-flex items-center gap-1'
+                    " text-primary-600 hover:text-primary-700"
+                    ' dark:text-primary-500 dark:hover:text-primary-400">'
+                    '<span class="material-symbols-outlined text-base">edit</span>{}</a>',
+                    edit_url,
+                    obj.pk,
+                    _("Edit"),
+                )
+            )
+        delete_url = (
+            reverse(
+                "fobi.delete_form_handler_entry",
                 kwargs={"form_handler_entry_id": obj.pk},
-            ) + "?_popup=1"
-            parts.append(format_html(
-                '<a href="{}" id="change_fobi_handler_{}" data-popup="yes"'
+            )
+            + "?_popup=1"
+        )
+        parts.append(
+            format_html(
+                '<a href="{}" id="delete_fobi_handler_{}" data-popup="yes"'
                 ' class="related-widget-wrapper-link inline-flex items-center gap-1'
-                ' text-primary-600 hover:text-primary-700'
-                ' dark:text-primary-500 dark:hover:text-primary-400">'
-                '<span class="material-symbols-outlined text-base">edit</span>{}</a>',
-                edit_url, obj.pk, _("Edit"),
-            ))
-        delete_url = reverse(
-            "fobi.delete_form_handler_entry",
-            kwargs={"form_handler_entry_id": obj.pk},
-        ) + "?_popup=1"
-        parts.append(format_html(
-            '<a href="{}" id="delete_fobi_handler_{}" data-popup="yes"'
-            ' class="related-widget-wrapper-link inline-flex items-center gap-1'
-            ' text-red-600 hover:text-red-700'
-            ' dark:text-red-500 dark:hover:text-red-400">'
-            '<span class="material-symbols-outlined text-base">delete</span>{}</a>',
-            delete_url, obj.pk, _("Delete"),
-        ))
+                " text-red-600 hover:text-red-700"
+                ' dark:text-red-500 dark:hover:text-red-400">'
+                '<span class="material-symbols-outlined text-base">delete</span>{}</a>',
+                delete_url,
+                obj.pk,
+                _("Delete"),
+            )
+        )
         # Plugin custom actions (e.g. "View entries" for db_store)
         request = getattr(self, "_request", None)
         plugin = obj.get_plugin(request=request)
         if plugin:
-            for action_url, label, _icon in plugin.get_custom_actions(
-                obj.form_entry, request
-            ):
+            get_custom_actions = getattr(plugin, "get_custom_actions", None)
+            custom_actions = (
+                get_custom_actions(obj.form_entry, request)
+                if callable(get_custom_actions)
+                else []
+            )
+            for action_url, label, _icon in (custom_actions or []):
                 # T07: redirect "View entries" to admin filtered changelist
                 if str(label) == str(_("View entries")):
                     action_url = (
@@ -157,12 +187,15 @@ class FormHandlerEntryInline(TabularInline):
                         )
                         + f"?form_entry__id__exact={obj.form_entry_id}"
                     )
-                parts.append(format_html(
-                    '<a href="{}" class="inline-flex items-center gap-1 text-primary-600 '
-                    'hover:text-primary-700 dark:text-primary-500 dark:hover:text-primary-400">'
-                    '{}</a>',
-                    action_url, label,
-                ))
+                parts.append(
+                    format_html(
+                        '<a href="{}" class="inline-flex items-center gap-1 text-primary-600 '
+                        'hover:text-primary-700 dark:text-primary-500 dark:hover:text-primary-400">'
+                        "{}</a>",
+                        action_url,
+                        label,
+                    )
+                )
         return mark_safe(" &nbsp; ".join(parts))
 
 
@@ -174,16 +207,29 @@ class FormEntryProxyAdmin(ModelAdmin):
     T10/T10a: native admin change form with element/handler inlines,
     "Add" dropdowns for available plugins, and editable element ordering.
     """
+
     list_display = ["name", "slug", "is_public", "created", "updated"]
     list_filter = ["is_public", "created", "updated"]
     search_fields = ["name", "slug"]
     readonly_fields = ["created", "updated"]
+
+    def get_readonly_fields(self, request, obj=None):
+        """Show slug as read-only on change view; hide on add (auto-generated)."""
+        ro = list(super().get_readonly_fields(request, obj))
+        if obj:
+            ro.insert(0, "slug")
+        return ro
+
     list_display_links = ["name"]
     compressed_fields = True
     warn_unsaved_form = True
     actions = ["export_selected_forms", "clone_selected_forms"]
+    actions_list = ["import_form_entry_action"]
     inlines = [FormElementEntryInline, FormHandlerEntryInline]
-    change_form_template = "admin/unfold_fobi/formentryproxy/change_form.html"
+
+    class Media:
+        js = ("unfold_fobi/js/admin_popup_actions.js",)
+        css = {"all": ("unfold_fobi/css/admin_action_dropdown_fix.css",)}
 
     def get_form(self, request, obj=None, **kwargs):
         """Use Fobi's FormEntryForm and inject request for validation/widgets."""
@@ -219,7 +265,8 @@ class FormEntryProxyAdmin(ModelAdmin):
     def get_fieldsets(self, request, obj=None):
         form_fields = set(FormEntryFormWithCloneable.base_fields)
         editable_fields = [
-            field for field in self._collect_editable_fields()
+            field
+            for field in self._collect_editable_fields()
             if field.name in form_fields
         ]
         if "is_cloneable" not in form_fields:
@@ -229,8 +276,7 @@ class FormEntryProxyAdmin(ModelAdmin):
                     break
         remaining = [field.name for field in editable_fields]
         extra_fields = [
-            name for name in FormEntryForm.base_fields
-            if name not in remaining
+            name for name in FormEntryForm.base_fields if name not in remaining
         ]
 
         def take(names):
@@ -262,30 +308,24 @@ class FormEntryProxyAdmin(ModelAdmin):
 
         fieldsets = []
         if basic_fields:
-            fieldsets.append(
-                (_("Basic information"), {"fields": basic_fields})
-            )
+            fieldsets.append((_("Basic information"), {"fields": basic_fields}))
         if visibility_fields:
             if "is_public" in visibility_fields and "is_cloneable" in visibility_fields:
                 visibility_fields = [
                     ("is_public", "is_cloneable"),
-                    *[name for name in visibility_fields if name not in ("is_public", "is_cloneable")],
+                    *[
+                        name
+                        for name in visibility_fields
+                        if name not in ("is_public", "is_cloneable")
+                    ],
                 ]
-            fieldsets.append(
-                (_("Visibility"), {"fields": visibility_fields})
-            )
+            fieldsets.append((_("Visibility"), {"fields": visibility_fields}))
         if success_fields:
-            fieldsets.append(
-                (_("Success page"), {"fields": success_fields})
-            )
+            fieldsets.append((_("Success page"), {"fields": success_fields}))
         if appearance_fields:
-            fieldsets.append(
-                (_("Appearance"), {"fields": appearance_fields})
-            )
+            fieldsets.append((_("Appearance"), {"fields": appearance_fields}))
         if ownership_fields:
-            fieldsets.append(
-                (_("Ownership"), {"fields": ownership_fields})
-            )
+            fieldsets.append((_("Ownership"), {"fields": ownership_fields}))
         if date_fields:
             fieldsets.append(
                 (
@@ -294,12 +334,8 @@ class FormEntryProxyAdmin(ModelAdmin):
                 )
             )
         if remaining or extra_fields:
-            remaining.extend(
-                [name for name in extra_fields if name not in remaining]
-            )
-            fieldsets.append(
-                (_("Advanced"), {"fields": remaining})
-            )
+            remaining.extend([name for name in extra_fields if name not in remaining])
+            fieldsets.append((_("Advanced"), {"fields": remaining}))
 
         if fieldsets:
             return fieldsets
@@ -311,16 +347,20 @@ class FormEntryProxyAdmin(ModelAdmin):
 
         urls = super().get_urls()
         custom_urls = [
-            path('import/',
-                 self.admin_site.admin_view(
-                     FormEntryImportView.as_view(model_admin=self)
-                 ),
-                 name='%s_%s_import' % (self.model._meta.app_label, self.model._meta.model_name)),
-            path('wizards/',
-                 self.admin_site.admin_view(
-                     FormWizardsDashboardView.as_view(model_admin=self)
-                 ),
-                 name='%s_%s_wizards' % (self.model._meta.app_label, self.model._meta.model_name)),
+            path(
+                "import/",
+                self.admin_site.admin_view(
+                    FormEntryImportView.as_view(model_admin=self)
+                ),
+                name=f"{self.model._meta.app_label}_{self.model._meta.model_name}_import",
+            ),
+            path(
+                "wizards/",
+                self.admin_site.admin_view(
+                    FormWizardsDashboardView.as_view(model_admin=self)
+                ),
+                name=f"{self.model._meta.app_label}_{self.model._meta.model_name}_wizards",
+            ),
         ]
         return custom_urls + urls
 
@@ -330,41 +370,123 @@ class FormEntryProxyAdmin(ModelAdmin):
         extra_context["title"] = _("Forms")
         return super().changelist_view(request, extra_context)
 
+    def _get_available_form_handler_plugins(self, request, form_entry):
+        """Return handler plugins available for current user and form constraints."""
+        from fobi.base import form_handler_plugin_registry
+        from fobi.utils import get_user_form_handler_plugins
+
+        all_handlers = get_user_form_handler_plugins(request.user)
+        existing_uids = set(
+            FormHandlerEntry.objects.filter(form_entry=form_entry).values_list(
+                "plugin_uid", flat=True
+            )
+        )
+        available_handlers = []
+        for uid, name in all_handlers:
+            if uid in existing_uids:
+                plugin_cls = form_handler_plugin_registry.get(uid)
+                if plugin_cls and not getattr(plugin_cls, "allow_multiple", True):
+                    continue
+            available_handlers.append((uid, name))
+        return available_handlers
+
+    def _build_native_add_dropdown_actions(self, request, form_entry):
+        """Build two native Unfold dropdown actions for adding elements/handlers."""
+        from fobi.utils import get_user_form_element_plugins_grouped
+
+        actions_detail = []
+
+        element_items = []
+        for _group, plugins in get_user_form_element_plugins_grouped(
+            request.user
+        ).items():
+            for uid, name in plugins:
+                element_items.append(
+                    {
+                        "title": name,
+                        "path": (
+                            reverse(
+                                "fobi.add_form_element_entry",
+                                kwargs={
+                                    "form_entry_id": form_entry.pk,
+                                    "form_element_plugin_uid": uid,
+                                },
+                            )
+                            + "?_popup=1"
+                        ),
+                        "variant": ActionVariant.DEFAULT,
+                        "attrs": {
+                            "id": f"add_fobi_element_{uid}",
+                            "data-popup": "yes",
+                        },
+                    }
+                )
+        if element_items:
+            actions_detail.append(
+                {
+                    "title": _("Add element"),
+                    "icon": "add",
+                    "variant": ActionVariant.PRIMARY,
+                    "method_name": "add_element",
+                    "attrs": {
+                        "x-show": "activeTab == 'formelemententry_set'",
+                        "x-cloak": True,
+                    },
+                    "items": element_items,
+                }
+            )
+
+        handler_items = []
+        for uid, name in self._get_available_form_handler_plugins(request, form_entry):
+            handler_items.append(
+                {
+                    "title": name,
+                    "path": (
+                        reverse(
+                            "fobi.add_form_handler_entry",
+                            kwargs={
+                                "form_entry_id": form_entry.pk,
+                                "form_handler_plugin_uid": uid,
+                            },
+                        )
+                        + "?_popup=1"
+                    ),
+                    "variant": ActionVariant.DEFAULT,
+                    "attrs": {
+                        "id": f"add_fobi_handler_{uid}",
+                        "data-popup": "yes",
+                    },
+                }
+            )
+        if handler_items:
+            actions_detail.append(
+                {
+                    "title": _("Add handler"),
+                    "icon": "add",
+                    "variant": ActionVariant.DEFAULT,
+                    "method_name": "add_handler",
+                    "attrs": {
+                        "x-show": "activeTab == 'formhandlerentry_set'",
+                        "x-cloak": True,
+                    },
+                    "items": handler_items,
+                }
+            )
+
+        return actions_detail
+
     def change_view(self, request, object_id, form_url="", extra_context=None):
-        """Pass available element/handler plugins to the change form template."""
+        """Inject native Unfold dropdown actions for add element/handler."""
         extra_context = extra_context or {}
         obj = self.get_object(request, object_id)
         if obj:
-            from fobi.base import form_handler_plugin_registry
-            from fobi.utils import (
-                get_user_form_element_plugins_grouped,
-                get_user_form_handler_plugins,
-            )
-
-            extra_context["user_form_element_plugins"] = (
-                get_user_form_element_plugins_grouped(request.user)
-            )
             extra_context["form_entry"] = obj
-
-            # Filter out single-use handlers already attached to this form
-            all_handlers = get_user_form_handler_plugins(request.user)
-            existing_uids = set(
-                FormHandlerEntry.objects.filter(form_entry=obj)
-                .values_list("plugin_uid", flat=True)
+        response = super().change_view(request, object_id, form_url, extra_context)
+        if obj and hasattr(response, "context_data"):
+            response.context_data["actions_detail"] = (
+                self._build_native_add_dropdown_actions(request, obj)
             )
-            available_handlers = []
-            for uid, name in all_handlers:
-                if uid in existing_uids:
-                    plugin_cls = form_handler_plugin_registry.get(uid)
-                    if plugin_cls and not getattr(
-                        plugin_cls, "allow_multiple", True
-                    ):
-                        continue
-                available_handlers.append((uid, name))
-            extra_context["user_form_handler_plugins"] = available_handlers
-        return super().change_view(
-            request, object_id, form_url, extra_context
-        )
+        return response
 
     def save_model(self, request, obj, form, change):
         """Ensure creator is set when using the native admin add view."""
@@ -376,10 +498,62 @@ class FormEntryProxyAdmin(ModelAdmin):
         data = [prepare_form_entry_export_data(entry) for entry in queryset]
         payload = json.dumps(data, cls=DjangoJSONEncoder)
         response = HttpResponse(payload, content_type="application/json")
-        response["Content-Disposition"] = 'attachment; filename="form-entries-export.json"'
+        response["Content-Disposition"] = (
+            'attachment; filename="form-entries-export.json"'
+        )
         return response
 
     export_selected_forms.short_description = _("Export selected forms (JSON)")
+
+    @action(
+        description=_("Import form (JSON)"),
+        url_path="import-json",
+        icon="file_upload",
+        permissions=("fobi.add_formentry",),
+    )
+    def import_form_entry_action(self, request):
+        """Changelist action: import a form entry from an uploaded JSON file."""
+        from django.template.response import TemplateResponse
+
+        if request.method == "POST" and request.FILES.get("file"):
+            uploaded = request.FILES["file"]
+            try:
+                raw = uploaded.read().decode("utf-8")
+                form_data = json.loads(raw)
+            except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+                messages.error(request, _("Invalid JSON file: {err}").format(err=exc))
+                return TemplateResponse(
+                    request,
+                    "admin/unfold_fobi/formentryproxy/import_action.html",
+                    {"title": _("Import form from JSON")},
+                )
+            # Export produces a JSON array; import expects a single dict.
+            # Handle both formats: unwrap single-item arrays, iterate multi-item.
+            if isinstance(form_data, list):
+                entries = form_data
+            else:
+                entries = [form_data]
+            imported = []
+            for entry_data in entries:
+                imported.append(perform_form_entry_import(request, entry_data))
+            names = ", ".join(e.name for e in imported)
+            messages.success(
+                request,
+                _("Imported {count} form(s): {names}.").format(
+                    count=len(imported), names=names
+                ),
+            )
+            return HttpResponse(
+                status=302,
+                headers={
+                    "Location": reverse("admin:unfold_fobi_formentryproxy_changelist")
+                },
+            )
+        return TemplateResponse(
+            request,
+            "admin/unfold_fobi/formentryproxy/import_action.html",
+            {"title": _("Import form from JSON")},
+        )
 
     @admin.action(description=_("Clone selected forms"))
     def clone_selected_forms(self, request, queryset):

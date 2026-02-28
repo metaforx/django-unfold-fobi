@@ -1,9 +1,10 @@
 """
 Custom form mixin to automatically use Unfold widgets for fobi forms.
 """
-from django import forms
+
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Fieldset, Row, Column
+from crispy_forms.layout import Column, Fieldset, Layout, Row
+from django import forms
 from unfold.widgets import (
     UnfoldAdminCheckboxSelectMultiple,
     UnfoldAdminDateWidget,
@@ -12,6 +13,7 @@ from unfold.widgets import (
     UnfoldAdminImageFieldWidget,
     UnfoldAdminIntegerFieldWidget,
     UnfoldAdminIntegerRangeWidget,
+    UnfoldAdminNullBooleanSelectWidget,
     UnfoldAdminRadioSelectWidget,
     UnfoldAdminSelectMultipleWidget,
     UnfoldAdminSelectWidget,
@@ -22,7 +24,6 @@ from unfold.widgets import (
     UnfoldAdminTimeWidget,
     UnfoldAdminURLInputWidget,
     UnfoldBooleanSwitchWidget,
-    UnfoldAdminNullBooleanSelectWidget,
 )
 
 
@@ -85,6 +86,7 @@ def apply_unfold_widgets_to_form(form_instance):
     This should be called in the form's __init__ method to ensure widgets
     are applied at instantiation time, not at class definition time.
     """
+
     def set_widget(field, widget_class):
         """Replace widget while preserving attrs/choices when possible."""
         old_widget = getattr(field, "widget", None)
@@ -97,9 +99,7 @@ def apply_unfold_widgets_to_form(form_instance):
             # Merge CSS classes rather than overwriting Unfold defaults
             new_classes = merged_attrs.get("class", "")
             old_classes = old_attrs.get("class", "")
-            merged_classes = " ".join(
-                filter(None, [new_classes, old_classes])
-            ).strip()
+            merged_classes = " ".join(filter(None, [new_classes, old_classes])).strip()
 
             merged_attrs.update(old_attrs)
 
@@ -110,7 +110,9 @@ def apply_unfold_widgets_to_form(form_instance):
                 for sub_widget in getattr(new_widget, "widgets", []):
                     sub_attrs = sub_widget.attrs or {}
                     sub_classes = sub_attrs.get("class", "")
-                    combined = " ".join(filter(None, [sub_classes, class_to_merge])).strip()
+                    combined = " ".join(
+                        filter(None, [sub_classes, class_to_merge])
+                    ).strip()
                     if combined:
                         sub_widget.attrs["class"] = combined
                 new_widget.attrs = merged_attrs
@@ -146,17 +148,17 @@ def apply_unfold_widgets_to_form(form_instance):
         forms.BooleanField: UnfoldBooleanSwitchWidget,
     }
 
-    for field_name, field in form_instance.fields.items():
+    for _field_name, field in form_instance.fields.items():
         field_type = type(field)
 
         # Check if field is a Textarea
-        if hasattr(field, 'widget') and isinstance(field.widget, forms.Textarea):
+        if hasattr(field, "widget") and isinstance(field.widget, forms.Textarea):
             set_widget(field, UnfoldAdminTextareaWidget)
         # Map field types to Unfold widgets
         elif field_type in widget_map:
             set_widget(field, widget_map[field_type])
         # For fields with existing widgets, try to preserve widget attributes
-        elif hasattr(field, 'widget'):
+        elif hasattr(field, "widget"):
             # Try to map based on widget type
             widget_type = type(field.widget)
             if widget_type == forms.TextInput:
@@ -223,32 +225,32 @@ def apply_unfold_widgets_to_form(form_instance):
 
     # Configure FormHelper for crispy forms if not already configured
     # This ensures crispy forms uses Unfold's fieldset template
-    if not hasattr(form_instance, 'helper'):
+    if not hasattr(form_instance, "helper"):
         form_instance.helper = FormHelper()
-        form_instance.helper.template_pack = 'unfold_crispy'
+        form_instance.helper.template_pack = "unfold_crispy"
         # Create a layout with all fields in a fieldset
         # This ensures fieldsets are rendered using Unfold's fieldset template
         form_instance.helper.layout = Layout(
             Fieldset(
                 None,  # No legend by default
                 *form_instance.fields.keys(),
-                css_class='aligned'  # Match Django admin's 'aligned' class
+                css_class="aligned",  # Match Django admin's 'aligned' class
             )
         )
-    
+
     return form_instance
 
 
 class UnfoldFormMixin:
     """
     Mixin to automatically apply Unfold widgets to form fields.
-    
+
     Usage:
         class MyForm(UnfoldFormMixin, forms.Form):
             name = forms.CharField()
             email = forms.EmailField()
     """
-    
+
     def __init__(self, *args, **kwargs):
         kwargs.pop("request", None)
         super().__init__(*args, **kwargs)

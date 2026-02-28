@@ -10,8 +10,10 @@
         window.opener.location.reload();
         window.close();
     } else if (window.parent && window.parent !== window) {
-        // Iframe modal (django-unfold-modal compatible)
-        window.parent.postMessage({type: 'django:popup:change', reload: true}, '*');
+        // Iframe modal — reload parent directly to refresh inlines and close modal.
+        // django-unfold-modal's postMessage handler does not support reload,
+        // so we bypass it and reload the parent page directly.
+        window.parent.location.reload();
     }
 })();
 </script>

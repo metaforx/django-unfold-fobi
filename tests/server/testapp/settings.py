@@ -5,12 +5,13 @@ Used for:
 - pytest-django automated tests
 - Manual runserver for local development / visual inspection
 """
+
 import os
 from pathlib import Path
 
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
-from unfold_modal.utils import get_modal_styles, get_modal_scripts
+from unfold_modal.utils import get_modal_scripts, get_modal_styles
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -49,6 +50,7 @@ INSTALLED_APPS = [
     "fobi.contrib.plugins.form_elements.fields.date",
     "fobi.contrib.plugins.form_elements.fields.select",
     "fobi.contrib.plugins.form_handlers.db_store",
+    "fobi.contrib.plugins.form_handlers.mail",
     # DRF integration (optional, mirrors production usage)
     "fobi.contrib.apps.drf_integration",
     "fobi.contrib.apps.drf_integration.form_elements.fields.text",
@@ -59,6 +61,7 @@ INSTALLED_APPS = [
     "fobi.contrib.apps.drf_integration.form_elements.fields.date",
     "fobi.contrib.apps.drf_integration.form_elements.fields.select",
     "fobi.contrib.apps.drf_integration.form_handlers.db_store",
+    "fobi.contrib.apps.drf_integration.form_handlers.mail",
 ]
 
 MIDDLEWARE = [
@@ -116,7 +119,10 @@ LANGUAGES = [
     ("de", _("German")),
 ]
 LOCALE_PATHS = [
-    Path(__file__).resolve().parent.parent.parent.parent / "src" / "unfold_fobi" / "locale",
+    Path(__file__).resolve().parent.parent.parent.parent
+    / "src"
+    / "unfold_fobi"
+    / "locale",
 ]
 TIME_ZONE = "UTC"
 USE_I18N = True
@@ -127,6 +133,10 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Allow same-origin iframe embedding (required for django-unfold-modal)
 X_FRAME_OPTIONS = "SAMEORIGIN"
+
+# Email (console backend for testing — emails are printed to stdout)
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+DEFAULT_FROM_EMAIL = "test@example.com"
 
 # --- Fobi ---
 FOBI_THEME = "unfold"

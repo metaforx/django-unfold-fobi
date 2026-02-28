@@ -3,6 +3,7 @@
 Handles the async/sync compatibility between Playwright and Django's ORM,
 and provides login and form-entry helpers for e2e tests.
 """
+
 import os
 
 import pytest

@@ -6,6 +6,7 @@ Verifies:
 - Non-superuser staff can view but cannot modify saved entries.
 - Superusers retain full edit access to saved entries.
 """
+
 import pytest
 from django.contrib.auth.models import Permission, User
 from django.test import Client
@@ -39,9 +40,7 @@ def staff_user(db):
         "add_formentry",
     ):
         try:
-            perm = Permission.objects.get(
-                content_type=ct_form, codename=codename
-            )
+            perm = Permission.objects.get(content_type=ct_form, codename=codename)
             user.user_permissions.add(perm)
         except Permission.DoesNotExist:
             pass
@@ -57,26 +56,20 @@ def staff_client(staff_user):
 
 
 CHANGELIST_URL_NAME = (
-    "admin:fobi_contrib_plugins_form_handlers_db_store"
-    "_savedformdataentry_changelist"
+    "admin:fobi_contrib_plugins_form_handlers_db_store_savedformdataentry_changelist"
 )
 CHANGE_URL_NAME = (
-    "admin:fobi_contrib_plugins_form_handlers_db_store"
-    "_savedformdataentry_change"
+    "admin:fobi_contrib_plugins_form_handlers_db_store_savedformdataentry_change"
 )
 
 
 class TestViewEntriesActionLink:
     """T07/T10: handler inline 'View entries' must link to admin changelist."""
 
-    def test_view_entries_links_to_admin_changelist(
-        self, admin_client, form_entry
-    ):
+    def test_view_entries_links_to_admin_changelist(self, admin_client, form_entry):
         """The handler inline action 'View entries' must point to the admin
         changelist with form_entry filter."""
-        url = reverse(
-            "admin:unfold_fobi_formentryproxy_change", args=[form_entry.pk]
-        )
+        url = reverse("admin:unfold_fobi_formentryproxy_change", args=[form_entry.pk])
         response = admin_client.get(url)
         html = response.content.decode()
         changelist_url = reverse(CHANGELIST_URL_NAME)
@@ -87,9 +80,7 @@ class TestViewEntriesActionLink:
         self, admin_client, form_entry
     ):
         """The old /fobi/<id>/ URL must not appear as an action link."""
-        url = reverse(
-            "admin:unfold_fobi_formentryproxy_change", args=[form_entry.pk]
-        )
+        url = reverse("admin:unfold_fobi_formentryproxy_change", args=[form_entry.pk])
         response = admin_client.get(url)
         html = response.content.decode()
         old_url = f"/fobi/{form_entry.pk}/"
@@ -102,20 +93,14 @@ class TestFilteredChangelist:
     def test_changelist_accessible_for_admin(
         self, admin_client, form_entry, rest_submitted_form_data
     ):
-        url = (
-            reverse(CHANGELIST_URL_NAME)
-            + f"?form_entry__id__exact={form_entry.pk}"
-        )
+        url = reverse(CHANGELIST_URL_NAME) + f"?form_entry__id__exact={form_entry.pk}"
         response = admin_client.get(url)
         assert response.status_code == 200
 
     def test_changelist_shows_filtered_entry(
         self, admin_client, form_entry, rest_submitted_form_data
     ):
-        url = (
-            reverse(CHANGELIST_URL_NAME)
-            + f"?form_entry__id__exact={form_entry.pk}"
-        )
+        url = reverse(CHANGELIST_URL_NAME) + f"?form_entry__id__exact={form_entry.pk}"
         response = admin_client.get(url)
         html = response.content.decode()
         assert "Full Name" in html
@@ -123,10 +108,7 @@ class TestFilteredChangelist:
     def test_changelist_accessible_for_staff(
         self, staff_client, form_entry, rest_submitted_form_data
     ):
-        url = (
-            reverse(CHANGELIST_URL_NAME)
-            + f"?form_entry__id__exact={form_entry.pk}"
-        )
+        url = reverse(CHANGELIST_URL_NAME) + f"?form_entry__id__exact={form_entry.pk}"
         response = staff_client.get(url)
         assert response.status_code == 200
 
