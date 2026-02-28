@@ -229,6 +229,7 @@ class FormEntryProxyAdmin(ModelAdmin):
 
     class Media:
         js = ("unfold_fobi/js/admin_popup_actions.js",)
+        css = {"all": ("unfold_fobi/css/admin_action_dropdown_fix.css",)}
 
     def get_form(self, request, obj=None, **kwargs):
         """Use Fobi's FormEntryForm and inject request for validation/widgets."""

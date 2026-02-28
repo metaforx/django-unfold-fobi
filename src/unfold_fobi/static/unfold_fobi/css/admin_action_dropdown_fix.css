@@ -1,0 +1,8 @@
+/*
+ * Native Unfold dropdown actions apply x-show on the <a> node, leaving the
+ * parent <li> border visible in hidden tabs. Hide the parent li as well.
+ */
+li[x-ref^="actionDropdownadd_"]:has(> a[x-cloak]),
+li[x-ref^="actionDropdownadd_"]:has(> a[style*="display: none"]) {
+  display: none !important;
+}

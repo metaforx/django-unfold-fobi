@@ -9,41 +9,30 @@
     callback();
   }
 
-  function isFobiAddPopupLink(link) {
-    if (!link || link.dataset.popup !== "yes") {
-      return false;
-    }
-    const id = link.id || "";
-    return id.startsWith("add_fobi_element_") || id.startsWith("add_fobi_handler_");
-  }
-
-  function openRelatedPopup(link) {
-    if (
-      !window.django ||
-      !django.jQuery ||
-      typeof window.showRelatedObjectPopup !== "function"
-    ) {
-      return;
-    }
-    // unfold_modal delegates on ".related-widget-wrapper-link[data-popup='yes']".
-    // Native Unfold action links don't have this class, so add it before trigger.
-    link.classList.add("related-widget-wrapper-link");
-    const $ = django.jQuery;
-    const relatedEvent = $.Event("django:show-related", { href: link.href });
-    $(link).trigger(relatedEvent);
-    if (!relatedEvent.isDefaultPrevented()) {
-      window.showRelatedObjectPopup(link);
-    }
+  function decoratePopupLinks(root) {
+    const links = (root || document).querySelectorAll(
+      "a[data-popup='yes'][id^='add_fobi_element_'], a[data-popup='yes'][id^='add_fobi_handler_']"
+    );
+    links.forEach(function (link) {
+      link.classList.add("related-widget-wrapper-link");
+    });
   }
 
   onReady(function () {
-    document.body.addEventListener("click", function (event) {
-      const link = event.target.closest("a[data-popup='yes']");
-      if (!isFobiAddPopupLink(link)) {
-        return;
-      }
-      event.preventDefault();
-      openRelatedPopup(link);
+    // Make native Unfold dropdown links follow the same selector contract
+    // as Django related widgets, then reuse stock admin/unfold_modal handlers.
+    decoratePopupLinks(document);
+
+    // Keep class assignment for any links inserted later.
+    const observer = new MutationObserver(function (records) {
+      records.forEach(function (record) {
+        record.addedNodes.forEach(function (node) {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            decoratePopupLinks(node);
+          }
+        });
+      });
     });
+    observer.observe(document.body, { childList: true, subtree: true });
   });
 })();
