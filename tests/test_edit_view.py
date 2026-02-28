@@ -1,4 +1,4 @@
-"""T10/T10a/T10b/T10c – Native change view tests.
+"""T10/T10a/T10b/T10c/T10d – Native change view tests.
 
 Verifies:
 - Change route resolves and is permission-protected.
@@ -12,6 +12,7 @@ Verifies:
 - T10b: Inline tabs render for elements and handlers.
 - T10b: Sortable inline attributes present (ordering_field, x-sort).
 - T10c: Multi-element drag-drop reorder persists after save.
+- T10d: Drag handle HTML contract (CSS classes, Alpine directives, icon).
 """
 
 import pytest
@@ -442,7 +443,7 @@ class TestInlineTabs:
 
 
 class TestSortableInline:
-    """T10b: element inline must use Unfold sortable (drag-and-drop) pattern."""
+    """T10b/T10d: element inline must use Unfold sortable pattern with full handle contract."""
 
     @pytest.fixture()
     def change_html(self, admin_client, form_entry):
@@ -454,10 +455,23 @@ class TestSortableInline:
         """The element inline table must have data-ordering-field='position'."""
         assert 'data-ordering-field="position"' in change_html
 
-    def test_sort_directive_present(self, change_html):
-        """The element inline must have Alpine.js x-sort directive."""
-        assert "x-sort" in change_html
+    def test_sort_ghost_directive(self, change_html):
+        """The element inline must have Alpine.js x-sort.ghost directive."""
+        assert "x-sort.ghost" in change_html
+
+    def test_sort_end_event_binding(self, change_html):
+        """The inline table must bind sortRecords on drag-end."""
+        assert 'x-on:end="sortRecords"' in change_html
 
     def test_drag_handle_icon(self, change_html):
         """Drag handle icon must be present for existing elements."""
         assert "drag_indicator" in change_html
+
+    def test_drag_handle_markup_contract(self, change_html):
+        """T10d: drag handle must be a single element with all required attributes."""
+        # Unfold renders: <span class="material-symbols-outlined cursor-move" x-sort:handle>drag_indicator</span>
+        # Assert the full contiguous fragment to prevent false positives.
+        assert (
+            'class="material-symbols-outlined cursor-move" x-sort:handle>drag_indicator'
+            in change_html
+        )
