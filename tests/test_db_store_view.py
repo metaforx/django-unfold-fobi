@@ -44,6 +44,24 @@ class TestPublicFormView:
         content = response.content.decode()
         assert "<form" in content.lower()
 
+    def test_public_form_view_has_single_html_form(self, client, form_entry):
+        from django.urls import reverse
+
+        url = reverse("fobi.view_form_entry", args=[form_entry.slug])
+        response = client.get(url)
+        content = response.content.decode().lower()
+        assert content.count("<form") == 1
+
+    def test_public_form_submit_redirects_to_submitted(self, client, form_entry):
+        from django.urls import reverse
+
+        url = reverse("fobi.view_form_entry", args=[form_entry.slug])
+        response = client.post(url, {"full_name": "Alice Example"})
+        assert response.status_code == 302
+        assert response["Location"].endswith(
+            reverse("fobi.form_entry_submitted", args=[form_entry.slug])
+        )
+
 
 class TestDBStoreEntriesList:
     """After DRF submission, saved entries are queryable."""

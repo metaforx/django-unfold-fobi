@@ -2,6 +2,8 @@
 Management command to create a test form with basic fields for testing Fobi DRF integration.
 """
 
+import json
+
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from fobi.contrib.apps.drf_integration.form_elements.fields.boolean.base import (
@@ -165,15 +167,13 @@ class Command(BaseCommand):
         ]
 
         for field_data in fields_data:
-            # Create the form element entry
-            element_entry = FormElementEntry(
+            # Persist element config in plugin_data (JSON string expected by fobi).
+            FormElementEntry.objects.create(
                 form_entry=form_entry,
                 plugin_uid=field_data["plugin"].uid,
                 position=field_data["position"],
+                plugin_data=json.dumps(field_data["data"]),
             )
-            # Set the form data directly (stored as JSON)
-            element_entry.form_data = field_data["data"]
-            element_entry.save()
             self.stdout.write(
                 self.style.SUCCESS(
                     f"  Added field: {field_data['data']['label']} ({field_data['plugin'].name})"

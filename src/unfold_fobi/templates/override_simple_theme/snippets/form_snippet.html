@@ -13,9 +13,5 @@
     {% endif %}
 {% endblock form_non_field_and_hidden_errors %}
 
-{# Provide form_classes for Unfold crispy forms template pack #}
-{% get_form_classes as form_classes %}
-
-{# Use Unfold crispy forms template pack for public forms #}
-{% crispy form "unfold_crispy" %}
-
+{# Render only fields; outer <form> is provided by fobi/snippets/form_ajax.html #}
+{{ form|crispy }}
