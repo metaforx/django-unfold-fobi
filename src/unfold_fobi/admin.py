@@ -6,25 +6,26 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.http import HttpResponse
 from django.urls import path, reverse
+from django.utils.dateparse import parse_datetime
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
-from unfold.admin import ModelAdmin, TabularInline
 from fobi.forms import FormEntryForm
 from fobi.models import FormElementEntry, FormHandlerEntry
 from fobi.utils import prepare_form_entry_export_data
-from django.utils.dateparse import parse_datetime
+from unfold.admin import ModelAdmin, TabularInline
+
+from .forms import FormEntryFormWithCloneable
 from .models import FormEntryProxy
 from .services import clone_form_entry
-from .forms import FormEntryFormWithCloneable
 
 
 class FormElementEntryInline(TabularInline):
-    """Read-only inline showing form elements with links to fobi edit views."""
+    """Inline showing form elements with editable position and action links."""
 
     model = FormElementEntry
     fields = ("position", "plugin_uid", "plugin_data_preview", "element_actions")
-    readonly_fields = ("position", "plugin_uid", "plugin_data_preview", "element_actions")
+    readonly_fields = ("plugin_uid", "plugin_data_preview", "element_actions")
     ordering = ("position",)
     extra = 0
     verbose_name = _("Form element")
@@ -158,8 +159,8 @@ class FormEntryProxyAdmin(ModelAdmin):
     """
     FormEntryProxy admin using native Unfold change view.
 
-    T10 POC: replaces the custom builder edit view with native admin
-    change form + read-only inlines for elements/handlers.
+    T10/T10a: native admin change form with element/handler inlines,
+    "Add" dropdowns for available plugins, and editable element ordering.
     """
     list_display = ["name", "slug", "is_public", "created", "updated"]
     list_filter = ["is_public", "created", "updated"]
@@ -170,6 +171,7 @@ class FormEntryProxyAdmin(ModelAdmin):
     warn_unsaved_form = True
     actions = ["export_selected_forms", "clone_selected_forms"]
     inlines = [FormElementEntryInline, FormHandlerEntryInline]
+    change_form_template = "admin/unfold_fobi/formentryproxy/change_form.html"
 
     def get_form(self, request, obj=None, **kwargs):
         """Use Fobi's FormEntryForm and inject request for validation/widgets."""
@@ -315,6 +317,42 @@ class FormEntryProxyAdmin(ModelAdmin):
         extra_context = extra_context or {}
         extra_context["title"] = _("Forms")
         return super().changelist_view(request, extra_context)
+
+    def change_view(self, request, object_id, form_url="", extra_context=None):
+        """Pass available element/handler plugins to the change form template."""
+        extra_context = extra_context or {}
+        obj = self.get_object(request, object_id)
+        if obj:
+            from fobi.base import form_handler_plugin_registry
+            from fobi.utils import (
+                get_user_form_element_plugins_grouped,
+                get_user_form_handler_plugins,
+            )
+
+            extra_context["user_form_element_plugins"] = (
+                get_user_form_element_plugins_grouped(request.user)
+            )
+            extra_context["form_entry"] = obj
+
+            # Filter out single-use handlers already attached to this form
+            all_handlers = get_user_form_handler_plugins(request.user)
+            existing_uids = set(
+                FormHandlerEntry.objects.filter(form_entry=obj)
+                .values_list("plugin_uid", flat=True)
+            )
+            available_handlers = []
+            for uid, name in all_handlers:
+                if uid in existing_uids:
+                    plugin_cls = form_handler_plugin_registry.get(uid)
+                    if plugin_cls and not getattr(
+                        plugin_cls, "allow_multiple", True
+                    ):
+                        continue
+                available_handlers.append((uid, name))
+            extra_context["user_form_handler_plugins"] = available_handlers
+        return super().change_view(
+            request, object_id, form_url, extra_context
+        )
 
     def save_model(self, request, obj, form, change):
         """Ensure creator is set when using the native admin add view."""

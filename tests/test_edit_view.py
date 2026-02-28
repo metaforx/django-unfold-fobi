@@ -1,14 +1,17 @@
-"""T10 – Native change view baseline tests.
+"""T10/T10a – Native change view tests.
 
 Verifies:
 - Change route resolves and is permission-protected.
 - Native change view renders with fieldsets and inlines.
 - Element inline shows plugin actions (edit/delete links).
 - Handler inline shows plugin actions.
+- T10a: "Add element" and "Add handler" dropdowns present.
+- T10a: Element position is editable and persisted on save.
+- T10a: Single-use handler plugins are hidden from "Add handler" dropdown.
 """
+
 import pytest
 from django.urls import reverse
-
 from helpers import get_admin_edit_url
 
 
@@ -115,3 +118,127 @@ class TestHandlerInline:
             kwargs={"form_handler_entry_id": handler.pk},
         )
         assert delete_url in change_html
+
+
+class TestAddElementDropdown:
+    """T10a: change page must show 'Add element' dropdown with available plugins."""
+
+    @pytest.fixture()
+    def change_html(self, admin_client, form_entry):
+        url = get_admin_edit_url(form_entry.pk)
+        response = admin_client.get(url)
+        return response.content.decode()
+
+    def test_add_element_button_present(self, change_html):
+        assert "Add element" in change_html
+
+    def test_add_element_links_to_fobi_add_url(self, change_html, form_entry):
+        """At least one element plugin add URL must be in the dropdown."""
+        add_url = reverse(
+            "fobi.add_form_element_entry",
+            kwargs={
+                "form_entry_id": form_entry.pk,
+                "form_element_plugin_uid": "text",
+            },
+        )
+        assert add_url in change_html
+
+    def test_add_element_shows_grouped_plugins(self, change_html):
+        """Element plugins must be listed (e.g. Text, Email)."""
+        assert "Text" in change_html
+        assert "Email" in change_html
+
+
+class TestAddHandlerDropdown:
+    """T10a: change page must show 'Add handler' dropdown with constraints."""
+
+    def test_add_handler_button_hidden_when_single_use_attached(
+        self, admin_client, form_entry
+    ):
+        """db_store is allow_multiple=False and already attached, so
+        it must NOT appear in the handler dropdown."""
+        url = get_admin_edit_url(form_entry.pk)
+        response = admin_client.get(url)
+        html = response.content.decode()
+        add_url = reverse(
+            "fobi.add_form_handler_entry",
+            kwargs={
+                "form_entry_id": form_entry.pk,
+                "form_handler_plugin_uid": "db_store",
+            },
+        )
+        assert add_url not in html
+
+    def test_add_handler_button_shows_when_no_handler_attached(
+        self, admin_client, form_entry
+    ):
+        """If db_store handler is removed, it must appear in the dropdown."""
+        from fobi.models import FormHandlerEntry
+
+        FormHandlerEntry.objects.filter(
+            form_entry=form_entry, plugin_uid="db_store"
+        ).delete()
+        url = get_admin_edit_url(form_entry.pk)
+        response = admin_client.get(url)
+        html = response.content.decode()
+        add_url = reverse(
+            "fobi.add_form_handler_entry",
+            kwargs={
+                "form_entry_id": form_entry.pk,
+                "form_handler_plugin_uid": "db_store",
+            },
+        )
+        assert add_url in html
+
+
+class TestElementPositionEditing:
+    """T10a: element position must be editable and saved via admin form."""
+
+    def test_position_field_is_editable(self, admin_client, form_entry):
+        """Position input must be a writable field (not just readonly text)."""
+        url = get_admin_edit_url(form_entry.pk)
+        response = admin_client.get(url)
+        html = response.content.decode()
+        # Position should appear as an input field, not just as display text
+        assert 'name="formelemententry_set-0-position"' in html
+
+    def test_position_change_persisted_on_save(self, admin_client, form_entry):
+        """Changing element position via admin save must persist."""
+
+        element = form_entry.formelemententry_set.first()
+        assert element.position == 1
+
+        url = get_admin_edit_url(form_entry.pk)
+        response = admin_client.get(url)
+
+        # Build POST data from the change form
+        post_data = {
+            "name": form_entry.name,
+            "slug": form_entry.slug,
+            "is_public": "on" if form_entry.is_public else "",
+            "is_cloneable": "on" if form_entry.is_cloneable else "",
+            # Element inline formset
+            "formelemententry_set-TOTAL_FORMS": "1",
+            "formelemententry_set-INITIAL_FORMS": "1",
+            "formelemententry_set-MIN_NUM_FORMS": "0",
+            "formelemententry_set-MAX_NUM_FORMS": "0",
+            "formelemententry_set-0-id": str(element.pk),
+            "formelemententry_set-0-form_entry": str(form_entry.pk),
+            "formelemententry_set-0-position": "5",
+            # Handler inline formset (unchanged)
+            "formhandlerentry_set-TOTAL_FORMS": "1",
+            "formhandlerentry_set-INITIAL_FORMS": "1",
+            "formhandlerentry_set-MIN_NUM_FORMS": "0",
+            "formhandlerentry_set-MAX_NUM_FORMS": "0",
+            "formhandlerentry_set-0-id": str(
+                form_entry.formhandlerentry_set.first().pk
+            ),
+            "formhandlerentry_set-0-form_entry": str(form_entry.pk),
+            "_save": "Save",
+        }
+
+        response = admin_client.post(url, data=post_data)
+        assert response.status_code in (200, 302)
+
+        element.refresh_from_db()
+        assert element.position == 5
