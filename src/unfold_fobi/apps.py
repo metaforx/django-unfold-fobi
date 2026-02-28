@@ -109,14 +109,127 @@ class UnfoldFobiConfig(AppConfig):
                 patched._unfold_patched = True
                 perm_cls.has_object_permission = patched
 
+    @staticmethod
+    def _patch_fobi_popup_response():
+        """Return a close-and-reload popup response when ``_popup=1`` is set.
+
+        Fobi add/edit/delete views always redirect after a successful
+        operation.  When the view is opened in popup mode (``?_popup=1``),
+        we intercept the redirect and return a tiny HTML page that tells
+        the opening window to reload, compatible with both ``window.open``
+        popups and ``django-unfold-modal`` iframe modals.
+        """
+        from django.template.loader import render_to_string
+        from django.http import HttpResponse
+
+        try:
+            from fobi.views.class_based import (
+                AddFormElementEntryView,
+                EditFormElementEntryView,
+                AddFormHandlerEntryView,
+                EditFormHandlerEntryView,
+                DeleteFormElementEntryView,
+                DeleteFormHandlerEntryView,
+            )
+        except ImportError:
+            return
+
+        POPUP_TEMPLATE = "admin/unfold_fobi/popup_response.html"
+        SESSION_KEY = "_fobi_popup_count"
+
+        def _is_popup(request):
+            """Check _popup in GET, POST, or session counter (set during GET)."""
+            return (
+                request.GET.get("_popup")
+                or request.POST.get("_popup")
+                or request.session.get(SESSION_KEY, 0) > 0
+            )
+
+        def _popup_http_response(request):
+            count = request.session.get(SESSION_KEY, 0)
+            if count > 1:
+                request.session[SESSION_KEY] = count - 1
+            else:
+                request.session.pop(SESSION_KEY, None)
+            html = render_to_string(POPUP_TEMPLATE)
+            return HttpResponse(html)
+
+        def _is_success_redirect(response):
+            """Return True only for fobi success redirects (not login/error)."""
+            if response.status_code not in (301, 302):
+                return False
+            location = response.get("Location", "")
+            # Auth redirects contain the login URL path; skip those.
+            from django.conf import settings
+
+            login_path = getattr(settings, "LOGIN_URL", "/accounts/login/")
+            if login_path and login_path in location:
+                return False
+            return True
+
+        def _wrap_method(original, method_name, intercept_get_redirect=False):
+            """Wrap get/post to store popup counter and intercept redirects."""
+            def wrapped(self, request, *args, **kwargs):
+                if method_name == "get":
+                    if request.GET.get("_popup"):
+                        count = request.session.get(SESSION_KEY, 0)
+                        request.session[SESSION_KEY] = count + 1
+                    else:
+                        # Non-popup GET: full reset of stale counter.
+                        request.session.pop(SESSION_KEY, None)
+                response = original(self, request, *args, **kwargs)
+                # Intercept redirects for:
+                # - POST (successful save on add/edit views)
+                # - GET on add views (no-form plugins save & redirect on GET)
+                # - GET on delete views (fobi deletes on GET)
+                intercept = (
+                    _is_popup(request)
+                    and _is_success_redirect(response)
+                    and (request.method == "POST" or intercept_get_redirect)
+                )
+                if intercept:
+                    return _popup_http_response(request)
+                return response
+            return wrapped
+
+        # Add views: intercept GET redirects too (no-form plugins save on GET)
+        add_views = (
+            AddFormElementEntryView,
+            AddFormHandlerEntryView,
+        )
+        edit_views = (
+            EditFormElementEntryView,
+            EditFormHandlerEntryView,
+        )
+        delete_views = (
+            DeleteFormElementEntryView,
+            DeleteFormHandlerEntryView,
+        )
+        for view_cls in edit_views:
+            for method_name in ("get", "post"):
+                method = getattr(view_cls, method_name, None)
+                if method and not getattr(method, "_unfold_popup_patched", False):
+                    wrapped = _wrap_method(method, method_name)
+                    wrapped._unfold_popup_patched = True
+                    setattr(view_cls, method_name, wrapped)
+        for view_cls in (*add_views, *delete_views):
+            for method_name in ("get", "post"):
+                method = getattr(view_cls, method_name, None)
+                if method and not getattr(method, "_unfold_popup_patched", False):
+                    wrapped = _wrap_method(
+                        method, method_name, intercept_get_redirect=True
+                    )
+                    wrapped._unfold_popup_patched = True
+                    setattr(view_cls, method_name, wrapped)
+
     def ready(self):
         """
         Apply Unfold widgets to fobi forms when the app is ready.
-        
+
         Instead of patching __init__, we use a cleaner approach:
         Monkey-patch the form classes to add widget application in their __init__
         using a mixin pattern that doesn't break super() calls.
-        
+
         Also patches fobi's dynamic form creation to apply Unfold widgets.
         """
         # Import fobi compatibility patch first (must be before any fobi imports)
@@ -383,3 +496,7 @@ class UnfoldFobiConfig(AppConfig):
         # `form_entry__user__pk=request.user.pk` in _get_queryset, causing
         # 404 for admin users who are not the form's original creator.
         self._patch_fobi_owner_filtering()
+
+        # T10e: Patch fobi add/edit/delete views to return a popup response
+        # instead of a redirect when opened with ?_popup=1.
+        self._patch_fobi_popup_response()

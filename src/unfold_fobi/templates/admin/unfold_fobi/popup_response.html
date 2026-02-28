@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html><head><title></title></head>
+<body>
+<script>
+(function() {
+    // After a successful fobi element/handler save in popup mode,
+    // signal the parent to reload and close this window.
+    if (window.opener) {
+        // Traditional window.open popup
+        window.opener.location.reload();
+        window.close();
+    } else if (window.parent && window.parent !== window) {
+        // Iframe modal (django-unfold-modal compatible)
+        window.parent.postMessage({type: 'django:popup:change', reload: true}, '*');
+    }
+})();
+</script>
+</body>
+</html>

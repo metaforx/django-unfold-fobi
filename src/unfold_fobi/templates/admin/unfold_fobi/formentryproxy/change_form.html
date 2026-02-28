@@ -25,7 +25,8 @@
                         {{ group }}
                     </div>
                     {% for uid, name in plugins %}
-                        <a href="{% url 'fobi.add_form_element_entry' form_entry.pk uid %}"
+                        <a href="{% url 'fobi.add_form_element_entry' form_entry.pk uid %}?_popup=1"
+                           onclick="window.open(this.href,'fobi_popup','width=800,height=600,scrollbars=yes');return false;"
                            class="block px-3 py-1.5 text-sm text-base-700 dark:text-base-300
                                   hover:bg-base-100 dark:hover:bg-base-700 transition-colors">
                             {{ name }}
@@ -52,7 +53,8 @@
                         border border-base-200 dark:border-base-700
                         rounded-default shadow-lg py-1 min-w-48">
                 {% for uid, name in user_form_handler_plugins %}
-                    <a href="{% url 'fobi.add_form_handler_entry' form_entry.pk uid %}"
+                    <a href="{% url 'fobi.add_form_handler_entry' form_entry.pk uid %}?_popup=1"
+                       onclick="window.open(this.href,'fobi_popup','width=800,height=600,scrollbars=yes');return false;"
                        class="block px-3 py-1.5 text-sm text-base-700 dark:text-base-300
                               hover:bg-base-100 dark:hover:bg-base-700 transition-colors">
                         {{ name }}
