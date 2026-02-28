@@ -1,10 +1,16 @@
 """URL configuration for the unfold_fobi test server."""
 from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
-from django.urls import include, path, re_path
+from django.shortcuts import redirect
+from django.urls import include, path, re_path, reverse
 from django.views.generic import RedirectView
 
 import unfold_fobi.views
+
+
+def _edit_form_entry_redirect(request, form_entry_id):
+    """Map fobi.edit_form_entry (form_entry_id kwarg) to native admin change URL."""
+    return redirect(reverse("admin:unfold_fobi_formentryproxy_change", args=[form_entry_id]))
 
 # Non-localised endpoints (no language prefix)
 urlpatterns = [
@@ -33,15 +39,13 @@ urlpatterns += i18n_patterns(
     path(
         "admin/fobi/forms/create/",
         RedirectView.as_view(
-            pattern_name="admin:unfold_fobi_formentryproxy_create"
+            pattern_name="admin:unfold_fobi_formentryproxy_add"
         ),
         name="fobi.create_form_entry",
     ),
     path(
         "admin/fobi/forms/edit/<int:form_entry_id>/",
-        RedirectView.as_view(
-            pattern_name="admin:unfold_fobi_formentryproxy_edit"
-        ),
+        _edit_form_entry_redirect,
         name="fobi.edit_form_entry",
     ),
     # Fobi edit views — must be before admin.site.urls for the same reason.

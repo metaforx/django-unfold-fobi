@@ -6,7 +6,11 @@ from django.utils.translation import gettext_lazy as _
 
 class UnfoldSimpleTheme(SimpleTheme):
     """
-    Unfold theme for fobi
+    Unfold theme for fobi — T10 POC simplified.
+
+    Only overrides templates still used by element/handler config views.
+    The edit_form_entry_ajax_template is no longer referenced since
+    the custom builder edit view was replaced by native admin change view.
     """
     uid = 'unfold'
     name = _("Django Unfold admin style")
@@ -16,14 +20,11 @@ class UnfoldSimpleTheme(SimpleTheme):
     form_properties_snippet_template_name = 'override_simple_theme/snippets/form_properties_snippet.html'
     form_snippet_template_name = 'override_simple_theme/snippets/form_snippet.html'
     form_wizard_properties_snippet_template_name = 'override_simple_theme/snippets/form_wizard_properties_snippet.html'
-    edit_form_entry_ajax_template = 'override_simple_theme/edit_form_entry_ajax.html'
-    create_form_entry_ajax_template = 'override_simple_theme/create_form_entry_ajax.html'
 
     media_css = (
         "simple/css/fobi.simple.css",
         "simple/css/fobi.simple.edit.css",
         "unfold_fobi/css/fobi_unfold.css",
-        #"jquery-ui/css/django-admin-theme/jquery-ui-1.10.4.custom.min.css",
     )
 
     media_js = (

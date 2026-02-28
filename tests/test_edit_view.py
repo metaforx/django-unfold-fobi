@@ -1,180 +1,117 @@
-"""T03/T06 – Edit-view baseline and structure tests.
+"""T10 – Native change view baseline tests.
 
 Verifies:
-- Edit route resolves and is permission-protected.
-- Edit template renders the Alpine.js tabs container with expected tab labels.
-- Tab markup uses clean Unfold semantics without legacy residue (T06).
-- Tab ARIA attributes are correct for accessibility (T06).
-- "Save ordering" button is absent (auto-save via JS instead).
-- Ordering POST path behaves as expected.
+- Change route resolves and is permission-protected.
+- Native change view renders with fieldsets and inlines.
+- Element inline shows plugin actions (edit/delete links).
+- Handler inline shows plugin actions.
 """
 import pytest
 from django.urls import reverse
 
-from helpers import (
-    assert_html_contains_tab,
-    assert_no_save_ordering_button,
-    get_admin_edit_url,
-)
+from helpers import get_admin_edit_url
 
 
-class TestEditViewRoute:
-    """The edit URL must resolve and enforce authentication."""
+class TestChangeViewRoute:
+    """The change URL must resolve and enforce authentication."""
 
-    def test_edit_route_resolves(self, form_entry):
+    def test_change_route_resolves(self, form_entry):
         url = get_admin_edit_url(form_entry.pk)
-        assert "/edit/" in url
+        assert "/change/" in url
 
-    def test_edit_view_requires_authentication(self, client, form_entry):
+    def test_change_view_requires_authentication(self, client, form_entry):
         """Unauthenticated requests must redirect (302)."""
         url = get_admin_edit_url(form_entry.pk)
         response = client.get(url)
         assert response.status_code == 302
 
-    def test_edit_view_accessible_for_admin(self, admin_client, form_entry):
+    def test_change_view_accessible_for_admin(self, admin_client, form_entry):
         url = get_admin_edit_url(form_entry.pk)
         response = admin_client.get(url)
         assert response.status_code == 200
 
-    def test_change_route_redirects_to_custom_edit(
-        self, admin_client, form_entry
-    ):
-        change_url = reverse(
-            "admin:unfold_fobi_formentryproxy_change", args=[form_entry.pk]
-        )
-        response = admin_client.get(change_url)
-        assert response.status_code == 302
-        assert response.url == get_admin_edit_url(form_entry.pk)
 
-
-class TestEditTemplateTabs:
-    """The edit template must render the Alpine.js tabs container."""
+class TestChangeViewFieldsets:
+    """Native change view must render fieldsets from get_fieldsets."""
 
     @pytest.fixture()
-    def edit_html(self, admin_client, form_entry):
+    def change_html(self, admin_client, form_entry):
         url = get_admin_edit_url(form_entry.pk)
         response = admin_client.get(url)
         return response.content.decode()
 
-    def test_tabs_container_present(self, edit_html):
-        assert 'id="tabs-alpine"' in edit_html
+    def test_basic_information_fieldset(self, change_html):
+        assert "Basic information" in change_html
 
-    def test_elements_tab_label(self, edit_html):
-        assert_html_contains_tab(edit_html, "Elements")
+    def test_visibility_fieldset(self, change_html):
+        assert "Visibility" in change_html
 
-    def test_handlers_tab_label(self, edit_html):
-        assert_html_contains_tab(edit_html, "Handlers")
-
-    def test_properties_tab_label(self, edit_html):
-        assert_html_contains_tab(edit_html, "Properties")
-
-    def test_tab_content_sections_present(self, edit_html):
-        """Each tab must have a corresponding content div."""
-        assert 'id="tab-form-elements"' in edit_html
-        assert 'id="tab-form-handlers"' in edit_html
-        assert 'id="tab-form-properties"' in edit_html
+    def test_form_name_displayed(self, change_html, form_entry):
+        assert form_entry.name in change_html
 
 
-class TestTabStructureClean:
-    """T06: Tab markup must use clean Unfold semantics, no legacy residue."""
+class TestElementInline:
+    """Element inline must show existing elements with action links."""
 
     @pytest.fixture()
-    def edit_html(self, admin_client, form_entry):
+    def change_html(self, admin_client, form_entry):
         url = get_admin_edit_url(form_entry.pk)
         response = admin_client.get(url)
         return response.content.decode()
 
-    def test_no_legacy_tab_links_class(self, edit_html):
-        """The tab-links CSS class from legacy jQuery tabs must be removed."""
-        assert 'class="tab-links ' not in edit_html
+    def test_element_inline_present(self, change_html):
+        """The element inline section must be rendered."""
+        assert "Form elements" in change_html
 
-    def test_no_legacy_col_class_on_tab_panels(self, edit_html):
-        """Legacy 'col' classes must not appear on tab content divs."""
-        assert 'class="col col-form-' not in edit_html
+    def test_element_plugin_uid_displayed(self, change_html):
+        """The text plugin uid must appear in the inline."""
+        assert "text" in change_html
 
-    def test_tablist_role_present(self, edit_html):
-        """The tab list must have role='tablist'."""
-        assert 'role="tablist"' in edit_html
-
-    def test_tab_role_present(self, edit_html):
-        """Tab links must have role='tab'."""
-        assert 'role="tab"' in edit_html
-
-    def test_tabpanel_role_present(self, edit_html):
-        """Tab content panels must have role='tabpanel'."""
-        assert 'role="tabpanel"' in edit_html
-
-    def test_aria_controls_present(self, edit_html):
-        """Tab links must have aria-controls pointing to their panel."""
-        assert 'aria-controls="tab-form-elements"' in edit_html
-        assert 'aria-controls="tab-form-handlers"' in edit_html
-        assert 'aria-controls="tab-form-properties"' in edit_html
-
-    def test_aria_labelledby_references_tab_ids(self, edit_html):
-        """Each tabpanel's aria-labelledby must reference its tab anchor's id."""
-        assert 'aria-labelledby="tab-elements"' in edit_html
-        assert 'aria-labelledby="tab-handlers"' in edit_html
-        assert 'aria-labelledby="tab-properties"' in edit_html
-
-    def test_tab_anchors_have_ids(self, edit_html):
-        """Tab anchor elements must have stable IDs for aria-labelledby."""
-        assert 'id="tab-elements"' in edit_html
-        assert 'id="tab-handlers"' in edit_html
-        assert 'id="tab-properties"' in edit_html
-
-    def test_no_legacy_fobi_unfold_js(self, edit_html):
-        """Dead fobi_unfold.js must not be loaded."""
-        assert "fobi_unfold.js" not in edit_html
-
-
-class TestSaveOrderingAbsent:
-    """No visible 'Save ordering' button; ordering is auto-saved via JS."""
-
-    def test_no_save_ordering_button(self, admin_client, form_entry):
-        url = get_admin_edit_url(form_entry.pk)
-        response = admin_client.get(url)
-        content = response.content.decode()
-        assert_no_save_ordering_button(content)
-
-    def test_ordering_hidden_input_present(self, admin_client, form_entry):
-        """A hidden ordering field should exist for JS auto-save."""
-        url = get_admin_edit_url(form_entry.pk)
-        response = admin_client.get(url)
-        content = response.content.decode()
-        assert 'name="ordering"' in content
-
-
-class TestOrderingPost:
-    """The ordering POST path must accept valid position data."""
-
-    def test_ordering_post_redirects_on_success(self, admin_client, form_entry):
-        """POST with ordering=1 and valid positions redirects (302)."""
-        url = get_admin_edit_url(form_entry.pk)
+    def test_element_edit_link(self, change_html, form_entry):
+        """Edit action link for the element must be present."""
         element = form_entry.formelemententry_set.first()
-        data = {
-            "ordering": "1",
-            f"form-0-id": str(element.pk),
-            f"form-0-position": "1",
-            "form-TOTAL_FORMS": "1",
-            "form-INITIAL_FORMS": "1",
-            "form-MIN_NUM_FORMS": "0",
-            "form-MAX_NUM_FORMS": "1000",
-        }
-        response = admin_client.post(url, data=data)
-        assert response.status_code == 302
+        edit_url = reverse(
+            "fobi.edit_form_element_entry",
+            kwargs={"form_element_entry_id": element.pk},
+        )
+        assert edit_url in change_html
 
-    def test_ordering_post_invalid_positions_redirects(
-        self, admin_client, form_entry
-    ):
-        """POST with invalid positions still redirects (with error message)."""
+    def test_element_delete_link(self, change_html, form_entry):
+        """Delete action link for the element must be present."""
+        element = form_entry.formelemententry_set.first()
+        delete_url = reverse(
+            "fobi.delete_form_element_entry",
+            kwargs={"form_element_entry_id": element.pk},
+        )
+        assert delete_url in change_html
+
+
+class TestHandlerInline:
+    """Handler inline must show existing handlers with action links."""
+
+    @pytest.fixture()
+    def change_html(self, admin_client, form_entry):
         url = get_admin_edit_url(form_entry.pk)
-        data = {
-            "ordering": "1",
-            "form-0-position": "999",
-            "form-TOTAL_FORMS": "1",
-            "form-INITIAL_FORMS": "1",
-            "form-MIN_NUM_FORMS": "0",
-            "form-MAX_NUM_FORMS": "1000",
-        }
-        response = admin_client.post(url, data=data)
-        assert response.status_code == 302
+        response = admin_client.get(url)
+        return response.content.decode()
+
+    def test_handler_inline_present(self, change_html):
+        """The handler inline section must be rendered."""
+        assert "Form handlers" in change_html
+
+    def test_handler_plugin_uid_displayed(self, change_html):
+        """The db_store handler uid must appear in the inline."""
+        assert "db_store" in change_html
+
+    def test_handler_delete_link(self, change_html, form_entry):
+        """Delete action link for the handler must be present."""
+        from fobi.models import FormHandlerEntry
+
+        handler = FormHandlerEntry.objects.filter(
+            form_entry=form_entry, plugin_uid="db_store"
+        ).first()
+        delete_url = reverse(
+            "fobi.delete_form_handler_entry",
+            kwargs={"form_handler_entry_id": handler.pk},
+        )
+        assert delete_url in change_html

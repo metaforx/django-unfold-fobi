@@ -8,8 +8,8 @@ def get_admin_add_url():
 
 
 def get_admin_edit_url(pk):
-    """Return the custom admin edit URL for a form entry."""
-    return reverse("admin:unfold_fobi_formentryproxy_edit", args=[pk])
+    """Return the admin change URL for a form entry (native change view)."""
+    return reverse("admin:unfold_fobi_formentryproxy_change", args=[pk])
 
 
 def get_admin_changelist_url():

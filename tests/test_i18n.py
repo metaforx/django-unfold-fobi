@@ -79,17 +79,17 @@ class TestAdminFieldsetLabelsTranslated:
 
 
 class TestViewTitlesTranslated:
-    """View classes must expose translated title attributes."""
+    """Redirect view classes must expose translated title attributes."""
 
-    def test_edit_view_title(self):
-        from unfold_fobi.views import FormEntryEditView
+    def test_import_view_title(self):
+        from unfold_fobi.views import FormEntryImportView
 
-        assert str(FormEntryEditView.title) == "Edit form"
+        assert str(FormEntryImportView.title) == "Import form"
 
-    def test_create_view_title(self):
-        from unfold_fobi.views import FormEntryCreateView
+    def test_wizards_view_title(self):
+        from unfold_fobi.views import FormWizardsDashboardView
 
-        assert str(FormEntryCreateView.title) == "Create form"
+        assert str(FormWizardsDashboardView.title) == "Wizards"
 
 
 class TestContextProcessorBrandingWrapped:

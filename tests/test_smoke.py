@@ -43,13 +43,10 @@ class TestAdminURLs:
         url = reverse("admin:unfold_fobi_formentryproxy_add")
         assert url == "/en/admin/unfold_fobi/formentryproxy/add/"
 
-    def test_edit_url(self):
-        url = reverse("admin:unfold_fobi_formentryproxy_edit", args=[1])
-        assert url == "/en/admin/unfold_fobi/formentryproxy/edit/1/"
-
-    def test_create_url(self):
-        url = reverse("admin:unfold_fobi_formentryproxy_create")
-        assert url == "/en/admin/unfold_fobi/formentryproxy/create/"
+    def test_change_url(self):
+        """T10: native change view URL resolves."""
+        url = reverse("admin:unfold_fobi_formentryproxy_change", args=[1])
+        assert url == "/en/admin/unfold_fobi/formentryproxy/1/change/"
 
 
 class TestAdminViews:
@@ -65,9 +62,10 @@ class TestAdminViews:
         response = admin_client.get(url)
         assert response.status_code == 200
 
-    def test_edit_view_accessible(self, admin_client, form_entry):
+    def test_change_view_accessible(self, admin_client, form_entry):
+        """T10: native change view renders 200."""
         url = reverse(
-            "admin:unfold_fobi_formentryproxy_edit", args=[form_entry.pk]
+            "admin:unfold_fobi_formentryproxy_change", args=[form_entry.pk]
         )
         response = admin_client.get(url)
         assert response.status_code == 200

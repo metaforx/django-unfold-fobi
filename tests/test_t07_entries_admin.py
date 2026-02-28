@@ -1,7 +1,7 @@
-"""T07 – DB Store Entries: admin routing and readonly contract.
+"""T07/T10 – DB Store Entries: admin routing and readonly contract.
 
 Verifies:
-- "View entries" action in builder edit view links to admin changelist (not /fobi/<id>/).
+- "View entries" action in handler inline links to admin changelist (not /fobi/<id>/).
 - Filtered admin changelist is accessible for staff.
 - Non-superuser staff can view but cannot modify saved entries.
 - Superusers retain full edit access to saved entries.
@@ -21,7 +21,6 @@ def staff_user(db):
         password="staffpass123",
         is_staff=True,
     )
-    # Grant view permission on SavedFormDataEntry
     from django.contrib.contenttypes.models import ContentType
     from fobi.contrib.plugins.form_handlers.db_store.models import (
         SavedFormDataEntry,
@@ -31,7 +30,6 @@ def staff_user(db):
     for codename in ("view_savedformdataentry",):
         perm = Permission.objects.get(content_type=ct, codename=codename)
         user.user_permissions.add(perm)
-    # Also need view permission on FormEntry for the filter FK widget
     from fobi.models import FormEntry
 
     ct_form = ContentType.objects.get_for_model(FormEntry)
@@ -69,15 +67,15 @@ CHANGE_URL_NAME = (
 
 
 class TestViewEntriesActionLink:
-    """T07: 'View entries' in builder edit must link to admin changelist."""
+    """T07/T10: handler inline 'View entries' must link to admin changelist."""
 
     def test_view_entries_links_to_admin_changelist(
         self, admin_client, form_entry
     ):
-        """The handler action 'View entries' must point to the admin
-        changelist with form_entry filter, not /fobi/<id>/."""
+        """The handler inline action 'View entries' must point to the admin
+        changelist with form_entry filter."""
         url = reverse(
-            "admin:unfold_fobi_formentryproxy_edit", args=[form_entry.pk]
+            "admin:unfold_fobi_formentryproxy_change", args=[form_entry.pk]
         )
         response = admin_client.get(url)
         html = response.content.decode()
@@ -90,13 +88,11 @@ class TestViewEntriesActionLink:
     ):
         """The old /fobi/<id>/ URL must not appear as an action link."""
         url = reverse(
-            "admin:unfold_fobi_formentryproxy_edit", args=[form_entry.pk]
+            "admin:unfold_fobi_formentryproxy_change", args=[form_entry.pk]
         )
         response = admin_client.get(url)
         html = response.content.decode()
         old_url = f"/fobi/{form_entry.pk}/"
-        # The old URL may still exist in the URL config, but must not appear
-        # as an href in the handler actions area.
         assert f'href="{old_url}"' not in html
 
 
@@ -147,7 +143,6 @@ class TestReadonlyForNonSuperuser:
         response = staff_client.get(url)
         assert response.status_code == 200
         html = response.content.decode()
-        # No save button should be present since change permission is denied
         assert '_save"' not in html
 
     def test_staff_post_change_is_forbidden(
