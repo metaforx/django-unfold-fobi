@@ -71,6 +71,7 @@ class FormEntryProxyAdmin(ModelAdmin):
         ]
 
     def get_fieldsets(self, request, obj=None):
+        """Group FormEntry fields into stable admin sections and keep cloneability fields visible."""
         form_fields = set(FormEntryFormWithCloneable.base_fields)
         editable_fields = [
             field
