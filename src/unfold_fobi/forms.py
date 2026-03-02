@@ -5,9 +5,11 @@ Custom forms/mixins for Unfold integration.
 import json
 
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Column, Fieldset, Layout, Row, Submit
+from crispy_forms.layout import Column, Fieldset, HTML, Layout, Row
 from django import forms
+from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
+from unfold.layout import Submit as UnfoldSubmit
 from unfold.widgets import (
     UnfoldAdminCheckboxSelectMultiple,
     UnfoldAdminDateWidget,
@@ -372,21 +374,31 @@ class FormEntryFormWithCloneable(forms.ModelForm):
 class ImportFormEntryJsonForm(forms.Form):
     """Upload form for importing form entries from exported JSON payloads."""
 
-    file = forms.FileField(
-        label=_("JSON file"),
-        help_text=_("Upload a JSON file previously exported via the export action."),
-        widget=forms.ClearableFileInput(
-            attrs={"accept": ".json,application/json"},
-        ),
-    )
+    file = forms.FileField(widget=UnfoldAdminFileFieldWidget())
 
     def __init__(self, *args, **kwargs):
+        cancel_url = kwargs.pop(
+            "cancel_url",
+            reverse("admin:unfold_fobi_formentryproxy_changelist"),
+        )
         super().__init__(*args, **kwargs)
+
         self.helper = FormHelper()
-        self.helper.template_pack = "unfold_crispy"
-        self.helper.form_method = "post"
-        self.helper.form_enctype = "multipart/form-data"
-        self.helper.add_input(Submit("submit", _("Import")))
+        self.helper.layout = Layout(
+            Fieldset(
+                None,
+                "file",
+            ),
+            Row(
+                Column(
+                    HTML(
+                        f'<a href="{cancel_url}" class="cursor-pointer border border-base-200 font-medium px-3 py-2 rounded-default transition-all hover:bg-base-50 dark:border-base-700 dark:hover:text-base-200 dark:hover:bg-base-900">Cancel</a>'
+                    ),
+                    UnfoldSubmit("submit", "Import"), 
+                    css_class="lg:flex-row lg:gap-2 justify-end"),
+                css_class="mt-8 justify-end",
+            ),
+        )
 
     def clean_file(self):
         uploaded = self.cleaned_data["file"]

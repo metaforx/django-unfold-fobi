@@ -515,8 +515,11 @@ class FormEntryProxyAdmin(ModelAdmin):
         """Changelist action: import a form entry from an uploaded JSON file."""
         from django.template.response import TemplateResponse
 
+        cancel_url = reverse("admin:unfold_fobi_formentryproxy_changelist")
         if request.method == "POST":
-            form = ImportFormEntryJsonForm(request.POST, request.FILES)
+            form = ImportFormEntryJsonForm(
+                request.POST, request.FILES, cancel_url=cancel_url
+            )
             if form.is_valid():
                 entries = form.cleaned_data["entries_payload"]
                 imported = []
@@ -532,18 +535,19 @@ class FormEntryProxyAdmin(ModelAdmin):
                 return HttpResponse(
                     status=302,
                     headers={
-                        "Location": reverse("admin:unfold_fobi_formentryproxy_changelist")
+                        "Location": cancel_url
                     },
                 )
         else:
-            form = ImportFormEntryJsonForm()
+            form = ImportFormEntryJsonForm(cancel_url=cancel_url)
         return TemplateResponse(
             request,
             "admin/unfold_fobi/formentryproxy/import_action.html",
             {
                 "title": _("Import form from JSON"),
+                "content_title": _("Import form from JSON"),
                 "form": form,
-                "cancel_url": reverse("admin:unfold_fobi_formentryproxy_changelist"),
+                "model_admin": self,
             },
         )
 

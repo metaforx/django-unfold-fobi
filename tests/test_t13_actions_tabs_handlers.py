@@ -38,6 +38,11 @@ class TestImportJsonAction:
         content = response.content.decode()
         assert 'type="file"' in content
         assert "Import" in content
+        assert 'class="unfoldadminfilefieldwidget"' in content
+        assert "file_upload" in content
+        assert "bg-primary-600" in content
+        assert "btn btn-primary" not in content
+        assert "clearablefileinput" not in content
 
     def test_import_post_creates_form_entry(self, admin_client, admin_user, form_entry):
         """POST with valid export JSON must create a new form entry."""
