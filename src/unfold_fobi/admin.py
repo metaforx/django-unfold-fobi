@@ -17,7 +17,7 @@ from unfold.admin import ModelAdmin, TabularInline
 from unfold.decorators import action
 from unfold.enums import ActionVariant
 
-from .forms import FormEntryFormWithCloneable
+from .forms import FormEntryFormWithCloneable, ImportFormEntryJsonForm
 from .models import FormEntryProxy
 from .services import clone_form_entry
 
@@ -515,44 +515,36 @@ class FormEntryProxyAdmin(ModelAdmin):
         """Changelist action: import a form entry from an uploaded JSON file."""
         from django.template.response import TemplateResponse
 
-        if request.method == "POST" and request.FILES.get("file"):
-            uploaded = request.FILES["file"]
-            try:
-                raw = uploaded.read().decode("utf-8")
-                form_data = json.loads(raw)
-            except (json.JSONDecodeError, UnicodeDecodeError) as exc:
-                messages.error(request, _("Invalid JSON file: {err}").format(err=exc))
-                return TemplateResponse(
+        if request.method == "POST":
+            form = ImportFormEntryJsonForm(request.POST, request.FILES)
+            if form.is_valid():
+                entries = form.cleaned_data["entries_payload"]
+                imported = []
+                for entry_data in entries:
+                    imported.append(perform_form_entry_import(request, entry_data))
+                names = ", ".join(e.name for e in imported)
+                messages.success(
                     request,
-                    "admin/unfold_fobi/formentryproxy/import_action.html",
-                    {"title": _("Import form from JSON")},
+                    _("Imported {count} form(s): {names}.").format(
+                        count=len(imported), names=names
+                    ),
                 )
-            # Export produces a JSON array; import expects a single dict.
-            # Handle both formats: unwrap single-item arrays, iterate multi-item.
-            if isinstance(form_data, list):
-                entries = form_data
-            else:
-                entries = [form_data]
-            imported = []
-            for entry_data in entries:
-                imported.append(perform_form_entry_import(request, entry_data))
-            names = ", ".join(e.name for e in imported)
-            messages.success(
-                request,
-                _("Imported {count} form(s): {names}.").format(
-                    count=len(imported), names=names
-                ),
-            )
-            return HttpResponse(
-                status=302,
-                headers={
-                    "Location": reverse("admin:unfold_fobi_formentryproxy_changelist")
-                },
-            )
+                return HttpResponse(
+                    status=302,
+                    headers={
+                        "Location": reverse("admin:unfold_fobi_formentryproxy_changelist")
+                    },
+                )
+        else:
+            form = ImportFormEntryJsonForm()
         return TemplateResponse(
             request,
             "admin/unfold_fobi/formentryproxy/import_action.html",
-            {"title": _("Import form from JSON")},
+            {
+                "title": _("Import form from JSON"),
+                "form": form,
+                "cancel_url": reverse("admin:unfold_fobi_formentryproxy_changelist"),
+            },
         )
 
     @admin.action(description=_("Clone selected forms"))

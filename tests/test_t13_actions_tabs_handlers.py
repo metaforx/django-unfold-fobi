@@ -67,6 +67,17 @@ class TestImportJsonAction:
         content = response.content.decode()
         assert 'type="file"' in content
 
+    def test_import_post_invalid_payload_root_shows_error(self, admin_client):
+        """POST with JSON root that is not dict/list must return form error."""
+        upload_file = io.BytesIO(b'"unexpected-string-root"')
+        upload_file.name = "bad-root.json"
+
+        url = reverse("admin:unfold_fobi_formentryproxy_import_form_entry_action")
+        response = admin_client.post(url, {"file": upload_file})
+        assert response.status_code == 200
+        content = response.content.decode()
+        assert "expected an object or an array" in content
+
     def test_import_handles_array_payload(self, admin_client, admin_user, form_entry):
         """POST with exported JSON array (multi-form export) must import all forms."""
         from fobi.models import FormEntry

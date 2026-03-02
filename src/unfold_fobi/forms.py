@@ -1,10 +1,13 @@
 """
-Custom form mixin to automatically use Unfold widgets for fobi forms.
+Custom forms/mixins for Unfold integration.
 """
 
+import json
+
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Column, Fieldset, Layout, Row
+from crispy_forms.layout import Column, Fieldset, Layout, Row, Submit
 from django import forms
+from django.utils.translation import gettext_lazy as _
 from unfold.widgets import (
     UnfoldAdminCheckboxSelectMultiple,
     UnfoldAdminDateWidget,
@@ -364,3 +367,61 @@ class FormEntryFormWithCloneable(forms.ModelForm):
         apply_unfold_widgets_to_form(self)
         ensure_field_in_helper_layout(self, "is_cloneable")
         align_visibility_fields_in_layout(self)
+
+
+class ImportFormEntryJsonForm(forms.Form):
+    """Upload form for importing form entries from exported JSON payloads."""
+
+    file = forms.FileField(
+        label=_("JSON file"),
+        help_text=_("Upload a JSON file previously exported via the export action."),
+        widget=forms.ClearableFileInput(
+            attrs={"accept": ".json,application/json"},
+        ),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.template_pack = "unfold_crispy"
+        self.helper.form_method = "post"
+        self.helper.form_enctype = "multipart/form-data"
+        self.helper.add_input(Submit("submit", _("Import")))
+
+    def clean_file(self):
+        uploaded = self.cleaned_data["file"]
+        try:
+            payload = json.loads(uploaded.read().decode("utf-8"))
+        except UnicodeDecodeError as exc:
+            raise forms.ValidationError(
+                _("Invalid JSON file: {err}").format(err=exc)
+            ) from exc
+        except json.JSONDecodeError as exc:
+            raise forms.ValidationError(
+                _("Invalid JSON file: {err}").format(err=exc)
+            ) from exc
+        finally:
+            uploaded.seek(0)
+
+        if isinstance(payload, dict):
+            entries = [payload]
+        elif isinstance(payload, list):
+            entries = payload
+        else:
+            raise forms.ValidationError(
+                _("Invalid JSON payload: expected an object or an array.")
+            )
+
+        if not entries:
+            raise forms.ValidationError(
+                _("Invalid JSON payload: expected at least one form entry.")
+            )
+        if not all(isinstance(item, dict) for item in entries):
+            raise forms.ValidationError(
+                _(
+                    "Invalid JSON payload: array items must be form entry objects."
+                )
+            )
+
+        self.cleaned_data["entries_payload"] = entries
+        return uploaded
