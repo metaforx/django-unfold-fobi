@@ -7,7 +7,6 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.http import HttpResponse
 from django.urls import path, reverse
-from django.utils.dateparse import parse_datetime
 from django.utils.translation import gettext_lazy as _
 from fobi.forms import FormEntryForm
 from fobi.utils import perform_form_entry_import, prepare_form_entry_export_data
@@ -62,19 +61,6 @@ class FormEntryProxyAdmin(ModelAdmin):
             def __init__(self, *args, **form_kwargs):
                 form_kwargs["request"] = request
                 super().__init__(*args, **form_kwargs)
-
-            def clean(self):
-                cleaned = super().clean()
-                # Defensive: ensure DateTimeField values are datetimes, not strings.
-                for name, field in self.fields.items():
-                    if field.__class__.__name__ == "DateTimeField":
-                        value = cleaned.get(name)
-                        if isinstance(value, str):
-                            parsed = parse_datetime(value.strip())
-                            if parsed is not None:
-                                cleaned[name] = parsed
-                return cleaned
-
         return RequestForm
 
     def _collect_editable_fields(self):
@@ -163,28 +149,6 @@ class FormEntryProxyAdmin(ModelAdmin):
             return fieldsets
         return super().get_fieldsets(request, obj)
 
-    def get_urls(self):
-        """Add custom URLs for import/wizards views (kept for compatibility)."""
-        from ..views import FormEntryImportView, FormWizardsDashboardView
-
-        urls = super().get_urls()
-        custom_urls = [
-            path(
-                "import/",
-                self.admin_site.admin_view(
-                    FormEntryImportView.as_view(model_admin=self)
-                ),
-                name=f"{self.model._meta.app_label}_{self.model._meta.model_name}_import",
-            ),
-            path(
-                "wizards/",
-                self.admin_site.admin_view(
-                    FormWizardsDashboardView.as_view(model_admin=self)
-                ),
-                name=f"{self.model._meta.app_label}_{self.model._meta.model_name}_wizards",
-            ),
-        ]
-        return custom_urls + urls
 
     def changelist_view(self, request, extra_context=None):
         """Override changelist to add custom buttons."""

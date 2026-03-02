@@ -126,8 +126,8 @@ python manage.py migrate
 ## Settings Reference (Unfold Sidebar)
 
 This is the "Forms" navigation block used in `djangocms_test/settings.py`.
-It links to the `unfold_fobi` admin views and keeps active states aligned with
-Fobi edit/import/wizard routes. Include the `reverse_lazy`/`gettext_lazy` imports.
+It links to `unfold_fobi` admin views and Fobi routes. Include the
+`reverse_lazy`/`gettext_lazy` imports.
 
 ```python
 from django.urls import reverse_lazy
@@ -160,30 +160,28 @@ UNFOLD = {
                     {
                         "title": _("Import Form"),
                         "icon": "upload",
-                        "link": reverse_lazy("admin:unfold_fobi_formentryproxy_import"),
+                        "link": reverse_lazy("admin:unfold_fobi_formentryproxy_import_form_entry_action"),
                         "active": lambda request: getattr(
                             getattr(request, "resolver_match", None), "view_name", ""
                         )
                         in {
-                            "admin:unfold_fobi_formentryproxy_import",
+                            "admin:unfold_fobi_formentryproxy_import_form_entry_action",
                             "fobi.import_form_entry",
                         }
                         or request.path.startswith("/admin/fobi/forms/import/")
-                        or request.path.startswith("/admin/unfold_fobi/formentryproxy/import/"),
+                        or request.path.startswith("/admin/unfold_fobi/formentryproxy/import-json/"),
                     },
                     {
                         "title": _("Wizards"),
                         "icon": "auto_awesome",
-                        "link": reverse_lazy("admin:unfold_fobi_formentryproxy_wizards"),
+                        "link": reverse_lazy("fobi.form_wizards_dashboard"),
                         "active": lambda request: getattr(
                             getattr(request, "resolver_match", None), "view_name", ""
                         )
                         in {
-                            "admin:unfold_fobi_formentryproxy_wizards",
                             "fobi.form_wizards_dashboard",
                         }
                         or request.path.startswith("/admin/fobi/wizards/")
-                        or request.path.startswith("/admin/unfold_fobi/formentryproxy/wizards/"),
                     },
                 ],
             },
