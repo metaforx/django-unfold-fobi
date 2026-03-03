@@ -20,9 +20,9 @@ class FormEntryFormWithCloneable(forms.ModelForm):
         kwargs.pop("request", None)
         super().__init__(*args, **kwargs)
 
-        if "is_cloneable" not in self.fields:
-            field = self._meta.model._meta.get_field("is_cloneable")
-            self.fields["is_cloneable"] = field.formfield()
+        # if "is_cloneable" not in self.fields:
+        #     field = self._meta.model._meta.get_field("is_cloneable")
+        #     self.fields["is_cloneable"] = field.formfield()
 
-        apply_unfold_widgets_to_form(self)
-        align_visibility_fields_in_layout(self)
+        #apply_unfold_widgets_to_form(self)
+        #align_visibility_fields_in_layout(self)
