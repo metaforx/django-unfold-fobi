@@ -2,7 +2,7 @@
 
 from django import forms
 
-from .layout import align_visibility_fields_in_layout, ensure_field_in_helper_layout
+from .layout import align_visibility_fields_in_layout
 from .widgets import apply_unfold_widgets_to_form
 
 
@@ -25,5 +25,4 @@ class FormEntryFormWithCloneable(forms.ModelForm):
             self.fields["is_cloneable"] = field.formfield()
 
         apply_unfold_widgets_to_form(self)
-        ensure_field_in_helper_layout(self, "is_cloneable")
         align_visibility_fields_in_layout(self)

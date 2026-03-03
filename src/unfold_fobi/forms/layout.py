@@ -3,44 +3,9 @@
 from crispy_forms.layout import Column, Row
 
 
-def _layout_contains_field(layout, field_name):
-    for item in layout:
-        if item == field_name:
-            return True
-        if hasattr(item, "fields"):
-            if _layout_contains_field(item.fields, field_name):
-                return True
-    return False
-
-
-def _append_field_to_layout(layout, field_name):
-    if hasattr(layout, "append"):
-        layout.append(field_name)
-        return True
-    if hasattr(layout, "fields"):
-        layout.fields.append(field_name)
-        return True
-    return False
-
-
-def ensure_field_in_helper_layout(form, field_name):
-    helper = getattr(form, "helper", None)
-    layout = getattr(helper, "layout", None) if helper else None
-    if not layout or _layout_contains_field(layout, field_name):
-        return
-
-    last_fieldset = None
-    for item in layout:
-        if hasattr(item, "fields"):
-            last_fieldset = item
-
-    if last_fieldset:
-        _append_field_to_layout(last_fieldset, field_name)
-    else:
-        _append_field_to_layout(layout, field_name)
-
-
 def align_visibility_fields_in_layout(form):
+    """Ensure 'is_public' and 'is_cloneable' fields are adjacent in the layout and styled together."""
+
     helper = getattr(form, "helper", None)
     layout = getattr(helper, "layout", None) if helper else None
     if not layout:
