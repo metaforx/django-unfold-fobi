@@ -2,8 +2,8 @@
 
 from django import forms
 
-from .layout import align_visibility_fields_in_layout
-from .widgets import apply_unfold_widgets_to_form
+# from .layout import align_visibility_fields_in_layout
+# from .widgets import apply_unfold_widgets_to_form
 
 
 class FormEntryFormWithCloneable(forms.ModelForm):
