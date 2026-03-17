@@ -117,7 +117,9 @@ class TestImportJsonAction:
         response = admin_client.post(url, {"file": upload_file})
 
         assert response.status_code == 302
-        imported = FormEntry.objects.exclude(id__in=existing_ids).order_by("-id").first()
+        imported = (
+            FormEntry.objects.exclude(id__in=existing_ids).order_by("-id").first()
+        )
         assert imported is not None
         assert (
             FormHandlerEntry.objects.filter(
