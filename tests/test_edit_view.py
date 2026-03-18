@@ -18,6 +18,8 @@ Verifies:
 - T10g: Iframe X-Frame-Options SAMEORIGIN for popup views.
 """
 
+import re
+
 import pytest
 from django.contrib.auth.models import User
 from django.test import Client
@@ -725,8 +727,13 @@ class TestPopupSubmitRow:
         html = response.content.decode()
         assert 'backdrop-blur-xs bg-white/80' in html
         assert 'bg-primary-600 text-white' in html
-        assert '<button type="submit"' in html
-        assert button_text in html
+        match = re.search(
+            r'<button type="submit"[^>]*>\s*(.*?)\s*</button>',
+            html,
+            re.S,
+        )
+        assert match is not None
+        assert match.group(1).strip() == button_text
         return html
 
     def test_add_element_popup_renders_submit_row(self, admin_client, form_entry):
@@ -734,7 +741,7 @@ class TestPopupSubmitRow:
             "fobi.add_form_element_entry",
             kwargs={"form_entry_id": form_entry.pk, "form_element_plugin_uid": "text"},
         )
-        html = self.assert_submit_row(admin_client.get(add_url + "?_popup=1"), "Add")
+        html = self.assert_submit_row(admin_client.get(add_url + "?_popup=1"), "Save")
         assert 'id="form_element_entry_form"' in html
 
     def test_edit_element_popup_renders_submit_row(self, admin_client, form_entry):
@@ -743,7 +750,7 @@ class TestPopupSubmitRow:
             "fobi.edit_form_element_entry",
             kwargs={"form_element_entry_id": element.pk},
         )
-        html = self.assert_submit_row(admin_client.get(edit_url + "?_popup=1"), "Submit")
+        html = self.assert_submit_row(admin_client.get(edit_url + "?_popup=1"), "Save")
         assert 'id="form_element_entry_form"' in html
 
     def test_add_handler_popup_renders_submit_row(self, admin_client, form_entry):
@@ -751,7 +758,7 @@ class TestPopupSubmitRow:
             "fobi.add_form_handler_entry",
             kwargs={"form_entry_id": form_entry.pk, "form_handler_plugin_uid": "mail"},
         )
-        html = self.assert_submit_row(admin_client.get(add_url + "?_popup=1"), "Add")
+        html = self.assert_submit_row(admin_client.get(add_url + "?_popup=1"), "Save")
         assert 'id="fobi-form"' in html
 
     def test_edit_handler_popup_renders_submit_row(self, admin_client, form_entry):
@@ -765,5 +772,5 @@ class TestPopupSubmitRow:
             "fobi.edit_form_handler_entry",
             kwargs={"form_handler_entry_id": handler.pk},
         )
-        html = self.assert_submit_row(admin_client.get(edit_url + "?_popup=1"), "Submit")
+        html = self.assert_submit_row(admin_client.get(edit_url + "?_popup=1"), "Save")
         assert 'id="fobi-form"' in html
