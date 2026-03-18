@@ -214,3 +214,9 @@ msgstr "Ja/Nein"
 
 msgid "Mail the sender"
 msgstr "Benachrichtigung Sender"
+
+msgid "Internal name of the field"
+msgstr "Interner Name des Feldes"
+
+msgid "Displayed name of the field"
+msgstr "Angezeigter Name des Feldes"

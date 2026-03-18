@@ -3,6 +3,7 @@
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Fieldset, Layout
 from django import forms
+from django.utils.translation import gettext_lazy as _
 from unfold.widgets import (
     UnfoldAdminCheckboxSelectMultiple,
     UnfoldAdminDateWidget,
@@ -23,6 +24,17 @@ from unfold.widgets import (
     UnfoldAdminURLInputWidget,
     UnfoldBooleanSwitchWidget,
 )
+
+
+def _apply_field_help_texts(form_instance):
+    """Add concise guidance for common Fobi element metadata fields."""
+    fields = getattr(form_instance, "fields", {})
+
+    if "name" in fields and not fields["name"].help_text:
+        fields["name"].help_text = _("Internal name of the field")
+
+    if "label" in fields and not fields["label"].help_text:
+        fields["label"].help_text = _("Displayed name of the field")
 
 
 class _SplitDateTimeStringValueMixin:
@@ -84,6 +96,8 @@ def apply_unfold_widgets_to_form(form_instance):
     This should be called in the form's __init__ method to ensure widgets
     are applied at instantiation time, not at class definition time.
     """
+
+    _apply_field_help_texts(form_instance)
 
     def set_widget(field, widget_class):
         """Replace widget while preserving attrs/choices when possible."""
