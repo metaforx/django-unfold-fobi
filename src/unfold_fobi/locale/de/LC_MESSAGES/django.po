@@ -188,6 +188,18 @@ msgstr "Datum und Uhrzeit, ab wann das Formular inaktiv ist, im Format: 'YYYY-MM
 msgid "Updated"
 msgstr "Aktualisiert"
 
+msgid "Public?"
+msgstr "Öffentlich"
+
+msgid "Makes your form visible to the public."
+msgstr "Formular ist ohne Login abrufbar."
+
+msgid "Cloneable?"
+msgstr "Kopierbar"
+
+msgid "Makes your form cloneable by other users."
+msgstr "Formular kann von Editoren als Vorlage verwendet werden."
+
 msgid "Form handler"
 msgstr "Formular-Aktion"
 

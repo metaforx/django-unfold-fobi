@@ -230,6 +230,16 @@ class TestGermanTranslationActivation:
             ("Form not found", "Formular nicht gefunden"),
             ("Create form", "Formular erstellen"),
             ("Django administration", "Django-Verwaltung"),
+            ("Public?", "Öffentlich"),
+            (
+                "Makes your form visible to the public.",
+                "Formular ist ohne Login abrufbar.",
+            ),
+            ("Cloneable?", "Kopierbar"),
+            (
+                "Makes your form cloneable by other users.",
+                "Formular kann von Editoren als Vorlage verwendet werden.",
+            ),
             ("Mail the sender", "Benachrichtigung Sender"),
             ("Form field name to email", "Formularfeldname für E-Mail"),
             (
