@@ -2,16 +2,7 @@
 
 from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
-from django.shortcuts import redirect
-from django.urls import include, path, re_path, reverse
-from django.views.generic import RedirectView
-
-
-def _edit_form_entry_redirect(request, form_entry_id):
-    """Map fobi.edit_form_entry (form_entry_id kwarg) to native admin change URL."""
-    return redirect(
-        reverse("admin:unfold_fobi_formentryproxy_change", args=[form_entry_id])
-    )
+from django.urls import include, path
 
 
 # Non-localised endpoints (no language prefix)
@@ -21,31 +12,15 @@ urlpatterns = [
     # DRF integration endpoints
     path("api/", include("fobi.contrib.apps.drf_integration.urls")),
     path("api/", include("unfold_fobi.api.urls")),
-    # Public Fobi views and handlers
-    re_path(r"^fobi/", include("fobi.urls.class_based.view")),
-    re_path(
-        r"^fobi/",
-        include("fobi.contrib.plugins.form_handlers.db_store.urls"),
-    ),
+    # Public Fobi views and handlers (packaged integration)
+    path("fobi/", include("unfold_fobi.urls.public")),
 ]
 
 # Language-prefixed admin URLs
 urlpatterns += i18n_patterns(
-    # Redirect legacy Fobi admin routes to the Unfold admin views.
-    # These must come before admin.site.urls so they are not swallowed
-    # by the Django admin catch_all_view.
-    path(
-        "admin/fobi/forms/create/",
-        RedirectView.as_view(pattern_name="admin:unfold_fobi_formentryproxy_add"),
-        name="fobi.create_form_entry",
-    ),
-    path(
-        "admin/fobi/forms/edit/<int:form_entry_id>/",
-        _edit_form_entry_redirect,
-        name="fobi.edit_form_entry",
-    ),
-    # Fobi edit views — must be before admin.site.urls for the same reason.
-    re_path(r"^admin/fobi/", include("fobi.urls.class_based.edit")),
+    # Fobi edit + legacy compatibility routes from unfold_fobi package.
+    # Must be before admin.site.urls so catch_all_view doesn't shadow them.
+    path("admin/fobi/", include("unfold_fobi.urls.admin")),
     # Admin (last, so its catch_all_view doesn't shadow /admin/fobi/* routes)
     path("admin/", admin.site.urls),
 )
