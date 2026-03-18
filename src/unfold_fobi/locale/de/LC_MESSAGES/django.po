@@ -211,3 +211,6 @@ msgstr "Textbereich"
 
 msgid "Boolean"
 msgstr "Ja/Nein"
+
+msgid "Mail the sender"
+msgstr "Benachrichtigung Sender"
