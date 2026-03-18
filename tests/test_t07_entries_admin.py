@@ -61,6 +61,7 @@ CHANGELIST_URL_NAME = (
 CHANGE_URL_NAME = (
     "admin:fobi_contrib_plugins_form_handlers_db_store_savedformdataentry_change"
 )
+ADD_URL_NAME = "admin:fobi_contrib_plugins_form_handlers_db_store_savedformdataentry_add"
 
 
 class TestViewEntriesActionLink:
@@ -116,6 +117,10 @@ class TestFilteredChangelist:
 class TestReadonlyForNonSuperuser:
     """T07: non-superuser staff cannot modify saved form data entries."""
 
+    def test_staff_cannot_access_add_form(self, staff_client):
+        response = staff_client.get(reverse(ADD_URL_NAME))
+        assert response.status_code == 403
+
     def test_staff_sees_readonly_change_form(
         self, staff_client, form_entry, rest_submitted_form_data
     ):
@@ -146,7 +151,11 @@ class TestReadonlyForNonSuperuser:
 
 
 class TestSuperuserRetainsAccess:
-    """T07: superusers must retain full edit access."""
+    """T07: superusers must retain edit access but no manual add access."""
+
+    def test_superuser_cannot_access_add_form(self, admin_client):
+        response = admin_client.get(reverse(ADD_URL_NAME))
+        assert response.status_code == 403
 
     def test_superuser_can_access_change_form(
         self, admin_client, form_entry, rest_submitted_form_data
@@ -164,3 +173,21 @@ class TestSuperuserRetainsAccess:
         response = admin_client.get(url)
         html = response.content.decode()
         assert "submit" in html.lower()
+
+    def test_programmatic_entry_creation_still_works(
+        self, admin_client, form_entry
+    ):
+        from fobi.contrib.plugins.form_handlers.db_store.models import (
+            SavedFormDataEntry,
+        )
+
+        before = SavedFormDataEntry.objects.filter(form_entry=form_entry).count()
+        response = admin_client.put(
+            f"/api/fobi-form-entry/{form_entry.slug}/",
+            data='{"full_name":"Alice Example"}',
+            content_type="application/json",
+        )
+
+        after = SavedFormDataEntry.objects.filter(form_entry=form_entry).count()
+        assert response.status_code == 200
+        assert after == before + 1
