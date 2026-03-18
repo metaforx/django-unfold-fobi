@@ -1,11 +1,13 @@
 """App configuration for unfold_fobi."""
 
 from django.apps import AppConfig
+from django.utils.translation import gettext_lazy as _
 
 
 class UnfoldFobiConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "unfold_fobi"
+    verbose_name = _("Forms")
 
     def ready(self):
         # DRF compatibility shim — must run before any fobi import.
