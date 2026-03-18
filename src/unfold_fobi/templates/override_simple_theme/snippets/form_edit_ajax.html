@@ -1,0 +1,31 @@
+{% load i18n %}
+
+<div id="content-main">
+    <h3 class="font-semibold mb-4 text-[15px] text-font-important-light dark:text-font-important-dark">
+        {% block form_page_title %}{% endblock %}
+    </h3>
+
+    <form id="{% block form_id %}fobi-form{% endblock %}"
+          method="{% block form_method %}post{% endblock %}"
+          action="{% block form_action %}{{ request.path }}{% endblock %}"
+          {% block form_enctype %}enctype="multipart/form-data"{% endblock %}
+          class="{% block form_html_class %}{% endblock %}"
+          {% block form_extra_attrs %}{% endblock %}>
+        {% csrf_token %}
+        {% include fobi_theme.form_edit_snippet_template_name %}
+
+        {# Unfold-style submit row for popup modal forms #}
+        <div class="{% block form_button_wrapper_html_class %}{% endblock %} relative lg:sticky lg:bottom-0 z-40 mt-6">
+            <div class="backdrop-blur-xs bg-white/80 rounded-b-default py-3 dark:bg-base-900/80 border-t border-base-200 dark:border-base-800">
+                <div class="flex flex-col-reverse gap-3 items-center lg:flex-row-reverse">
+                    {% block form_buttons %}
+                    <button type="submit"
+                            class="{% block form_primary_button_html_class %}font-medium inline-flex items-center gap-2 px-3 py-2 rounded-default justify-center whitespace-nowrap cursor-pointer border border-transparent bg-primary-600 text-white hover:bg-primary-600/80 w-full lg:w-auto{% endblock %}">
+                        {% block form_primary_button_text %}{% endblock %}
+                    </button>
+                    {% endblock %}
+                </div>
+            </div>
+        </div>
+    </form>
+</div>

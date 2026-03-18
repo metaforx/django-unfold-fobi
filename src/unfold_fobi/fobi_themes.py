@@ -20,6 +20,13 @@ class UnfoldSimpleTheme(SimpleTheme):
         "unfold",
     ]
     base_edit_template = "override_simple_theme/base_edit.html"
+    form_edit_ajax = "override_simple_theme/snippets/form_edit_ajax.html"
+    edit_form_element_entry_ajax_template = (
+        "override_simple_theme/edit_form_element_entry_ajax.html"
+    )
+    edit_form_handler_entry_ajax_template = (
+        "override_simple_theme/edit_form_handler_entry_ajax.html"
+    )
     form_edit_snippet_template_name = (
         "override_simple_theme/snippets/form_edit_snippet.html"
     )
