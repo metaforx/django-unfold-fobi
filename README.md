@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "crispy_forms",  # required by unfold_fobi layouts/templates
 
     # Fobi integration
     "unfold_fobi",
@@ -90,30 +91,19 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = ["unfold_crispy"]
 5. Add URLs from `djangocms_test/urls.py`.
 
 ```python
-from django.urls import path, include, re_path
-from django.views.generic import RedirectView
+from django.urls import include, path
 
 urlpatterns = [
     # DRF integration endpoints (optional)
     path("api/", include("fobi.contrib.apps.drf_integration.urls")),
     path("api/", include("unfold_fobi.api.urls")),
 
-    # Public Fobi views and handlers
-    re_path(r"^fobi/", include("fobi.urls.class_based.view")),
-    re_path(r"^admin/fobi/", include("fobi.urls.class_based.edit")),
-    re_path(r"^fobi/", include("fobi.contrib.plugins.form_handlers.db_store.urls")),
+    # Public Fobi routes
+    path("fobi/", include("unfold_fobi.urls.public")),
 
-    # Redirect legacy Fobi admin routes to the Unfold admin views
-    path(
-        "admin/fobi/forms/create/",
-        RedirectView.as_view(pattern_name="admin:unfold_fobi_formentryproxy_create"),
-        name="fobi.create_form_entry",
-    ),
-    path(
-        "admin/fobi/forms/edit/<int:form_entry_id>/",
-        RedirectView.as_view(pattern_name="admin:unfold_fobi_formentryproxy_edit"),
-        name="fobi.edit_form_entry",
-    ),
+    # Admin/Fobi edit + legacy compatibility routes
+    # Place before admin.site.urls to avoid admin catch_all_view shadowing.
+    path("admin/fobi/", include("unfold_fobi.urls.admin")),
 ]
 ```
 
@@ -150,7 +140,7 @@ UNFOLD = {
                             in {
                                 "admin:unfold_fobi_formentryproxy_changelist",
                                 "admin:unfold_fobi_formentryproxy_add",
-                                "admin:unfold_fobi_formentryproxy_edit",
+                                "admin:unfold_fobi_formentryproxy_change",
                                 "fobi.edit_form_entry",
                             }
                             or request.path.startswith("/admin/unfold_fobi/formentryproxy/")
