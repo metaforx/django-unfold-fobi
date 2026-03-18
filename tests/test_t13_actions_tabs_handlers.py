@@ -10,6 +10,7 @@ Verifies:
 
 import io
 import json
+from types import SimpleNamespace
 
 import pytest
 from django.urls import reverse
@@ -282,3 +283,33 @@ class TestEmailHandlerAvailability:
         url = get_admin_edit_url(form_entry.pk)
         response = admin_client.get(url)
         assert response.status_code == 200
+
+
+class TestMailSenderHandlerPatch:
+    """mail_sender should not expose the unused recipient-name field."""
+
+    def test_mail_sender_form_omits_to_name_field(self):
+        from fobi.contrib.plugins.form_handlers.mail_sender.forms import (
+            MailSenderForm,
+        )
+
+        form = MailSenderForm()
+
+        assert "to_name" not in form.fields
+        assert "to_name" not in dict(MailSenderForm.plugin_data_fields)
+
+    def test_mail_sender_plugin_data_repr_does_not_require_to_name(self):
+        from fobi.contrib.plugins.form_handlers.mail_sender.base import (
+            MailSenderHandlerPlugin,
+        )
+
+        plugin = MailSenderHandlerPlugin()
+        plugin.data = SimpleNamespace(
+            form_field_name_to_email="email",
+            subject="Confirmation",
+        )
+
+        html = plugin.plugin_data_repr()
+
+        assert "email" in html
+        assert "Confirmation" in html

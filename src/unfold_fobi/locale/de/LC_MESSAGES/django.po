@@ -215,6 +215,27 @@ msgstr "Ja/Nein"
 msgid "Mail the sender"
 msgstr "Benachrichtigung Sender"
 
+msgid "From name"
+msgstr "Absendername"
+
+msgid "From email"
+msgstr "Absender-E-Mail"
+
+msgid "To name"
+msgstr "Empfängername"
+
+msgid "Form field name to email"
+msgstr "Formularfeldname für E-Mail"
+
+msgid "Name of the form field to be used as email."
+msgstr "Name des Formularfeldes, das als E-Mail verwendet werden soll."
+
+msgid "Subject"
+msgstr "Betreff"
+
+msgid "Body"
+msgstr "Nachricht"
+
 msgid "Internal name of the field"
 msgstr "Interner Name des Feldes"
 

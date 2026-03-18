@@ -230,6 +230,12 @@ class TestGermanTranslationActivation:
             ("Form not found", "Formular nicht gefunden"),
             ("Create form", "Formular erstellen"),
             ("Django administration", "Django-Verwaltung"),
+            ("Mail the sender", "Benachrichtigung Sender"),
+            ("Form field name to email", "Formularfeldname für E-Mail"),
+            (
+                "Name of the form field to be used as email.",
+                "Name des Formularfeldes, das als E-Mail verwendet werden soll.",
+            ),
         ],
     )
     def test_german_translation_activates(self, english, german):
