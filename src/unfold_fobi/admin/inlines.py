@@ -3,13 +3,46 @@
 import json
 
 from django.contrib import admin
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.html import format_html
-from django.utils.safestring import mark_safe
 from django.utils.encoding import force_str
 from django.utils.translation import gettext_lazy as _
 from fobi.models import FormElementEntry, FormHandlerEntry
 from unfold.admin import TabularInline
+
+INLINE_ACTION_BUTTON_CLASS = (
+    "related-widget-wrapper-link px-2.5 py-1.5 text-sm gap-1 shadow-none"
+)
+INLINE_ACTION_DANGER_CLASS = (
+    "related-widget-wrapper-link px-2.5 py-1.5 text-sm gap-1 shadow-none "
+    "border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-900/60 dark:text-red-500 "
+    "dark:hover:bg-red-950/30 dark:hover:text-red-400"
+)
+
+
+def _build_action(
+    url, label, icon_name=None, attrs=None, variant="default", button_class=""
+):
+    """Build context for a compact inline action button."""
+    return {
+        "url": url,
+        "label": label,
+        "icon_name": icon_name,
+        "attrs": attrs or {},
+        "variant": variant,
+        "button_class": button_class,
+    }
+
+
+def _render_action_buttons(actions):
+    """Render inline actions via the Unfold button component."""
+    return render_to_string(
+        "unfold_fobi/admin/inline_action_buttons.html",
+        {
+            "actions": actions,
+        },
+    )
 
 
 class FormElementEntryInline(TabularInline):
@@ -91,23 +124,31 @@ class FormElementEntryInline(TabularInline):
             + "?_popup=1"
         )
         return format_html(
-            '<a href="{}" id="change_fobi_element_{}" data-popup="yes"'
-            ' class="related-widget-wrapper-link inline-flex items-center gap-1'
-            " text-primary-600 hover:text-primary-700"
-            ' dark:text-primary-500 dark:hover:text-primary-400">'
-            '<span class="material-symbols-outlined text-base">edit</span>{}</a>'
-            " &nbsp; "
-            '<a href="{}" id="delete_fobi_element_{}" data-popup="yes"'
-            ' class="related-widget-wrapper-link inline-flex items-center gap-1'
-            " text-red-600 hover:text-red-700"
-            ' dark:text-red-500 dark:hover:text-red-400">'
-            '<span class="material-symbols-outlined text-base">delete</span>{}</a>',
-            edit_url,
-            obj.pk,
-            _("Edit"),
-            delete_url,
-            obj.pk,
-            _("Delete"),
+            "{}",
+            _render_action_buttons(
+                [
+                    _build_action(
+                        edit_url,
+                        _("Edit"),
+                        icon_name="edit",
+                        attrs={
+                            "id": f"change_fobi_element_{obj.pk}",
+                            "data-popup": "yes",
+                        },
+                        button_class=INLINE_ACTION_BUTTON_CLASS,
+                    ),
+                    _build_action(
+                        delete_url,
+                        _("Delete"),
+                        icon_name="delete",
+                        attrs={
+                            "id": f"delete_fobi_element_{obj.pk}",
+                            "data-popup": "yes",
+                        },
+                        button_class=INLINE_ACTION_DANGER_CLASS,
+                    ),
+                ]
+            ),
         )
 
 
@@ -115,8 +156,8 @@ class FormHandlerEntryInline(TabularInline):
     """Read-only inline showing form handlers with links to fobi edit views."""
 
     model = FormHandlerEntry
-    fields = ("plugin_uid", "handler_data_preview", "handler_actions")
-    readonly_fields = ("plugin_uid", "handler_data_preview", "handler_actions")
+    fields = ("handler_name", "handler_data_preview", "handler_actions")
+    readonly_fields = ("handler_name", "handler_data_preview", "handler_actions")
     extra = 0
     verbose_name = _("Form handler")
     verbose_name_plural = _("Form handlers")
@@ -134,6 +175,14 @@ class FormHandlerEntryInline(TabularInline):
         self._request = request
         return super().get_formset(request, obj, **kwargs)
 
+    @admin.display(description=_("Form handler"))
+    def handler_name(self, obj):
+        request = getattr(self, "_request", None)
+        plugin = obj.get_plugin(request=request)
+        if plugin and getattr(plugin, "name", None):
+            return force_str(plugin.name)
+        return obj.plugin_uid or "-"
+
     @admin.display(description=_("Preview"))
     def handler_data_preview(self, obj):
         if not obj.plugin_data:
@@ -148,7 +197,8 @@ class FormHandlerEntryInline(TabularInline):
     def handler_actions(self, obj):
         if not obj.pk:
             return "-"
-        parts = []
+        actions = []
+        delete_action = None
         if obj.plugin_data:
             edit_url = (
                 reverse(
@@ -157,16 +207,16 @@ class FormHandlerEntryInline(TabularInline):
                 )
                 + "?_popup=1"
             )
-            parts.append(
-                format_html(
-                    '<a href="{}" id="change_fobi_handler_{}" data-popup="yes"'
-                    ' class="related-widget-wrapper-link inline-flex items-center gap-1'
-                    " text-primary-600 hover:text-primary-700"
-                    ' dark:text-primary-500 dark:hover:text-primary-400">'
-                    '<span class="material-symbols-outlined text-base">edit</span>{}</a>',
+            actions.append(
+                _build_action(
                     edit_url,
-                    obj.pk,
                     _("Edit"),
+                    icon_name="edit",
+                    attrs={
+                        "id": f"change_fobi_handler_{obj.pk}",
+                        "data-popup": "yes",
+                    },
+                    button_class=INLINE_ACTION_BUTTON_CLASS,
                 )
             )
         delete_url = (
@@ -176,17 +226,15 @@ class FormHandlerEntryInline(TabularInline):
             )
             + "?_popup=1"
         )
-        parts.append(
-            format_html(
-                '<a href="{}" id="delete_fobi_handler_{}" data-popup="yes"'
-                ' class="related-widget-wrapper-link inline-flex items-center gap-1'
-                " text-red-600 hover:text-red-700"
-                ' dark:text-red-500 dark:hover:text-red-400">'
-                '<span class="material-symbols-outlined text-base">delete</span>{}</a>',
-                delete_url,
-                obj.pk,
-                _("Delete"),
-            )
+        delete_action = _build_action(
+            delete_url,
+            _("Delete"),
+            icon_name="delete",
+            attrs={
+                "id": f"delete_fobi_handler_{obj.pk}",
+                "data-popup": "yes",
+            },
+            button_class=INLINE_ACTION_DANGER_CLASS,
         )
         # Plugin custom actions (e.g. "View entries" for db_store)
         request = getattr(self, "_request", None)
@@ -199,6 +247,7 @@ class FormHandlerEntryInline(TabularInline):
                 else []
             )
             for action_url, label, _icon in custom_actions or []:
+                icon_name = None
                 # T07: redirect "View entries" to admin filtered changelist
                 if str(label) == str(_("View entries")):
                     action_url = (
@@ -207,13 +256,17 @@ class FormHandlerEntryInline(TabularInline):
                         )
                         + f"?form_entry__id__exact={obj.form_entry_id}"
                     )
-                parts.append(
-                    format_html(
-                        '<a href="{}" class="inline-flex items-center gap-1 text-primary-600 '
-                        'hover:text-primary-700 dark:text-primary-500 dark:hover:text-primary-400">'
-                        "{}</a>",
+                    icon_name = "visibility"
+                elif str(label) == str(_("Export entries")):
+                    icon_name = "download"
+                actions.append(
+                    _build_action(
                         action_url,
                         label,
+                        icon_name=icon_name,
+                        button_class=INLINE_ACTION_BUTTON_CLASS,
                     )
                 )
-        return mark_safe(" &nbsp; ".join(parts))
+        if delete_action:
+            actions.append(delete_action)
+        return format_html("{}", _render_action_buttons(actions))
