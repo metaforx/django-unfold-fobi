@@ -6,7 +6,7 @@ from django.contrib import admin, messages
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.http import HttpResponse
-from django.urls import path, reverse
+from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from fobi.forms import FormEntryForm
 from fobi.utils import perform_form_entry_import, prepare_form_entry_export_data
@@ -61,6 +61,7 @@ class FormEntryProxyAdmin(ModelAdmin):
             def __init__(self, *args, **form_kwargs):
                 form_kwargs["request"] = request
                 super().__init__(*args, **form_kwargs)
+
         return RequestForm
 
     def _collect_editable_fields(self):
@@ -149,7 +150,6 @@ class FormEntryProxyAdmin(ModelAdmin):
         if fieldsets:
             return fieldsets
         return super().get_fieldsets(request, obj)
-
 
     def changelist_view(self, request, extra_context=None):
         """Override changelist to add custom buttons."""
@@ -297,7 +297,7 @@ class FormEntryProxyAdmin(ModelAdmin):
         description=_("Import form (JSON)"),
         url_path="import-json",
         icon="file_upload",
-        permissions=("fobi.add_formentry",),
+        permissions=("add",),
     )
     def import_form_entry_action(self, request):
         """Changelist action: import a form entry from an uploaded JSON file."""

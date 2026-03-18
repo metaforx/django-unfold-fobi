@@ -12,6 +12,7 @@ keywords = ["django", "fobi", "unfold", "admin", "forms"]
 dependencies = [
     "django>=5.0",
     "django-unfold>=0.81.0",
+    "django-unfold-modal>=0.1.0",
     "django-fobi>=0.19",
     "django-crispy-forms>=2.0",
     "djangorestframework>=3.14",

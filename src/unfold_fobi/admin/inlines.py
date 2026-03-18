@@ -167,7 +167,7 @@ class FormHandlerEntryInline(TabularInline):
                 if callable(get_custom_actions)
                 else []
             )
-            for action_url, label, _icon in (custom_actions or []):
+            for action_url, label, _icon in custom_actions or []:
                 # T07: redirect "View entries" to admin filtered changelist
                 if str(label) == str(_("View entries")):
                     action_url = (

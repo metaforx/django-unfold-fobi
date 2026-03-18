@@ -3,7 +3,7 @@
 import json
 
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Column, Fieldset, HTML, Layout, Row
+from crispy_forms.layout import HTML, Column, Fieldset, Layout, Row
 from django import forms
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
@@ -71,9 +71,7 @@ class ImportFormEntryJsonForm(forms.Form):
             )
         if not all(isinstance(item, dict) for item in entries):
             raise forms.ValidationError(
-                _(
-                    "Invalid JSON payload: array items must be form entry objects."
-                )
+                _("Invalid JSON payload: array items must be form entry objects.")
             )
 
         self.cleaned_data["entries_payload"] = entries

@@ -1,0 +1,9 @@
+{% extends "admin/app_index.html" %}
+
+{% block content_title %}
+    {% if app_list %}
+        {{ app_list.0.name }}
+    {% else %}
+        {{ block.super }}
+    {% endif %}
+{% endblock %}
