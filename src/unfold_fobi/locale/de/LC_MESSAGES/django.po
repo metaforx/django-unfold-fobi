@@ -220,3 +220,6 @@ msgstr "Interner Name des Feldes"
 
 msgid "Displayed name of the field"
 msgstr "Angezeigter Name des Feldes"
+
+msgid "Required field"
+msgstr "Pflichtfeld"

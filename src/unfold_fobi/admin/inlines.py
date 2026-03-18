@@ -6,6 +6,7 @@ from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
+from django.utils.encoding import force_str
 from django.utils.translation import gettext_lazy as _
 from fobi.models import FormElementEntry, FormHandlerEntry
 from unfold.admin import TabularInline
@@ -15,8 +16,19 @@ class FormElementEntryInline(TabularInline):
     """Inline showing form elements with sortable drag-and-drop and action links."""
 
     model = FormElementEntry
-    fields = ("plugin_uid", "position", "plugin_data_preview", "element_actions")
-    readonly_fields = ("plugin_uid", "plugin_data_preview", "element_actions")
+    fields = (
+        "plugin_data_preview",
+        "plugin_name",
+        "required_field",
+        "position",
+        "element_actions",
+    )
+    readonly_fields = (
+        "plugin_data_preview",
+        "plugin_name",
+        "required_field",
+        "element_actions",
+    )
     ordering = ("position",)
     extra = 0
     verbose_name = _("Form element")
@@ -32,7 +44,7 @@ class FormElementEntryInline(TabularInline):
     def has_delete_permission(self, request, obj=None):
         return False
 
-    @admin.display(description=_("Preview"))
+    @admin.display(description=_("Label"))
     def plugin_data_preview(self, obj):
         if not obj.plugin_data:
             return "-"
@@ -42,6 +54,23 @@ class FormElementEntryInline(TabularInline):
             return label[:80] if label else "-"
         except (json.JSONDecodeError, TypeError):
             return obj.plugin_data[:80]
+
+    @admin.display(description=_("Form element"))
+    def plugin_name(self, obj):
+        plugin = obj.get_plugin()
+        if plugin and getattr(plugin, "name", None):
+            return force_str(plugin.name)
+        return obj.plugin_uid or "-"
+
+    @admin.display(description=_("Required field"), boolean=True)
+    def required_field(self, obj):
+        if not obj.plugin_data:
+            return False
+        try:
+            data = json.loads(obj.plugin_data)
+            return bool(data.get("required"))
+        except (json.JSONDecodeError, TypeError):
+            return False
 
     @admin.display(description=_("Actions"))
     def element_actions(self, obj):
