@@ -230,6 +230,15 @@ msgstr "Formularfeldname für E-Mail"
 msgid "Name of the form field to be used as email."
 msgstr "Name des Formularfeldes, das als E-Mail verwendet werden soll."
 
+msgid "Choose email field"
+msgstr "E-Mail-Feld auswählen"
+
+msgid "Select one of the email fields defined on this form."
+msgstr "Wählen Sie eines der in diesem Formular definierten E-Mail-Felder aus."
+
+msgid "No email fields are available on this form. Add an email field first."
+msgstr "Für dieses Formular sind keine E-Mail-Felder verfügbar. Fügen Sie zuerst ein E-Mail-Feld hinzu."
+
 msgid "Subject"
 msgstr "Betreff"
 

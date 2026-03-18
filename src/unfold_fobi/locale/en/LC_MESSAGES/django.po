@@ -208,6 +208,15 @@ msgstr ""
 msgid "Name of the form field to be used as email."
 msgstr ""
 
+msgid "Choose email field"
+msgstr ""
+
+msgid "Select one of the email fields defined on this form."
+msgstr ""
+
+msgid "No email fields are available on this form. Add an email field first."
+msgstr ""
+
 msgid "Subject"
 msgstr ""
 
