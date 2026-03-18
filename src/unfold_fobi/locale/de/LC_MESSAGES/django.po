@@ -129,10 +129,10 @@ msgid "Change form elements"
 msgstr "Formularelemente ändern"
 
 msgid "Available Form Handlers"
-msgstr "Verfügbare Formular-Handler"
+msgstr "Verfügbare Formular-Aktionen"
 
 msgid "Change form handlers"
-msgstr "Formular-Handler ändern"
+msgstr "Formular-Aktionen ändern"
 
 msgid "Change form properties"
 msgstr "Formulareigenschaften ändern"
@@ -141,7 +141,7 @@ msgid "Save"
 msgstr "Speichern"
 
 msgid "Handler"
-msgstr "Handler"
+msgstr "Aktion"
 
 msgid "Info"
 msgstr "Info"
@@ -187,3 +187,27 @@ msgstr "Datum und Uhrzeit, ab wann das Formular inaktiv ist, im Format: 'YYYY-MM
 
 msgid "Updated"
 msgstr "Aktualisiert"
+
+msgid "Form handler"
+msgstr "Formular-Aktion"
+
+msgid "Form handlers"
+msgstr "Formular-Aktionen"
+
+msgid "Form element"
+msgstr "Formular-Element"
+
+msgid "Form elements"
+msgstr "Formular-Elemente"
+
+msgid "Add element"
+msgstr "Element hinzufügen"
+
+msgid "Add handler"
+msgstr "Aktion hinzufügen"
+
+msgid "Textarea"
+msgstr "Textbereich"
+
+msgid "Boolean"
+msgstr "Ja/Nein"
