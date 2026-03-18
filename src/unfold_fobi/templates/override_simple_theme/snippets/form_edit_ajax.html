@@ -1,9 +1,27 @@
 {% load i18n %}
 
-<div id="content-main">
-    <h3 class="font-semibold mb-4 text-[15px] text-font-important-light dark:text-font-important-dark">
+<div id="content-main" class="pb-16">
+    <h3 id="popup-form-page-title" class="font-semibold mb-4 text-[15px] text-font-important-light dark:text-font-important-dark sr-only hidden">
         {% block form_page_title %}{% endblock %}
     </h3>
+    <script>
+    (function () {
+        function syncDocumentTitle() {
+            var titleNode = document.getElementById("popup-form-page-title");
+            if (!titleNode) return;
+            var titleText = (titleNode.textContent || "").trim();
+            if (!titleText) return;
+            document.title = titleText;
+        }
+
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", syncDocumentTitle, { once: true });
+            return;
+        }
+
+        syncDocumentTitle();
+    })();
+    </script>
 
     <form id="{% block form_id %}fobi-form{% endblock %}"
           method="{% block form_method %}post{% endblock %}"
