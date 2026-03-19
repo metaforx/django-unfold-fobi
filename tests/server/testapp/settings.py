@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "rest_framework",
     # Fobi integration
     "unfold_fobi",
+    "unfold_fobi.contrib.sites",
     "fobi.contrib.themes.simple",
     "fobi",
     # Standard Fobi plugins (form builder elements)

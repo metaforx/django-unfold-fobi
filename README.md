@@ -2,6 +2,7 @@
 
 Unfold integration for `django-fobi`: Unfold-styled admin, Unfold theme for the
 form builder UI, DRF compatibility shims, and a few Unfold-friendly admin views.
+The optional Sites extension lives in `unfold_fobi.contrib.sites`.
 
 This README shows the integration steps as they are used in
 `djangocms_test/settings.py` and `djangocms_test/urls.py`.
@@ -18,7 +19,6 @@ pip install django-unfold-fobi
 
 ```python
 INSTALLED_APPS = [
-    "django.contrib.sites",
     "unfold",  # must be before django.contrib.admin
     "django.contrib.admin",
     "django.contrib.auth",
@@ -54,6 +54,17 @@ INSTALLED_APPS = [
     "fobi.contrib.apps.drf_integration.form_elements.fields.select",
     "fobi.contrib.apps.drf_integration.form_handlers.db_store",
 ]
+```
+
+If you want site-aware form bindings, add the optional apps too:
+
+```python
+INSTALLED_APPS += [
+    "django.contrib.sites",
+    "unfold_fobi.contrib.sites",
+]
+
+SITE_ID = 1
 ```
 
 3. Add template context processors and builtins.
@@ -179,6 +190,90 @@ UNFOLD = {
     },
 }
 ```
+
+## Optional Sites Integration
+
+The base package does not require `django.contrib.sites`. Enable the Sites
+extension only if your project needs form-to-site bindings.
+
+1. Add the optional apps:
+
+```python
+INSTALLED_APPS += [
+    "django.contrib.sites",
+    "unfold_fobi.contrib.sites",
+]
+
+SITE_ID = 1
+UNFOLD_FOBI_SITES_FOR_USER = "myproject.site_permissions.sites_for_user"
+```
+
+2. Run migrations:
+
+```bash
+python manage.py migrate
+```
+
+3. Re-register your admin classes with the mixins from
+`unfold_fobi.contrib.sites.admin`:
+
+```python
+from django.contrib import admin
+from fobi.contrib.plugins.form_handlers.db_store.models import SavedFormDataEntry
+
+from unfold_fobi.admin import FormEntryProxyAdmin as BaseFormEntryProxyAdmin
+from unfold_fobi.contrib.sites.admin import (
+    RelationSiteScopeAdminMixin,
+    SiteAwareFormEntryMixin,
+)
+from unfold_fobi.fobi_admin import SavedFormDataEntryAdmin as BaseSavedEntryAdmin
+from unfold_fobi.models import FormEntryProxy
+
+
+admin.site.unregister(FormEntryProxy)
+
+
+@admin.register(FormEntryProxy)
+class FormEntryProxyAdmin(
+    SiteAwareFormEntryMixin,
+    RelationSiteScopeAdminMixin,
+    BaseFormEntryProxyAdmin,
+):
+    site_relation_lookup = "site_binding__sites"
+
+    def has_view_permission(self, request, obj=None):
+        return self._has_site_scoped_permission(request, "view", obj)
+
+    def has_change_permission(self, request, obj=None):
+        return self._has_site_scoped_permission(request, "change", obj)
+
+    def has_delete_permission(self, request, obj=None):
+        return self._has_site_scoped_permission(request, "delete", obj)
+
+
+admin.site.unregister(SavedFormDataEntry)
+
+
+@admin.register(SavedFormDataEntry)
+class SavedFormDataEntryAdmin(RelationSiteScopeAdminMixin, BaseSavedEntryAdmin):
+    site_relation_lookup = "form_entry__site_binding__sites"
+
+    def has_view_permission(self, request, obj=None):
+        return self._has_site_scoped_permission(request, "view", obj)
+```
+
+What the package provides:
+- `FobiFormSiteBinding` to persist form-to-site relations.
+- `SiteAwareFormEntryMixin` to add the synthetic `sites` field to the form admin.
+- `RelationSiteScopeAdminMixin` to filter querysets by a relation path such as
+  `site_binding__sites` or `form_entry__site_binding__sites`.
+- Binding helpers in `unfold_fobi.contrib.sites.services`.
+
+What stays in the consuming project:
+- Mapping users to allowed sites.
+- Any fallback/default assignment logic when no sites are selected.
+- Project-specific `has_*_permission()` policy.
+- Project-specific clone/import wiring beyond the provided binding helpers.
 
 ## Development & Testing
 
