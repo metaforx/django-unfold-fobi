@@ -10,8 +10,10 @@ Verifies:
 
 import io
 import json
+from types import SimpleNamespace
 
 import pytest
+from django import forms
 from django.urls import reverse
 from helpers import get_admin_edit_url
 
@@ -282,3 +284,116 @@ class TestEmailHandlerAvailability:
         url = get_admin_edit_url(form_entry.pk)
         response = admin_client.get(url)
         assert response.status_code == 200
+
+
+class TestMailSenderHandlerPatch:
+    """mail_sender should not expose the unused recipient-name field."""
+
+    @staticmethod
+    def _make_plugin(form_entry_id):
+        from fobi.contrib.plugins.form_handlers.mail_sender.base import (
+            MailSenderHandlerPlugin,
+        )
+
+        plugin = MailSenderHandlerPlugin()
+        plugin.request = SimpleNamespace(
+            resolver_match=SimpleNamespace(kwargs={"form_entry_id": form_entry_id})
+        )
+        return plugin
+
+    def test_mail_sender_form_omits_to_name_field(self, form_entry):
+        from fobi.contrib.plugins.form_handlers.mail_sender.forms import (
+            MailSenderForm,
+        )
+
+        form = self._make_plugin(form_entry.pk).get_initialised_create_form_or_404()
+
+        assert "to_name" not in form.fields
+        assert "to_name" not in dict(MailSenderForm.plugin_data_fields)
+
+    def test_mail_sender_uses_dropdown_of_email_fields_only(self, form_entry):
+        from fobi.models import FormElementEntry
+
+        FormElementEntry.objects.create(
+            form_entry=form_entry,
+            plugin_uid="email",
+            plugin_data=json.dumps(
+                {
+                    "label": "Email address",
+                    "name": "email",
+                    "required": True,
+                }
+            ),
+            position=2,
+        )
+
+        form = self._make_plugin(form_entry.pk).get_initialised_create_form_or_404()
+        field = form.fields["form_field_name_to_email"]
+
+        assert isinstance(field, forms.ChoiceField)
+        assert ("", "Choose email field") in field.choices
+        assert ("email", "Email address (email)") in field.choices
+        assert ("full_name", "Full Name (full_name)") not in field.choices
+
+    def test_mail_sender_has_empty_dropdown_when_no_email_fields(self, form_entry):
+        form = self._make_plugin(form_entry.pk).get_initialised_create_form_or_404()
+        field = form.fields["form_field_name_to_email"]
+
+        assert isinstance(field, forms.ChoiceField)
+        assert list(field.choices) == [
+            (
+                "",
+                "No email fields are available on this form. Add an email field first.",
+            )
+        ]
+
+    def test_mail_sender_rejects_non_email_field_names(self, form_entry):
+        from fobi.models import FormElementEntry
+
+        FormElementEntry.objects.create(
+            form_entry=form_entry,
+            plugin_uid="email",
+            plugin_data=json.dumps(
+                {
+                    "label": "Email address",
+                    "name": "email",
+                    "required": True,
+                }
+            ),
+            position=2,
+        )
+
+        plugin = self._make_plugin(form_entry.pk)
+        plugin.data = SimpleNamespace(
+            form_field_name_to_email="full_name",
+            subject="Confirmation",
+        )
+
+        form = plugin.get_initialised_create_form_or_404(
+            data={
+                "from_name": "Test sender",
+                "from_email": "sender@example.com",
+                "form_field_name_to_email": "full_name",
+                "subject": "Confirmation",
+                "body": "Body",
+            }
+        )
+
+        assert not form.is_valid()
+        assert "form_field_name_to_email" in form.errors
+
+    def test_mail_sender_plugin_data_repr_does_not_require_to_name(self):
+        from fobi.contrib.plugins.form_handlers.mail_sender.base import (
+            MailSenderHandlerPlugin,
+        )
+
+        plugin = MailSenderHandlerPlugin()
+        plugin.data = SimpleNamespace(
+            form_field_name_to_email="email",
+            subject="Confirmation",
+        )
+
+        html = plugin.plugin_data_repr()
+
+        assert "email" in html
+        assert "Confirmation" in html

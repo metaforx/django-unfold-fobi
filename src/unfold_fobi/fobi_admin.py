@@ -271,9 +271,13 @@ class FormWizardHandlerAdmin(
 class SavedFormDataEntryAdmin(FobiSavedFormDataEntryAdmin, ModelAdmin):
     """SavedFormDataEntry admin using django-unfold.
 
+    Saved entries are created programmatically only.
     Non-superuser staff can view entries but cannot modify or delete them.
-    Superusers retain full access.
+    Superusers retain edit/delete access, but cannot add entries manually.
     """
+
+    def has_add_permission(self, request):
+        return False
 
     def has_change_permission(self, request, obj=None):
         if not request.user.is_superuser:

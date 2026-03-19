@@ -18,6 +18,8 @@ Verifies:
 - T10g: Iframe X-Frame-Options SAMEORIGIN for popup views.
 """
 
+import re
+
 import pytest
 from django.contrib.auth.models import User
 from django.test import Client
@@ -714,3 +716,61 @@ class TestPopupLayout:
         resp = admin_client.get(add_url + "?_popup=1")
         assert resp.status_code == 200
         assert 'id="nav-sidebar"' not in resp.content.decode()
+
+
+class TestPopupSubmitRow:
+    """Popup add/edit screens must render the shared Unfold submit row."""
+
+    @staticmethod
+    def assert_submit_row(response, button_text):
+        assert response.status_code == 200
+        html = response.content.decode()
+        assert 'backdrop-blur-xs bg-white/80' in html
+        assert 'bg-primary-600 text-white' in html
+        match = re.search(
+            r'<button type="submit"[^>]*>\s*(.*?)\s*</button>',
+            html,
+            re.S,
+        )
+        assert match is not None
+        assert match.group(1).strip() == button_text
+        return html
+
+    def test_add_element_popup_renders_submit_row(self, admin_client, form_entry):
+        add_url = reverse(
+            "fobi.add_form_element_entry",
+            kwargs={"form_entry_id": form_entry.pk, "form_element_plugin_uid": "text"},
+        )
+        html = self.assert_submit_row(admin_client.get(add_url + "?_popup=1"), "Save")
+        assert 'id="form_element_entry_form"' in html
+
+    def test_edit_element_popup_renders_submit_row(self, admin_client, form_entry):
+        element = form_entry.formelemententry_set.first()
+        edit_url = reverse(
+            "fobi.edit_form_element_entry",
+            kwargs={"form_element_entry_id": element.pk},
+        )
+        html = self.assert_submit_row(admin_client.get(edit_url + "?_popup=1"), "Save")
+        assert 'id="form_element_entry_form"' in html
+
+    def test_add_handler_popup_renders_submit_row(self, admin_client, form_entry):
+        add_url = reverse(
+            "fobi.add_form_handler_entry",
+            kwargs={"form_entry_id": form_entry.pk, "form_handler_plugin_uid": "mail"},
+        )
+        html = self.assert_submit_row(admin_client.get(add_url + "?_popup=1"), "Save")
+        assert 'id="fobi-form"' in html
+
+    def test_edit_handler_popup_renders_submit_row(self, admin_client, form_entry):
+        from fobi.models import FormHandlerEntry
+
+        handler, _ = FormHandlerEntry.objects.get_or_create(
+            form_entry=form_entry,
+            plugin_uid="mail",
+        )
+        edit_url = reverse(
+            "fobi.edit_form_handler_entry",
+            kwargs={"form_handler_entry_id": handler.pk},
+        )
+        html = self.assert_submit_row(admin_client.get(edit_url + "?_popup=1"), "Save")
+        assert 'id="fobi-form"' in html

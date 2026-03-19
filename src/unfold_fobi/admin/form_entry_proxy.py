@@ -29,7 +29,14 @@ class FormEntryProxyAdmin(ModelAdmin):
     "Add" dropdowns for available plugins, and editable element ordering.
     """
 
-    list_display = ["name", "slug", "is_public", "created", "updated"]
+    list_display = [
+        "name",
+        "slug",
+        "is_public",
+        "active_date_from",
+        "active_date_to",
+        "updated",
+    ]
     list_filter = ["is_public", "created", "updated"]
     search_fields = ["name", "slug"]
     readonly_fields = ["created", "updated"]
@@ -297,7 +304,7 @@ class FormEntryProxyAdmin(ModelAdmin):
         description=_("Import form (JSON)"),
         url_path="import-json",
         icon="file_upload",
-        permissions=("add",),
+        permissions=("fobi.add_formentry",),
     )
     def import_form_entry_action(self, request):
         """Changelist action: import a form entry from an uploaded JSON file."""

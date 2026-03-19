@@ -230,6 +230,31 @@ class TestGermanTranslationActivation:
             ("Form not found", "Formular nicht gefunden"),
             ("Create form", "Formular erstellen"),
             ("Django administration", "Django-Verwaltung"),
+            ("Public?", "Öffentlich"),
+            (
+                "Makes your form visible to the public.",
+                "Formular ist ohne Login abrufbar.",
+            ),
+            ("Cloneable?", "Kopierbar"),
+            (
+                "Makes your form cloneable by other users.",
+                "Formular kann von Editoren als Vorlage verwendet werden.",
+            ),
+            ("Mail the sender", "Benachrichtigung Sender"),
+            ("Form field name to email", "Formularfeldname für E-Mail"),
+            (
+                "Name of the form field to be used as email.",
+                "Name des Formularfeldes, das als E-Mail verwendet werden soll.",
+            ),
+            ("Choose email field", "E-Mail-Feld auswählen"),
+            (
+                "Select one of the email fields defined on this form.",
+                "Wählen Sie eines der in diesem Formular definierten E-Mail-Felder aus.",
+            ),
+            (
+                "No email fields are available on this form. Add an email field first.",
+                "Für dieses Formular sind keine E-Mail-Felder verfügbar. Fügen Sie zuerst ein E-Mail-Feld hinzu.",
+            ),
         ],
     )
     def test_german_translation_activates(self, english, german):

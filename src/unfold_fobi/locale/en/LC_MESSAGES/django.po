@@ -189,3 +189,36 @@ msgstr ""
 
 msgid "Updated"
 msgstr ""
+
+msgid "Mail the sender"
+msgstr ""
+
+msgid "From name"
+msgstr ""
+
+msgid "From email"
+msgstr ""
+
+msgid "To name"
+msgstr ""
+
+msgid "Form field name to email"
+msgstr ""
+
+msgid "Name of the form field to be used as email."
+msgstr ""
+
+msgid "Choose email field"
+msgstr ""
+
+msgid "Select one of the email fields defined on this form."
+msgstr ""
+
+msgid "No email fields are available on this form. Add an email field first."
+msgstr ""
+
+msgid "Subject"
+msgstr ""
+
+msgid "Body"
+msgstr ""

@@ -1,0 +1,12 @@
+{% load unfold %}
+
+<div class="flex w-full flex-wrap items-center gap-2 lg:justify-end">
+    {% for action in actions %}
+        {% component "unfold/components/button.html" with href=action.url variant=action.variant class=action.button_class attrs=action.attrs %}
+            {% if action.icon_name %}
+                <span class="material-symbols-outlined text-base">{{ action.icon_name }}</span>
+            {% endif %}
+            {{ action.label }}
+        {% endcomponent %}
+    {% endfor %}
+</div>
