@@ -1,0 +1,267 @@
+# German translations for unfold_fobi.
+# Copyright (C) 2026 THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the unfold_fobi package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: unfold_fobi\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-02-27 20:41+0100\n"
+"PO-Revision-Date: 2026-02-27 21:00+0100\n"
+"Last-Translator: \n"
+"Language-Team: German\n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+msgid "Name"
+msgstr "Name"
+
+msgid "Basic information"
+msgstr "Allgemeine Informationen"
+
+msgid "Visibility"
+msgstr "Sichtbarkeit"
+
+msgid "Success page"
+msgstr "Erfolgsseite"
+
+msgid "Appearance"
+msgstr "Darstellung"
+
+msgid "Ownership"
+msgstr "Besitz"
+
+msgid "Active dates"
+msgstr "Aktive Zeiträume"
+
+msgid "Advanced"
+msgstr "Erweitert"
+
+msgid "Forms"
+msgstr "Formulare"
+
+msgid "Export selected forms (JSON)"
+msgstr "Ausgewählte Formulare exportieren (JSON)"
+
+msgid "Clone selected forms"
+msgstr "Ausgewählte Formulare klonen"
+
+#, python-brace-format
+msgid "Skipped {count} form(s) because cloning is disabled."
+msgstr "{count} Formular(e) übersprungen, da das Klonen deaktiviert ist."
+
+#, python-brace-format
+msgid "Cloned {count} form(s)."
+msgstr "{count} Formular(e) geklont."
+
+#, python-brace-format
+msgid "The form \"{0}\" was deleted successfully."
+msgstr "Das Formular \"{0}\" wurde erfolgreich gelöscht."
+
+msgid "Create form"
+msgstr "Formular erstellen"
+
+msgid "Edit form"
+msgstr "Formular bearbeiten"
+
+msgid "Import form"
+msgstr "Formular importieren"
+
+msgid "Create wizard"
+msgstr "Assistent erstellen"
+
+msgid "Edit wizard"
+msgstr "Assistent bearbeiten"
+
+msgid "Wizards"
+msgstr "Assistenten"
+
+msgid "Import wizard"
+msgstr "Assistent importieren"
+
+msgid "Export form"
+msgstr "Formular exportieren"
+
+msgid "Export wizard"
+msgstr "Assistent exportieren"
+
+msgid "Django administration"
+msgstr "Django-Verwaltung"
+
+msgid "Django Unfold admin style"
+msgstr "Django Unfold Administrationsstil"
+
+msgid "Forms (builder)"
+msgstr "Formulare (Baukasten)"
+
+#, python-brace-format
+msgid "Copy of {name}"
+msgstr "Kopie von {name}"
+
+#, python-brace-format
+msgid "{base} ({suffix})"
+msgstr "{base} ({suffix})"
+
+msgid "Create form entry"
+msgstr "Formulareintrag erstellen"
+
+msgid "Create form wizard"
+msgstr "Formularassistent erstellen"
+
+msgid "Elements"
+msgstr "Elemente"
+
+msgid "Handlers"
+msgstr "Handler"
+
+msgid "Properties"
+msgstr "Eigenschaften"
+
+msgid "Available Form Fields"
+msgstr "Verfügbare Formularfelder"
+
+msgid "Add"
+msgstr "Hinzufügen"
+
+msgid "Change form elements"
+msgstr "Formularelemente ändern"
+
+msgid "Available Form Handlers"
+msgstr "Verfügbare Formular-Aktionen"
+
+msgid "Change form handlers"
+msgstr "Formular-Aktionen ändern"
+
+msgid "Change form properties"
+msgstr "Formulareigenschaften ändern"
+
+msgid "Save"
+msgstr "Speichern"
+
+msgid "Handler"
+msgstr "Aktion"
+
+msgid "Info"
+msgstr "Info"
+
+msgid "Actions"
+msgstr "Aktionen"
+
+msgid "Edit"
+msgstr "Bearbeiten"
+
+msgid "Delete"
+msgstr "Löschen"
+
+msgid "Errors occurred while trying to change the elements ordering!"
+msgstr "Beim Ändern der Elementreihenfolge sind Fehler aufgetreten!"
+
+msgid "Form not found"
+msgstr "Formular nicht gefunden"
+
+msgid "Active from"
+msgstr "Aktiv ab"
+
+msgid "Active until"
+msgstr "Aktiv bis"
+
+msgid "Inactive form page title"
+msgstr "Titel der Inaktiv-Seite des Formulars"
+
+msgid "Inactive form page body"
+msgstr "Text der Inaktiv-Seite des Formulars"
+
+msgid "Custom message title to display if form is inactive."
+msgstr "Benutzerdefinierter Nachrichtentitel, der angezeigt wird, wenn das Formular inaktiv ist."
+
+msgid "Custom message text to display if form is inactive."
+msgstr "Benutzerdefinierter Nachrichtentext, der angezeigt wird, wenn das Formular inaktiv ist."
+
+msgid "Date and time when the form becomes active in the format: 'YYYY-MM-DD HH:MM'. Leave it blank to activate immediately."
+msgstr "Datum und Uhrzeit, ab wann das Formular aktiv ist, im Format: 'YYYY-MM-DD HH:MM'. Leer lassen, um es sofort zu aktivieren."
+
+msgid "Date and time when the form becomes inactive in the format: 'YYYY-MM-DD HH:MM'. Leave it blank to keep active forever."
+msgstr "Datum und Uhrzeit, ab wann das Formular inaktiv ist, im Format: 'YYYY-MM-DD HH:MM'. Leer lassen, um es dauerhaft aktiv zu halten."
+
+msgid "Updated"
+msgstr "Aktualisiert"
+
+msgid "Public?"
+msgstr "Öffentlich"
+
+msgid "Makes your form visible to the public."
+msgstr "Formular ist ohne Login abrufbar."
+
+msgid "Cloneable?"
+msgstr "Kopierbar"
+
+msgid "Makes your form cloneable by other users."
+msgstr "Formular kann von Editoren als Vorlage verwendet werden."
+
+msgid "Form handler"
+msgstr "Formular-Aktion"
+
+msgid "Form handlers"
+msgstr "Formular-Aktionen"
+
+msgid "Form element"
+msgstr "Formular-Element"
+
+msgid "Form elements"
+msgstr "Formular-Elemente"
+
+msgid "Add element"
+msgstr "Element hinzufügen"
+
+msgid "Add handler"
+msgstr "Aktion hinzufügen"
+
+msgid "Textarea"
+msgstr "Textbereich"
+
+msgid "Boolean"
+msgstr "Ja/Nein"
+
+msgid "Mail the sender"
+msgstr "Benachrichtigung Sender"
+
+msgid "From name"
+msgstr "Absendername"
+
+msgid "From email"
+msgstr "Absender-E-Mail"
+
+msgid "To name"
+msgstr "Empfängername"
+
+msgid "Form field name to email"
+msgstr "Formularfeldname für E-Mail"
+
+msgid "Name of the form field to be used as email."
+msgstr "Name des Formularfeldes, das als E-Mail verwendet werden soll."
+
+msgid "Choose email field"
+msgstr "E-Mail-Feld auswählen"
+
+msgid "Select one of the email fields defined on this form."
+msgstr "Wählen Sie eines der in diesem Formular definierten E-Mail-Felder aus."
+
+msgid "No email fields are available on this form. Add an email field first."
+msgstr "Für dieses Formular sind keine E-Mail-Felder verfügbar. Fügen Sie zuerst ein E-Mail-Feld hinzu."
+
+msgid "Subject"
+msgstr "Betreff"
+
+msgid "Body"
+msgstr "Nachricht"
+
+msgid "Internal name of the field"
+msgstr "Interner Name des Feldes"
+
+msgid "Displayed name of the field"
+msgstr "Angezeigter Name des Feldes"
+
+msgid "Required field"
+msgstr "Pflichtfeld"

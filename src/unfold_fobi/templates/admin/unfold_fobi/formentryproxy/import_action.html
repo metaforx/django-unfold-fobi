@@ -1,0 +1,15 @@
+{% extends "admin/base_site.html" %}
+{% load crispy_forms_tags i18n unfold_fobi_tags %}
+
+{% block title %}{% trans "Import form from JSON" %}{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto mt-8">
+    <h2 class="text-lg font-semibold mb-4">{% trans "Import form from JSON" %}</h2>
+    <p class="text-sm text-base-500 dark:text-base-400 mb-6">
+        {% trans "Upload a JSON file previously exported via the export action." %}
+    </p>
+    {% get_form_classes as form_classes %}
+    {% crispy form "unfold_crispy" %}
+</div>
+{% endblock %}

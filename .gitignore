@@ -121,6 +121,7 @@ dmypy.json
 # IDE
 .vscode/
 .idea/
+.claude/
 *.swp
 *.swo
 *~
@@ -128,4 +129,3 @@ dmypy.json
 # OS
 .DS_Store
 Thumbs.db
-

@@ -1,0 +1,37 @@
+/* Scoped overrides to keep Unfold theme consistent when Fobi simple CSS is loaded. */
+html.dark #nav-sidebar,
+html.dark #nav-sidebar-inner {
+    background-color: var(--color-base-900) !important;
+}
+
+html.dark #nav-sidebar {
+    border-color: var(--color-base-800) !important;
+}
+
+html.dark #nav-sidebar-inner {
+    color: var(--color-font-default-dark) !important;
+}
+
+/* Restore Unfold palette for non-active sidebar links if Fobi styles override them. */
+html.dark #nav-sidebar a:not(.text-primary-500):not(.text-primary-600):not(.font-semibold) {
+    color: var(--color-font-default-dark) !important;
+}
+
+html.dark #nav-sidebar a:not(.text-primary-500):not(.text-primary-600):not(.font-semibold):hover {
+    color: var(--color-primary-500) !important;
+}
+
+/* Keep the search input consistent with Unfold in dark mode. */
+html.dark #nav-sidebar .bg-white {
+    background-color: var(--color-base-900) !important;
+}
+
+html.dark #nav-sidebar .border-base-200,
+html.dark #nav-sidebar .border-base-700 {
+    border-color: var(--color-base-700) !important;
+}
+
+/* Ensure active sidebar items don't render with light background in dark mode. */
+html.dark #nav-sidebar .bg-base-100 {
+    background-color: color-mix(in oklab, #ffffff 6%, transparent) !important;
+}

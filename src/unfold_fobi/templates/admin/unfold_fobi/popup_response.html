@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html><head><title></title></head>
+<body>
+<script>
+(function() {
+    // After a successful fobi element/handler save in popup mode,
+    // signal the parent to reload and close this window.
+    if (window.opener) {
+        // Traditional window.open popup
+        window.opener.location.reload();
+        window.close();
+    } else if (window.parent && window.parent !== window) {
+        // Iframe modal — reload parent directly to refresh inlines and close modal.
+        // django-unfold-modal's postMessage handler does not support reload,
+        // so we bypass it and reload the parent page directly.
+        window.parent.location.reload();
+    }
+})();
+</script>
+</body>
+</html>

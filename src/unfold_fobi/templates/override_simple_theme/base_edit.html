@@ -1,8 +1,8 @@
 {% extends "admin/base.html" %}
-{% load static admin_urls crispy_forms_tags i18n unfold unfold_extra_tags %}
+{% load static admin_urls crispy_forms_tags i18n unfold %}
 
 {# Ensure Unfold navigation renders branding/icon even for Fobi templates #}
-{% block branding %}{{ site_header|default:"Django administration" }}{% endblock %}
+{% block branding %}{% trans "Django administration" as default_branding %}{{ site_header|default:default_branding }}{% endblock %}
 
 {% block extrahead %}
     {{ block.super }}
@@ -15,23 +15,18 @@
     {% endblock theme-javascripts %}
 {% endblock %}
 
-{% block extrastyle %}
-    {{ block.super }}
-    {% unfold_extra_styles %}
-    {# Fobi theme stylesheets #}
-    {% block theme-stylesheets %}
-        {% for css_file in fobi_theme.get_media_css %}
-        <link href="{{ css_file }}" rel="stylesheet" media="all" />
-        {% endfor %}
-    {% endblock theme-stylesheets %}
-{% endblock %}
-
-
 {% block content %}
     {# Default content when child templates don't override content-wrapper #}
     {% block content-wrapper %}
         {% block object-tools %}{% endblock %}
     {% endblock %}
+{% endblock %}
+
+{# Match Django native related-widget popup behavior: no admin nav sidebar. #}
+{% block nav-sidebar %}
+    {% if not is_popup and "_popup" not in request.GET and "_popup" not in request.POST %}
+        {{ block.super }}
+    {% endif %}
 {% endblock %}
 
 {# Render Fobi's optional sidebar content inside Unfold's sidebar slot #}

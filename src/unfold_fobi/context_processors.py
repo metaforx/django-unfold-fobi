@@ -1,7 +1,6 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 
-
 FOBI_TITLES = {
     "fobi.dashboard": _("Forms"),
     "fobi.create_form_entry": _("Create form"),
@@ -24,7 +23,7 @@ def admin_site(request):
     context = admin.site.each_context(request)
     # Unfold only renders the navigation header when `branding` is set.
     # Fall back to the admin site header (or a default string) so the icon renders.
-    default_brand = admin.site.site_header or "Django administration"
+    default_brand = admin.site.site_header or _("Django administration")
     context.setdefault("site_header", default_brand)
     context.setdefault("branding", default_brand)
     # Ensure a symbol exists so the default settings icon renders when no logo/icon.
