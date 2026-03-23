@@ -37,7 +37,7 @@
 ## Installation
 
 ```bash
-cd /Users/metafor/code/unfold-fobi
+cd /Users/metafor/code/django-unfold-fobi
 pip install -e .
 ```
 

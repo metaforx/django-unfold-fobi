@@ -1,4 +1,4 @@
-# unfold_fobi
+# django-unfold-fobi
 
 Unfold integration for `django-fobi`: Unfold-styled admin, Unfold theme for the
 form builder UI, DRF compatibility shims, and a few Unfold-friendly admin views.
