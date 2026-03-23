@@ -48,6 +48,7 @@ coverage.xml
 # Translations
 *.mo
 *.pot
+!src/unfold_fobi/locale/**/LC_MESSAGES/*.mo
 
 # Django stuff:
 *.log

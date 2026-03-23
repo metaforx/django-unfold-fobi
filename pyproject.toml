@@ -1,6 +1,6 @@
 [project]
 name = "django-unfold-fobi"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Django Unfold admin integration for django-fobi"
 readme = "README.md"
 license = "MIT"
@@ -41,6 +41,15 @@ Repository = "https://github.com/metaforx/django-unfold-fobi"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.build]
+include = [
+    "src/unfold_fobi/locale/**/*.po",
+    "src/unfold_fobi/locale/**/*.mo",
+]
+
+[tool.hatch.version]
+path = "src/unfold_fobi/__init__.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/unfold_fobi"]
