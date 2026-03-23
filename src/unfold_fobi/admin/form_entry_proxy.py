@@ -61,12 +61,12 @@ class FormEntryProxyAdmin(ModelAdmin):
 
     def get_form(self, request, obj=None, **kwargs):
         """Use Fobi's FormEntryForm and inject request for validation/widgets."""
-        kwargs["form"] = FormEntryFormWithCloneable
+        kwargs.setdefault("form", FormEntryFormWithCloneable)
         form_class = super().get_form(request, obj, **kwargs)
 
         class RequestForm(form_class):
             def __init__(self, *args, **form_kwargs):
-                form_kwargs["request"] = request
+                form_kwargs.setdefault("request", request)
                 super().__init__(*args, **form_kwargs)
 
         return RequestForm
@@ -300,6 +300,14 @@ class FormEntryProxyAdmin(ModelAdmin):
 
     export_selected_forms.short_description = _("Export selected forms (JSON)")
 
+    def _do_import(self, request, entry_data):
+        """Import a single form entry. Override for post-import hooks."""
+        return perform_form_entry_import(request, entry_data)
+
+    def _do_clone(self, request, form_entry):
+        """Clone a single form entry. Override for post-clone hooks."""
+        return clone_form_entry(form_entry)
+
     @action(
         description=_("Import form (JSON)"),
         url_path="import-json",
@@ -319,7 +327,7 @@ class FormEntryProxyAdmin(ModelAdmin):
                 entries = form.cleaned_data["entries_payload"]
                 imported = []
                 for entry_data in entries:
-                    imported.append(perform_form_entry_import(request, entry_data))
+                    imported.append(self._do_import(request, entry_data))
                 names = ", ".join(e.name for e in imported)
                 messages.success(
                     request,
@@ -354,7 +362,7 @@ class FormEntryProxyAdmin(ModelAdmin):
             if not form_entry.is_cloneable:
                 skipped += 1
                 continue
-            clone_form_entry(form_entry)
+            self._do_clone(request, form_entry)
             created += 1
 
         if skipped:
