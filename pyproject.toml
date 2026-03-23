@@ -70,7 +70,8 @@ playwright = ">=1.40"
 ruff = ">=0.4"
 
 [tool.pytest.ini_options]
-addopts = "--ds=testapp.settings -q"
+addopts = "--ds=testapp.settings"
+console_output_style = "progress"
 testpaths = ["tests"]
 pythonpath = ["src", "tests/server", "tests"]
 django_find_project = false

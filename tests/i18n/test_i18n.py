@@ -149,8 +149,14 @@ class TestMakemessagesExtraction:
     def test_po_file_contains_expected_strings(self):
         from pathlib import Path
 
-        po_path = Path(__file__).resolve().parent.parent / (
-            "src/unfold_fobi/locale/en/LC_MESSAGES/django.po"
+        po_path = (
+            Path(__file__).resolve().parents[2]
+            / "src"
+            / "unfold_fobi"
+            / "locale"
+            / "en"
+            / "LC_MESSAGES"
+            / "django.po"
         )
         assert po_path.exists(), f"PO file not found at {po_path}"
         content = po_path.read_text()
@@ -166,8 +172,14 @@ class TestGermanPOFilePresent:
     def test_de_po_file_exists(self):
         from pathlib import Path
 
-        po_path = Path(__file__).resolve().parent.parent / (
-            "src/unfold_fobi/locale/de/LC_MESSAGES/django.po"
+        po_path = (
+            Path(__file__).resolve().parents[2]
+            / "src"
+            / "unfold_fobi"
+            / "locale"
+            / "de"
+            / "LC_MESSAGES"
+            / "django.po"
         )
         assert po_path.exists(), f"German PO file not found at {po_path}"
 
@@ -175,14 +187,21 @@ class TestGermanPOFilePresent:
         """Compile messages if needed and verify the .mo file is produced."""
         from pathlib import Path
 
-        mo_path = Path(__file__).resolve().parent.parent / (
-            "src/unfold_fobi/locale/de/LC_MESSAGES/django.mo"
+        repo_root = Path(__file__).resolve().parents[2]
+        mo_path = (
+            repo_root
+            / "src"
+            / "unfold_fobi"
+            / "locale"
+            / "de"
+            / "LC_MESSAGES"
+            / "django.mo"
         )
         if not mo_path.exists():
             # Compile on-the-fly (handles fresh clones where .mo is gitignored)
             subprocess.run(
                 ["python", "tests/server/manage.py", "compilemessages", "-l", "de"],
-                cwd=str(Path(__file__).resolve().parent.parent),
+                cwd=str(repo_root),
                 check=True,
             )
         assert mo_path.exists(), (
@@ -193,8 +212,14 @@ class TestGermanPOFilePresent:
         """Every string from the English extraction must have a German msgstr."""
         from pathlib import Path
 
-        po_path = Path(__file__).resolve().parent.parent / (
-            "src/unfold_fobi/locale/de/LC_MESSAGES/django.po"
+        po_path = (
+            Path(__file__).resolve().parents[2]
+            / "src"
+            / "unfold_fobi"
+            / "locale"
+            / "de"
+            / "LC_MESSAGES"
+            / "django.po"
         )
         content = po_path.read_text()
         expected = TestMakemessagesExtraction.EXPECTED_STRINGS

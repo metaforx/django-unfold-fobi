@@ -174,16 +174,16 @@ class TestPopupResponseReload:
 
     def test_popup_response_uses_parent_reload(self):
         """popup_response.html must use window.parent.location.reload()."""
-        import os
+        from pathlib import Path
 
-        template_path = os.path.join(
-            os.path.dirname(os.path.dirname(__file__)),
-            "src",
-            "unfold_fobi",
-            "templates",
-            "admin",
-            "unfold_fobi",
-            "popup_response.html",
+        template_path = (
+            Path(__file__).resolve().parents[2]
+            / "src"
+            / "unfold_fobi"
+            / "templates"
+            / "admin"
+            / "unfold_fobi"
+            / "popup_response.html"
         )
         with open(template_path) as f:
             content = f.read()
@@ -191,16 +191,16 @@ class TestPopupResponseReload:
 
     def test_popup_response_no_post_message_call(self):
         """popup_response.html must NOT call postMessage() (broken with unfold-modal)."""
-        import os
+        from pathlib import Path
 
-        template_path = os.path.join(
-            os.path.dirname(os.path.dirname(__file__)),
-            "src",
-            "unfold_fobi",
-            "templates",
-            "admin",
-            "unfold_fobi",
-            "popup_response.html",
+        template_path = (
+            Path(__file__).resolve().parents[2]
+            / "src"
+            / "unfold_fobi"
+            / "templates"
+            / "admin"
+            / "unfold_fobi"
+            / "popup_response.html"
         )
         with open(template_path) as f:
             content = f.read()
@@ -209,16 +209,16 @@ class TestPopupResponseReload:
 
     def test_popup_response_handles_opener(self):
         """popup_response.html must handle window.opener for traditional popups."""
-        import os
+        from pathlib import Path
 
-        template_path = os.path.join(
-            os.path.dirname(os.path.dirname(__file__)),
-            "src",
-            "unfold_fobi",
-            "templates",
-            "admin",
-            "unfold_fobi",
-            "popup_response.html",
+        template_path = (
+            Path(__file__).resolve().parents[2]
+            / "src"
+            / "unfold_fobi"
+            / "templates"
+            / "admin"
+            / "unfold_fobi"
+            / "popup_response.html"
         )
         with open(template_path) as f:
             content = f.read()
@@ -246,7 +246,11 @@ class TestEmailHandlerAvailability:
         from pathlib import Path
 
         settings_file = (
-            Path(__file__).resolve().parent / "server" / "testapp" / "settings.py"
+            Path(__file__).resolve().parents[2]
+            / "tests"
+            / "server"
+            / "testapp"
+            / "settings.py"
         )
         content = settings_file.read_text()
         assert "django.core.mail.backends.console.EmailBackend" in content

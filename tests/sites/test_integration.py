@@ -212,7 +212,7 @@ class TestConfModule:
 
     def test_custom_sites_for_user_via_setting(self, settings, staff_user, site_a):
         settings.UNFOLD_FOBI_SITES_FOR_USER = (
-            "test_t16_sites_integration._all_sites_for_user"
+            "tests.sites.test_integration._all_sites_for_user"
         )
         from unfold_fobi.contrib.sites.conf import get_sites_for_user_func
 
