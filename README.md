@@ -1,5 +1,8 @@
 # django-unfold-fobi
 
+[![PyPI - Version](https://img.shields.io/pypi/v/django-unfold-fobi.svg?style=for-the-badge)](https://pypi.org/project/django-unfold-fobi/)
+[![Build](https://img.shields.io/github/actions/workflow/status/metaforx/django-unfold-fobi/ci.yml?style=for-the-badge&event=pull_request)](https://github.com/metaforx/django-unfold-fobi/actions/workflows/ci.yml)
+
 Unfold integration for `django-fobi`: Unfold-styled admin, Unfold theme for the
 form builder UI, DRF compatibility shims, and a few Unfold-friendly admin views.
 The optional Sites extension lives in `unfold_fobi.contrib.sites`.
@@ -15,48 +18,20 @@ This README shows the integration steps as they are used in
 pip install django-unfold-fobi
 ```
 
-2. Add apps to `INSTALLED_APPS` (order matters).
+2. Follow the standard `django-fobi` installation and plugin setup first, then add the `unfold_fobi` integration apps to `INSTALLED_APPS` (order matters).
 
 ```python
 INSTALLED_APPS = [
     "unfold",  # must be before django.contrib.admin
-    "django.contrib.admin",
-    "django.contrib.auth",
-    "django.contrib.contenttypes",
-    "django.contrib.sessions",
-    "django.contrib.messages",
-    "django.contrib.staticfiles",
     "crispy_forms",  # required by unfold_fobi layouts/templates
-
-    # Fobi integration
-    "unfold_fobi",
     "fobi.contrib.themes.simple",  # required, Unfold theme extends it
-    "fobi",
-
-    # Standard Fobi plugins (for wizard interface)
-    "fobi.contrib.plugins.form_elements.fields.text",
-    "fobi.contrib.plugins.form_elements.fields.textarea",
-    "fobi.contrib.plugins.form_elements.fields.email",
-    "fobi.contrib.plugins.form_elements.fields.integer",
-    "fobi.contrib.plugins.form_elements.fields.boolean",
-    "fobi.contrib.plugins.form_elements.fields.date",
-    "fobi.contrib.plugins.form_elements.fields.select",
-    "fobi.contrib.plugins.form_handlers.db_store",
-
-    # DRF integration (optional, but used in this project)
-    "fobi.contrib.apps.drf_integration",
-    "fobi.contrib.apps.drf_integration.form_elements.fields.text",
-    "fobi.contrib.apps.drf_integration.form_elements.fields.email",
-    "fobi.contrib.apps.drf_integration.form_elements.fields.integer",
-    "fobi.contrib.apps.drf_integration.form_elements.fields.boolean",
-    "fobi.contrib.apps.drf_integration.form_elements.fields.textarea",
-    "fobi.contrib.apps.drf_integration.form_elements.fields.date",
-    "fobi.contrib.apps.drf_integration.form_elements.fields.select",
-    "fobi.contrib.apps.drf_integration.form_handlers.db_store",
+    "unfold_fobi",
 ]
 ```
 
-If you want site-aware form bindings, add the optional apps too:
+Add your normal `django-fobi` apps, plugins, and optional DRF integration exactly as documented by `django-fobi`.
+
+If you want site-aware form bindings, add the optional app too:
 
 ```python
 INSTALLED_APPS += [
