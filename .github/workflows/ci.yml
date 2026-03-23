@@ -44,4 +44,4 @@ jobs:
         run: poetry install --no-interaction
 
       - name: Run unit tests
-        run: poetry run pytest --ignore=tests/test_ui_*.py -rs
+        run: poetry run pytest --ignore=tests/e2e -rs
