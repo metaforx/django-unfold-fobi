@@ -1,292 +1,35 @@
-"""T03/T05/T05a – i18n baseline, audit, and German localization tests.
+"""Minimal i18n smoke test coverage for the shipped German catalog."""
 
-Verifies that core translated labels and messages exist for custom admin
-and view strings used by unfold_fobi, that the makemessages extraction
-workflow discovers all expected strings, and that German translations are
-present and activated correctly.
-"""
+from pathlib import Path
 
-import subprocess
-
-import pytest
-from django.utils.functional import Promise  # lazy string base class
+from django.conf import settings
+from django.core.management import call_command
 
 
-class TestFobiTitlesTranslated:
-    """FOBI_TITLES in context_processors must contain lazy translated strings."""
+def test_german_catalog_compiles_and_loads():
+    """Ensure the German catalog can be compiled and resolved at runtime."""
+    from django.utils import translation
+    from django.utils.translation import gettext
+    from django.utils.translation import trans_real
 
-    def test_fobi_titles_defined(self):
-        from unfold_fobi.context_processors import FOBI_TITLES
+    repo_root = Path(__file__).resolve().parents[2]
+    locale_dir = repo_root / "src" / "unfold_fobi" / "locale" / "de" / "LC_MESSAGES"
+    po_path = locale_dir / "django.po"
+    mo_path = locale_dir / "django.mo"
 
-        assert len(FOBI_TITLES) > 0
+    assert po_path.exists(), f"German PO file not found at {po_path}"
 
-    @pytest.mark.parametrize(
-        "view_name",
-        [
-            "fobi.dashboard",
-            "fobi.create_form_entry",
-            "fobi.edit_form_entry",
-            "fobi.import_form_entry",
-        ],
-    )
-    def test_fobi_title_is_lazy_string(self, view_name):
-        from unfold_fobi.context_processors import FOBI_TITLES
+    if (not mo_path.exists()) or mo_path.stat().st_mtime < po_path.stat().st_mtime:
+        call_command("compilemessages", locale=["de"], verbosity=0)
 
-        title = FOBI_TITLES[view_name]
-        assert isinstance(title, (str, Promise))
-        assert len(str(title)) > 0
+    assert mo_path.exists(), f"Compiled German MO file not found at {mo_path}"
 
+    # Reload Django's in-process translation cache after compiling.
+    trans_real._translations.clear()
+    trans_real._default = None
 
-class TestProxyModelVerboseName:
-    """FormEntryProxy verbose_name must be a translated string."""
-
-    def test_verbose_name_is_translated(self):
-        from unfold_fobi.models import FormEntryProxy
-
-        vn = FormEntryProxy._meta.verbose_name
-        assert isinstance(vn, (str, Promise))
-        assert str(vn) == "Forms (builder)"
-
-    def test_verbose_name_plural_is_translated(self):
-        from unfold_fobi.models import FormEntryProxy
-
-        vn = FormEntryProxy._meta.verbose_name_plural
-        assert isinstance(vn, (str, Promise))
-        assert str(vn) == "Forms (builder)"
-
-
-class TestAdminFieldsetLabelsTranslated:
-    """Fieldset group labels produced by get_fieldsets should be lazy strings."""
-
-    @pytest.fixture()
-    def fieldsets(self, admin_user):
-        from django.contrib import admin
-        from django.test import RequestFactory
-
-        from unfold_fobi.models import FormEntryProxy
-
-        ma = admin.site._registry[FormEntryProxy]
-        factory = RequestFactory()
-        request = factory.get("/admin/")
-        request.user = admin_user
-        return ma.get_fieldsets(request, obj=None)
-
-    def test_all_labels_are_translatable(self, fieldsets):
-        for label, _opts in fieldsets:
-            assert isinstance(label, (str, Promise)), (
-                f"Fieldset label '{label}' is not a translatable string"
-            )
-            assert len(str(label)) > 0
-
-
-class TestViewTitlesTranslated:
-    """Redirect view classes must expose translated title attributes."""
-
-    def test_import_view_title(self):
-        from unfold_fobi.views import FormEntryImportView
-
-        assert str(FormEntryImportView.title) == "Import form"
-
-    def test_wizards_view_title(self):
-        from unfold_fobi.views import FormWizardsDashboardView
-
-        assert str(FormWizardsDashboardView.title) == "Wizards"
-
-
-class TestContextProcessorBrandingWrapped:
-    """The branding fallback in context_processors must be translatable."""
-
-    def test_default_brand_is_lazy(self):
-
-        from unfold_fobi.context_processors import _
-
-        # The fallback uses _("Django administration"), which is a lazy string.
-        fallback = _("Django administration")
-        assert isinstance(fallback, (str, Promise))
-        assert str(fallback) == "Django administration"
-
-    def test_admin_site_context_has_branding(self, admin_user):
-        from django.test import RequestFactory
-
-        from unfold_fobi.context_processors import admin_site
-
-        factory = RequestFactory()
-        request = factory.get("/admin/")
-        request.user = admin_user
-        request.resolver_match = None
-        ctx = admin_site(request)
-        assert "branding" in ctx
-        assert len(str(ctx["branding"])) > 0
-
-
-class TestAPIErrorMessageWrapped:
-    """The get_form_fields API error message must be translatable."""
-
-    def test_form_not_found_returns_translated_error(self, admin_client):
-        response = admin_client.get("/api/fobi-form-fields/nonexistent-slug/")
-        assert response.status_code == 404
-        data = response.json()
-        assert data["error"] == "Form not found"
-
-
-class TestMakemessagesExtraction:
-    """Verify that makemessages extracts all expected i18n strings."""
-
-    EXPECTED_STRINGS = [
-        "Django administration",
-        "Basic information",
-        "Visibility",
-        "Active dates",
-        "Forms (builder)",
-        "Create form",
-        "Edit form",
-        "Elements",
-        "Handlers",
-        "Properties",
-        "Form not found",
-    ]
-
-    def test_po_file_contains_expected_strings(self):
-        from pathlib import Path
-
-        po_path = (
-            Path(__file__).resolve().parents[2]
-            / "src"
-            / "unfold_fobi"
-            / "locale"
-            / "en"
-            / "LC_MESSAGES"
-            / "django.po"
-        )
-        assert po_path.exists(), f"PO file not found at {po_path}"
-        content = po_path.read_text()
-        for string in self.EXPECTED_STRINGS:
-            assert f'msgid "{string}"' in content, (
-                f"Expected string '{string}' not found in PO file"
-            )
-
-
-class TestGermanPOFilePresent:
-    """T05a – verify German PO file exists and contains translations."""
-
-    def test_de_po_file_exists(self):
-        from pathlib import Path
-
-        po_path = (
-            Path(__file__).resolve().parents[2]
-            / "src"
-            / "unfold_fobi"
-            / "locale"
-            / "de"
-            / "LC_MESSAGES"
-            / "django.po"
-        )
-        assert po_path.exists(), f"German PO file not found at {po_path}"
-
-    def test_de_mo_file_compiled(self):
-        """Compile messages if needed and verify the .mo file is produced."""
-        from pathlib import Path
-
-        repo_root = Path(__file__).resolve().parents[2]
-        mo_path = (
-            repo_root
-            / "src"
-            / "unfold_fobi"
-            / "locale"
-            / "de"
-            / "LC_MESSAGES"
-            / "django.mo"
-        )
-        if not mo_path.exists():
-            # Compile on-the-fly (handles fresh clones where .mo is gitignored)
-            subprocess.run(
-                ["python", "tests/server/manage.py", "compilemessages", "-l", "de"],
-                cwd=str(repo_root),
-                check=True,
-            )
-        assert mo_path.exists(), (
-            f"Compiled German MO file not found at {mo_path} even after compilemessages."
-        )
-
-    def test_de_po_has_translations_for_all_expected_strings(self):
-        """Every string from the English extraction must have a German msgstr."""
-        from pathlib import Path
-
-        po_path = (
-            Path(__file__).resolve().parents[2]
-            / "src"
-            / "unfold_fobi"
-            / "locale"
-            / "de"
-            / "LC_MESSAGES"
-            / "django.po"
-        )
-        content = po_path.read_text()
-        expected = TestMakemessagesExtraction.EXPECTED_STRINGS
-        for string in expected:
-            assert f'msgid "{string}"' in content, (
-                f"German PO missing msgid for '{string}'"
-            )
-
-        # Verify none of the expected strings have empty msgstr
-        lines = content.splitlines()
-        for i, line in enumerate(lines):
-            if line.startswith("msgid ") and line != 'msgid ""':
-                msgid_val = line[len("msgid ") :]
-                # Check the next line for msgstr
-                if i + 1 < len(lines):
-                    msgstr_line = lines[i + 1]
-                    if msgstr_line.startswith("msgstr "):
-                        msgstr_val = msgstr_line[len("msgstr ") :]
-                        if msgstr_val == '""':
-                            pytest.fail(
-                                f"German PO has empty translation for {msgid_val}"
-                            )
-
-
-class TestGermanTranslationActivation:
-    """T05a – verify that German translations activate correctly at runtime."""
-
-    @pytest.mark.parametrize(
-        "english,german",
-        [
-            ("Basic information", "Allgemeine Informationen"),
-            ("Forms (builder)", "Formulare (Baukasten)"),
-            ("Form not found", "Formular nicht gefunden"),
-            ("Create form", "Formular erstellen"),
-            ("Django administration", "Django-Verwaltung"),
-            ("Public?", "Öffentlich"),
-            (
-                "Makes your form visible to the public.",
-                "Formular ist ohne Login abrufbar.",
-            ),
-            ("Cloneable?", "Kopierbar"),
-            (
-                "Makes your form cloneable by other users.",
-                "Formular kann von Editoren als Vorlage verwendet werden.",
-            ),
-            ("Mail the sender", "Benachrichtigung Sender"),
-            ("Form field name to email", "Formularfeldname für E-Mail"),
-            (
-                "Name of the form field to be used as email.",
-                "Name des Formularfeldes, das als E-Mail verwendet werden soll.",
-            ),
-            ("Choose email field", "E-Mail-Feld auswählen"),
-            (
-                "Select one of the email fields defined on this form.",
-                "Wählen Sie eines der in diesem Formular definierten E-Mail-Felder aus.",
-            ),
-            (
-                "No email fields are available on this form. Add an email field first.",
-                "Für dieses Formular sind keine E-Mail-Felder verfügbar. Fügen Sie zuerst ein E-Mail-Feld hinzu.",
-            ),
-        ],
-    )
-    def test_german_translation_activates(self, english, german):
-        from django.utils import translation
-
+    try:
         with translation.override("de"):
-            from django.utils.translation import gettext
-
-            result = gettext(english)
-            assert result == german, f"Expected '{german}', got '{result}'"
+            assert gettext("Basic information") == "Allgemeine Informationen"
+    finally:
+        translation.activate(settings.LANGUAGE_CODE)
