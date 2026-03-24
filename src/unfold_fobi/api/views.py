@@ -55,6 +55,8 @@ def _coerce_choice_pair(choice):
 
 def _build_widget_map(form_entry):
     """Map field names to their Django widget class names."""
+    from django.forms.fields import EmailField
+
     widget_map = {}
     for element_entry in form_entry.formelemententry_set.all().order_by("position"):
         try:
@@ -63,11 +65,24 @@ def _build_widget_map(form_entry):
                 continue
             for item in plugin.get_form_field_instances():
                 name = item[0]
+                field_cls = item[1] if len(item) > 1 else None
                 kwargs = item[2] if len(item) > 2 else {}
                 widget = kwargs.get("widget")
                 if widget is not None:
-                    widget_map[name] = widget.__class__.__name__
-        except (AttributeError, IndexError):
+                    widget_name = widget.__class__.__name__
+                elif field_cls is not None:
+                    # Plugin omitted widget; instantiate field to get default.
+                    safe_kwargs = {k: v for k, v in kwargs.items() if k != "widget"}
+                    instance = field_cls(**safe_kwargs)
+                    widget_name = instance.widget.__class__.__name__
+                else:
+                    continue
+                # Fobi's email plugin uses TextInput(type=email) instead of
+                # Django's EmailInput; resolve to the semantic widget name.
+                if widget_name == "TextInput" and field_cls is not None and issubclass(field_cls, EmailField):
+                    widget_name = "EmailInput"
+                widget_map[name] = widget_name
+        except Exception:
             continue
     return widget_map
 
