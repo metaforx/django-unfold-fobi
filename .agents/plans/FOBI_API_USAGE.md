@@ -52,14 +52,24 @@ curl -X 'GET' \
     {
       "name": "full_name",
       "type": "CharField",
+      "widget": "TextInput",
       "label": "Full Name",
       "required": true,
       "help_text": "",
       "max_length": 255
     },
     {
+      "name": "description",
+      "type": "CharField",
+      "widget": "Textarea",
+      "label": "Description",
+      "required": false,
+      "help_text": ""
+    },
+    {
       "name": "email",
       "type": "EmailField",
+      "widget": "EmailInput",
       "label": "Email Address",
       "required": true,
       "help_text": ""
@@ -67,6 +77,7 @@ curl -X 'GET' \
     {
       "name": "age",
       "type": "IntegerField",
+      "widget": "NumberInput",
       "label": "Age",
       "required": false,
       "min_value": 0,
@@ -75,6 +86,7 @@ curl -X 'GET' \
     {
       "name": "country",
       "type": "ChoiceField",
+      "widget": "Select",
       "label": "Country",
       "required": false,
       "choices": [
@@ -135,14 +147,18 @@ Submitted data is stored by the db_store handler only if the form has the **DB s
 
 If the list is empty after submitting via API, ensure the form has the **DB store** handler: open the form in admin (e.g. edit form 4), go to the **Form handlers** section, and add the **DB store** handler if missing. You can also run `python manage.py attach_db_store_handler` to attach it to all forms that don’t have it.
 
-## Field Types Mapping
+## Field Types and Widget Mapping
 
-The API returns field types that map to frontend form controls:
+The API returns both `type` (field class) and `widget` (widget class) for each field.
+Use `widget` to distinguish ambiguous types:
 
-- `CharField` → Text input
-- `EmailField` → Email input
-- `IntegerField` → Number input
-- `BooleanField` → Checkbox
-- `ChoiceField` → Select dropdown
-- `DateField` → Date picker
-- `TextareaField` → Textarea
+| `type` | `widget` | Frontend control |
+|--------|----------|-----------------|
+| `CharField` | `TextInput` | Text input |
+| `CharField` | `Textarea` | Textarea |
+| `EmailField` | `EmailInput` | Email input |
+| `IntegerField` | `NumberInput` | Number input |
+| `BooleanField` | `CheckboxInput` | Checkbox |
+| `ChoiceField` | `Select` | Select dropdown |
+| `ChoiceField` | `RadioSelect` | Radio buttons |
+| `DateField` | `DateInput` | Date picker |
