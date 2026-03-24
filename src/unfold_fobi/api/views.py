@@ -53,6 +53,25 @@ def _coerce_choice_pair(choice):
     return choice, choice
 
 
+def _build_widget_map(form_entry):
+    """Map field names to their Django widget class names."""
+    widget_map = {}
+    for element_entry in form_entry.formelemententry_set.all().order_by("position"):
+        try:
+            plugin = element_entry.get_plugin(request=None)
+            if not plugin:
+                continue
+            for item in plugin.get_form_field_instances():
+                name = item[0]
+                kwargs = item[2] if len(item) > 2 else {}
+                widget = kwargs.get("widget")
+                if widget is not None:
+                    widget_map[name] = widget.__class__.__name__
+        except (AttributeError, TypeError, IndexError):
+            continue
+    return widget_map
+
+
 @api_view(["GET"])
 def get_form_fields(request, slug):
     """
@@ -70,6 +89,8 @@ def get_form_fields(request, slug):
         else:
             fields = fields_result
 
+        widget_map = _build_widget_map(form_entry)
+
         form_structure = {
             "id": form_entry.id,
             "slug": form_entry.slug,
@@ -81,6 +102,7 @@ def get_form_fields(request, slug):
             field_info = {
                 "name": field_name,
                 "type": field.__class__.__name__,
+                "widget": widget_map.get(field_name, ""),
                 "label": getattr(field, "label", field_name),
                 "required": getattr(field, "required", False),
                 "help_text": getattr(field, "help_text", ""),
