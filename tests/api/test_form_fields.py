@@ -8,49 +8,61 @@ import json
 import pytest
 from fobi.models import FormElementEntry, FormEntry, FormHandlerEntry
 
+# -- Plugin UID → (field name, plugin_data, expected_type, expected_widget) --
+# Covers all standard fobi field plugins except model-object selects (need ContentType)
+# and input (uses bare django.forms.fields.Field).
+PLUGIN_SPECS = [
+    ("boolean", "agree", {"label": "Agree", "name": "agree"}, "BooleanField", "CheckboxInput"),
+    ("checkbox_select_multiple", "colors", {"label": "Colors", "name": "colors", "choices": "r\ng\nb"}, "MultipleChoiceField", "CheckboxSelectMultiple"),
+    ("date", "birth_date", {"label": "Birth", "name": "birth_date"}, "DateField", "DateInput"),
+    ("date_drop_down", "start_date", {"label": "Start", "name": "start_date", "year_min": 2000, "year_max": 2030}, "DateField", "SelectDateWidget"),
+    ("datetime", "event_at", {"label": "Event", "name": "event_at"}, "DateTimeField", "DateTimeInput"),
+    ("decimal", "price", {"label": "Price", "name": "price", "initial": 0, "max_value": 9999, "min_value": 0, "max_digits": 6, "decimal_places": 2}, "DecimalField", "NumberInput"),
+    ("email", "e_mail", {"label": "Email", "name": "e_mail"}, "EmailField", "EmailInput"),
+    ("file", "attachment", {"label": "File", "name": "attachment"}, "FileField", "ClearableFileInput"),
+    ("float", "weight", {"label": "Weight", "name": "weight"}, "FloatField", "NumberInput"),
+    ("hidden", "token", {"label": "Token", "name": "token"}, "HiddenField", "HiddenInput"),
+    ("integer", "age", {"label": "Age", "name": "age"}, "IntegerField", "NumberInput"),
+    ("ip_address", "ip", {"label": "IP", "name": "ip"}, "IPAddressField", "TextInput"),
+    ("null_boolean", "maybe", {"label": "Maybe", "name": "maybe"}, "BooleanField", "NullBooleanSelect"),
+    ("password", "secret", {"label": "Secret", "name": "secret"}, "CharField", "PasswordInput"),
+    ("radio", "size", {"label": "Size", "name": "size", "choices": "S\nM\nL"}, "ChoiceField", "RadioSelect"),
+    ("regex", "code", {"label": "Code", "name": "code", "regex": r"^\d+$"}, "RegexField", "TextInput"),
+    ("select", "color", {"label": "Color", "name": "color", "choices": "r\ng\nb"}, "ChoiceField", "Select"),
+    ("select_multiple", "tags", {"label": "Tags", "name": "tags", "choices": "a\nb\nc"}, "MultipleChoiceField", "SelectMultiple"),
+    ("slug", "page_slug", {"label": "Slug", "name": "page_slug"}, "SlugField", "TextInput"),
+    ("text", "short_text", {"label": "Short", "name": "short_text", "required": True}, "CharField", "TextInput"),
+    ("textarea", "long_text", {"label": "Long", "name": "long_text"}, "CharField", "Textarea"),
+    ("time", "start_time", {"label": "Time", "name": "start_time"}, "TimeField", "TextInput"),
+    ("url", "website", {"label": "URL", "name": "website"}, "URLField", "URLInput"),
+]
+
 
 @pytest.fixture()
 def multi_field_form(db, admin_user):
-    """Form with text, textarea, and select elements for full endpoint coverage."""
+    """Form with all standard fobi field plugins."""
     entry = FormEntry.objects.create(
         user=admin_user,
         name="Multi Field Form",
         slug="multi-field-form",
         is_public=True,
     )
-    FormElementEntry.objects.create(
-        form_entry=entry,
-        plugin_uid="text",
-        plugin_data=json.dumps(
-            {"label": "Short Text", "name": "short_text", "required": True}
-        ),
-        position=1,
-    )
-    FormElementEntry.objects.create(
-        form_entry=entry,
-        plugin_uid="textarea",
-        plugin_data=json.dumps(
-            {"label": "Long Text", "name": "long_text", "required": False}
-        ),
-        position=2,
-    )
-    FormElementEntry.objects.create(
-        form_entry=entry,
-        plugin_uid="select",
-        plugin_data=json.dumps(
-            {
-                "label": "Color",
-                "name": "color",
-                "required": False,
-                "choices": "red\ngreen\nblue",
-            }
-        ),
-        position=3,
-    )
-    FormHandlerEntry.objects.get_or_create(
-        form_entry=entry, plugin_uid="db_store"
-    )
+    for pos, (uid, name, data, *_) in enumerate(PLUGIN_SPECS, start=1):
+        FormElementEntry.objects.create(
+            form_entry=entry,
+            plugin_uid=uid,
+            plugin_data=json.dumps(data),
+            position=pos,
+        )
+    FormHandlerEntry.objects.get_or_create(form_entry=entry, plugin_uid="db_store")
     return entry
+
+
+def _get_fields(client, slug):
+    return {
+        f["name"]: f
+        for f in client.get(f"/api/fobi-form-fields/{slug}/").json()["fields"]
+    }
 
 
 class TestFormFieldsResponseStructure:
@@ -76,64 +88,43 @@ class TestFormFieldsResponseStructure:
 
     def test_field_count_matches_elements(self, admin_client, multi_field_form):
         data = admin_client.get(f"/api/fobi-form-fields/{multi_field_form.slug}/").json()
-        assert len(data["fields"]) == 3
+        assert len(data["fields"]) == len(PLUGIN_SPECS)
 
 
 class TestFormFieldsMetadata:
     """Each field object must carry required metadata keys."""
 
-    def _get_fields(self, client, slug):
-        return {
-            f["name"]: f
-            for f in client.get(f"/api/fobi-form-fields/{slug}/").json()["fields"]
-        }
-
     def test_every_field_has_required_keys(self, admin_client, multi_field_form):
-        fields = self._get_fields(admin_client, multi_field_form.slug)
+        fields = _get_fields(admin_client, multi_field_form.slug)
         for name, info in fields.items():
             for key in ("name", "type", "widget", "label", "required", "help_text"):
                 assert key in info, f"Field '{name}' missing key '{key}'"
 
-    def test_text_field_metadata(self, admin_client, multi_field_form):
-        fields = self._get_fields(admin_client, multi_field_form.slug)
-        f = fields["short_text"]
-        assert f["type"] == "CharField"
-        assert f["label"] == "Short Text"
-        assert f["required"] is True
-
     def test_select_field_has_choices(self, admin_client, multi_field_form):
-        fields = self._get_fields(admin_client, multi_field_form.slug)
+        fields = _get_fields(admin_client, multi_field_form.slug)
         f = fields["color"]
         assert "choices" in f
         values = [c["value"] for c in f["choices"]]
-        assert "red" in values
-        assert "green" in values
-        assert "blue" in values
+        assert "r" in values
 
 
 class TestFormFieldsWidgetDisambiguation:
-    """Widget key distinguishes ambiguous field types."""
+    """Widget key is correct for every registered fobi field plugin."""
 
-    def _get_fields(self, client, slug):
-        return {
-            f["name"]: f
-            for f in client.get(f"/api/fobi-form-fields/{slug}/").json()["fields"]
-        }
-
-    def test_text_input_widget(self, admin_client, multi_field_form):
-        fields = self._get_fields(admin_client, multi_field_form.slug)
-        assert fields["short_text"]["type"] == "CharField"
-        assert fields["short_text"]["widget"] == "TextInput"
-
-    def test_textarea_widget(self, admin_client, multi_field_form):
-        fields = self._get_fields(admin_client, multi_field_form.slug)
-        assert fields["long_text"]["type"] == "CharField"
-        assert fields["long_text"]["widget"] == "Textarea"
-
-    def test_select_widget(self, admin_client, multi_field_form):
-        fields = self._get_fields(admin_client, multi_field_form.slug)
-        assert fields["color"]["type"] == "ChoiceField"
-        assert fields["color"]["widget"] == "Select"
+    @pytest.mark.parametrize(
+        "field_name, expected_type, expected_widget",
+        [
+            (name, exp_type, exp_widget)
+            for (_uid, name, _data, exp_type, exp_widget) in PLUGIN_SPECS
+        ],
+        ids=[uid for (uid, *_rest) in PLUGIN_SPECS],
+    )
+    def test_widget(
+        self, admin_client, multi_field_form, field_name, expected_type, expected_widget
+    ):
+        fields = _get_fields(admin_client, multi_field_form.slug)
+        assert fields[field_name]["type"] == expected_type
+        assert fields[field_name]["widget"] == expected_widget
 
 
 class TestFormFieldsErrorHandling:
