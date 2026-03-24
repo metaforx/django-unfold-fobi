@@ -67,7 +67,7 @@ def _build_widget_map(form_entry):
                 widget = kwargs.get("widget")
                 if widget is not None:
                     widget_map[name] = widget.__class__.__name__
-        except (AttributeError, TypeError, IndexError):
+        except (AttributeError, IndexError):
             continue
     return widget_map
 
@@ -102,7 +102,7 @@ def get_form_fields(request, slug):
             field_info = {
                 "name": field_name,
                 "type": field.__class__.__name__,
-                "widget": widget_map.get(field_name, ""),
+                "widget": widget_map.get(field_name),
                 "label": getattr(field, "label", field_name),
                 "required": getattr(field, "required", False),
                 "help_text": getattr(field, "help_text", ""),
