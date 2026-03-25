@@ -2,6 +2,7 @@
 
 from django.middleware.csrf import get_token
 from django.utils.translation import gettext_lazy as _
+from django.views.decorators.cache import never_cache
 from fobi.models import FormEntry
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -89,6 +90,7 @@ def _build_widget_map(form_entry):
 
 
 @api_view(["GET"])
+@never_cache
 def get_form_fields(request, slug):
     """
     Custom API endpoint to get form fields structure for frontend rendering.
