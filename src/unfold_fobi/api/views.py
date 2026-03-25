@@ -1,5 +1,6 @@
 """DRF API views for unfold_fobi."""
 
+from django.middleware.csrf import get_token
 from django.utils.translation import gettext_lazy as _
 from fobi.models import FormEntry
 from rest_framework.decorators import api_view
@@ -110,6 +111,7 @@ def get_form_fields(request, slug):
             "id": form_entry.id,
             "slug": form_entry.slug,
             "title": form_entry.name,
+            "csrf_token": get_token(request),
             "fields": [],
         }
 
