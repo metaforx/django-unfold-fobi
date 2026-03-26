@@ -137,7 +137,7 @@ class TestImportJsonAction:
 
         method = FormEntryProxyAdmin.import_form_entry_action
         assert hasattr(method, "allowed_permissions")
-        assert "fobi.add_formentry" in method.allowed_permissions
+        assert "add" in method.allowed_permissions
 
 
 class TestTabScopedAddButtons:

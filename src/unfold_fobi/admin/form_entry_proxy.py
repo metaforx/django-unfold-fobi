@@ -312,7 +312,7 @@ class FormEntryProxyAdmin(ModelAdmin):
         description=_("Import form (JSON)"),
         url_path="import-json",
         icon="file_upload",
-        permissions=("fobi.add_formentry",),
+        permissions=("add",),
     )
     def import_form_entry_action(self, request):
         """Changelist action: import a form entry from an uploaded JSON file."""
