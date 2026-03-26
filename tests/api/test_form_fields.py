@@ -74,6 +74,12 @@ class TestFormFieldsResponseStructure:
 
     def test_envelope_keys(self, admin_client, multi_field_form):
         data = admin_client.get(f"/api/fobi-form-fields/{multi_field_form.slug}/").json()
+        for key in (
+            "id", "slug", "title", "is_active",
+            "active_date_from", "active_date_to",
+            "success_page_title", "success_page_message", "fields",
+        ):
+            assert key in data, f"Missing envelope key '{key}'"
         for key in ("id", "slug", "title", "csrf_token", "fields"):
             assert key in data, f"Missing envelope key '{key}'"
         assert isinstance(data["fields"], list)
@@ -83,6 +89,7 @@ class TestFormFieldsResponseStructure:
         assert data["id"] == multi_field_form.id
         assert data["slug"] == multi_field_form.slug
         assert data["title"] == multi_field_form.name
+        assert data["is_active"] is True
 
     def test_csrf_token_is_non_empty_string(self, admin_client, multi_field_form):
         data = admin_client.get(f"/api/fobi-form-fields/{multi_field_form.slug}/").json()

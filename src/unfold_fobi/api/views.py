@@ -113,6 +113,11 @@ def get_form_fields(request, slug):
             "id": form_entry.id,
             "slug": form_entry.slug,
             "title": form_entry.name,
+            "is_active": form_entry.is_active,
+            "active_date_from": form_entry.active_date_from,
+            "active_date_to": form_entry.active_date_to,
+            "success_page_title": form_entry.success_page_title or "",
+            "success_page_message": form_entry.success_page_message or "",
             "csrf_token": get_token(request),
             "fields": [],
         }
