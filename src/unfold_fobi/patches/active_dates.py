@@ -25,13 +25,14 @@ def apply():
         return
 
     def update_with_active_check(self, request, *args, **kwargs):
+        from rest_framework import status
         from rest_framework.response import Response
 
         instance = self.get_object()
         if not instance.is_active:
             return Response(
                 {"detail": _("This form is not currently accepting submissions.")},
-                status=403,
+                status=status.HTTP_403_FORBIDDEN,
             )
         return original_update(self, request, *args, **kwargs)
 
