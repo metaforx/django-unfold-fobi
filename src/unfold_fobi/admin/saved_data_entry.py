@@ -2,6 +2,7 @@ import json
 
 from django.contrib import admin
 from django.template.loader import render_to_string
+from django.utils.html import escape
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
@@ -76,7 +77,7 @@ class SavedFormDataEntryAdminIntegrationMixin:
             return ", ".join(str(v) for v in value)
         if isinstance(value, dict):
             formatted = json.dumps(value, indent=2, ensure_ascii=False, default=str)
-            return mark_safe(f"<pre>{formatted}</pre>")
+            return mark_safe("<pre>%s</pre>" % escape(formatted))
         return str(value)
 
     @admin.display(description="")
