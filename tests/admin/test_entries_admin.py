@@ -1,10 +1,12 @@
-"""T07/T10 – DB Store Entries: admin routing and readonly contract.
+"""T07/T10/T20 – DB Store Entries: admin routing, readonly contract, pretty JSON.
 
 Verifies:
 - "View entries" action in handler inline links to admin changelist (not /fobi/<id>/).
 - Filtered admin changelist is accessible for staff.
 - Non-superuser staff can view but cannot modify saved entries.
 - Superusers retain full edit access to saved entries.
+- Staff readonly access works without explicit permission assignment.
+- Detail view shows submitted data (JSON) as an HTML template without raw duplication.
 """
 
 import pytest
@@ -61,7 +63,9 @@ CHANGELIST_URL_NAME = (
 CHANGE_URL_NAME = (
     "admin:fobi_contrib_plugins_form_handlers_db_store_savedformdataentry_change"
 )
-ADD_URL_NAME = "admin:fobi_contrib_plugins_form_handlers_db_store_savedformdataentry_add"
+ADD_URL_NAME = (
+    "admin:fobi_contrib_plugins_form_handlers_db_store_savedformdataentry_add"
+)
 
 
 class TestViewEntriesActionLink:
@@ -104,7 +108,8 @@ class TestFilteredChangelist:
         url = reverse(CHANGELIST_URL_NAME) + f"?form_entry__id__exact={form_entry.pk}"
         response = admin_client.get(url)
         html = response.content.decode()
-        assert "Full Name" in html
+        # Pretty JSON preview shows submitted field values
+        assert "Alice Example" in html
 
     def test_changelist_accessible_for_staff(
         self, staff_client, form_entry, rest_submitted_form_data
@@ -174,9 +179,7 @@ class TestSuperuserRetainsAccess:
         html = response.content.decode()
         assert "submit" in html.lower()
 
-    def test_programmatic_entry_creation_still_works(
-        self, admin_client, form_entry
-    ):
+    def test_programmatic_entry_creation_still_works(self, admin_client, form_entry):
         from fobi.contrib.plugins.form_handlers.db_store.models import (
             SavedFormDataEntry,
         )
@@ -191,3 +194,108 @@ class TestSuperuserRetainsAccess:
         after = SavedFormDataEntry.objects.filter(form_entry=form_entry).count()
         assert response.status_code == 200
         assert after == before + 1
+
+
+class TestStaffReadonlyWithoutExplicitPerms:
+    """T20: staff can view entries without an explicit view_savedformdataentry perm."""
+
+    @pytest.fixture()
+    def bare_staff_user(self, db):
+        """Staff user with NO explicit model permissions."""
+        return User.objects.create_user(
+            username="barestaff",
+            email="bare@test.local",
+            password="barepass",
+            is_staff=True,
+        )
+
+    @pytest.fixture()
+    def bare_staff_client(self, bare_staff_user):
+        client = Client()
+        client.login(username="barestaff", password="barepass")
+        return client
+
+    def test_bare_staff_can_view_changelist(
+        self, bare_staff_client, form_entry, rest_submitted_form_data
+    ):
+        """Staff without explicit perm assignment can view the changelist."""
+        url = reverse(CHANGELIST_URL_NAME)
+        response = bare_staff_client.get(url)
+        assert response.status_code == 200
+
+    def test_bare_staff_can_view_detail(
+        self, bare_staff_client, form_entry, rest_submitted_form_data
+    ):
+        """Staff without explicit perm assignment can view the detail page."""
+        saved_entry = rest_submitted_form_data["saved_entry"]
+        url = reverse(CHANGE_URL_NAME, args=[saved_entry.pk])
+        response = bare_staff_client.get(url)
+        assert response.status_code == 200
+
+    def test_bare_staff_cannot_change(
+        self, bare_staff_client, form_entry, rest_submitted_form_data
+    ):
+        saved_entry = rest_submitted_form_data["saved_entry"]
+        url = reverse(CHANGE_URL_NAME, args=[saved_entry.pk])
+        response = bare_staff_client.post(url, data={})
+        assert response.status_code == 403
+
+    def test_bare_staff_cannot_delete(
+        self, bare_staff_client, form_entry, rest_submitted_form_data
+    ):
+        saved_entry = rest_submitted_form_data["saved_entry"]
+        url = reverse(CHANGE_URL_NAME, args=[saved_entry.pk]) + "delete/"
+        response = bare_staff_client.get(url)
+        assert response.status_code == 403
+
+
+class TestPrettyJsonRendering:
+    """T20: detail view shows submitted data as pretty JSON, no raw duplication."""
+
+    def test_detail_shows_labeled_fields(
+        self, admin_client, form_entry, rest_submitted_form_data
+    ):
+        """Detail page must render each submitted field with its label."""
+        saved_entry = rest_submitted_form_data["saved_entry"]
+        url = reverse(CHANGE_URL_NAME, args=[saved_entry.pk])
+        response = admin_client.get(url)
+        html = response.content.decode()
+        # Field label from form_data_headers
+        assert "Full Name" in html
+        # Field value
+        assert "Alice Example" in html
+        # Each value should be selectable (select-all CSS class)
+        assert "select-all" in html
+
+    def test_detail_shows_submitted_data_fieldset(
+        self, admin_client, form_entry, rest_submitted_form_data
+    ):
+        """Detail page must show 'Submitted data' fieldset."""
+        saved_entry = rest_submitted_form_data["saved_entry"]
+        url = reverse(CHANGE_URL_NAME, args=[saved_entry.pk])
+        response = admin_client.get(url)
+        html = response.content.decode()
+        assert "Submitted data" in html
+
+    def test_detail_hides_raw_fields(
+        self, admin_client, form_entry, rest_submitted_form_data
+    ):
+        """Detail page must NOT show raw 'saved_data' or 'form_data_headers' fields."""
+        saved_entry = rest_submitted_form_data["saved_entry"]
+        url = reverse(CHANGE_URL_NAME, args=[saved_entry.pk])
+        response = admin_client.get(url)
+        html = response.content.decode()
+        # Raw fields should not appear as editable form fields
+        assert 'name="saved_data"' not in html
+        assert 'name="form_data_headers"' not in html
+
+    def test_mixin_is_reusable(self):
+        """The integration mixin must be importable from the admin package."""
+        from unfold_fobi.admin.saved_data_entry import (
+            SavedFormDataEntryAdminIntegrationMixin,
+        )
+
+        assert hasattr(
+            SavedFormDataEntryAdminIntegrationMixin, "pretty_saved_data_display"
+        )
+        assert hasattr(SavedFormDataEntryAdminIntegrationMixin, "has_view_permission")

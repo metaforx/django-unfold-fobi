@@ -222,3 +222,9 @@ msgstr ""
 
 msgid "Body"
 msgstr ""
+
+msgid "Submitted data"
+msgstr ""
+
+msgid "Data"
+msgstr ""
