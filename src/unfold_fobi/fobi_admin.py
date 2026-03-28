@@ -65,6 +65,8 @@ from fobi.models import (
 )
 from unfold.admin import ModelAdmin, TabularInline
 
+from .admin.saved_data_entry import SavedFormDataEntryAdminIntegrationMixin
+
 # Unregister all fobi models from admin
 # This ensures we can re-register them with unfold ModelAdmin
 _models_to_unregister = [
@@ -268,26 +270,14 @@ class FormWizardHandlerAdmin(
 
 
 @admin.register(SavedFormDataEntry)
-class SavedFormDataEntryAdmin(FobiSavedFormDataEntryAdmin, ModelAdmin):
-    """SavedFormDataEntry admin using django-unfold.
+class SavedFormDataEntryAdmin(
+    SavedFormDataEntryAdminIntegrationMixin,
+    FobiSavedFormDataEntryAdmin,
+    ModelAdmin,
+):
+    """SavedFormDataEntry admin using django-unfold with reusable integration mixin."""
 
-    Saved entries are created programmatically only.
-    Non-superuser staff can view entries but cannot modify or delete them.
-    Superusers retain edit/delete access, but cannot add entries manually.
-    """
-
-    def has_add_permission(self, request):
-        return False
-
-    def has_change_permission(self, request, obj=None):
-        if not request.user.is_superuser:
-            return False
-        return super().has_change_permission(request, obj)
-
-    def has_delete_permission(self, request, obj=None):
-        if not request.user.is_superuser:
-            return False
-        return super().has_delete_permission(request, obj)
+    pass
 
 
 @admin.register(SavedFormWizardDataEntry)

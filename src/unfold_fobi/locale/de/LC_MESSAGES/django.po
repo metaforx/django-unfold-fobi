@@ -265,3 +265,9 @@ msgstr "Angezeigter Name des Feldes"
 
 msgid "Required field"
 msgstr "Pflichtfeld"
+
+msgid "Submitted data"
+msgstr "Übermittelte Daten"
+
+msgid "Data"
+msgstr "Daten"
