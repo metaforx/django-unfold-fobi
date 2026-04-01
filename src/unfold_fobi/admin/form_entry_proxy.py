@@ -2,6 +2,7 @@
 
 import json
 
+from django import forms
 from django.contrib import admin, messages
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
@@ -18,12 +19,12 @@ from ..forms import FormEntryFormWithCloneable, ImportFormEntryJsonForm
 from ..models import FormEntryProxy
 from ..services import clone_form_entry
 from .inlines import FormElementEntryInline, FormHandlerEntryInline
-
+from fobi.models import FormEntry
 
 @admin.register(FormEntryProxy)
 class FormEntryProxyAdmin(ModelAdmin):
     """
-    FormEntryProxy admin using native Unfold change view.
+    FormEntryProxy admin using a native Unfold change view.
 
     T10/T10a: native admin change form with element/handler inlines,
     "Add" dropdowns for available plugins, and editable element ordering.
@@ -68,6 +69,23 @@ class FormEntryProxyAdmin(ModelAdmin):
             def __init__(self, *args, **form_kwargs):
                 form_kwargs.setdefault("request", request)
                 super().__init__(*args, **form_kwargs)
+
+            def clean_name(self_form):
+                """Check for unique form name per user"""
+                name = self_form.cleaned_data.get("name")
+                if not name:
+                    return name
+                user = getattr(obj, "user", None) if obj else request.user
+                if user is None:
+                    user = request.user
+                qs = FormEntry.objects.filter(user=user, name=name)
+                if obj:
+                    qs = qs.exclude(pk=obj.pk)
+                if qs.exists():
+                    raise forms.ValidationError(
+                        _("A form with this name already exists.")
+                    )
+                return name
 
         return RequestForm
 
@@ -285,7 +303,7 @@ class FormEntryProxyAdmin(ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         """Ensure creator is set when using the native admin add view."""
-        if not obj.user_id:
+        if not getattr(obj, "user_id", None):
             obj.user = request.user
         super().save_model(request, obj, form, change)
 

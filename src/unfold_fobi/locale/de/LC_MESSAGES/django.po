@@ -271,3 +271,6 @@ msgstr "Übermittelte Daten"
 
 msgid "Data"
 msgstr "Daten"
+
+msgid "A form with this name already exists."
+msgstr "Ein Formular mit diesem Namen existiert bereits."
