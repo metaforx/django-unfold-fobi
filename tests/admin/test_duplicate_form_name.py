@@ -61,5 +61,8 @@ class TestDuplicateFormNameValidation:
         )
         response = admin_client.post(url, {"name": "Testformular"})
         assert response.status_code == 200
-        content = response.content.decode()
-        assert "already exists" in content
+
+        # The duplicate-name validation error should be attached to the "name" field.
+        admin_form = response.context["adminform"].form
+        assert "name" in admin_form.errors
+        assert admin_form.errors["name"]
