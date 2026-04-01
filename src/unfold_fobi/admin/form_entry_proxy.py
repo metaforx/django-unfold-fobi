@@ -381,16 +381,11 @@ class FormEntryProxyAdmin(ModelAdmin):
             )
 
     def has_delete_permission(self, request, obj=None):
-        if request.user.is_superuser:
-            return True
-        if not request.user.has_perm("fobi.delete_formentry"):
-            return False
-        if obj is not None and obj.user_id != request.user.pk:
-            return False
-        return True
+        return request.user.has_perm("fobi.delete_formentry")
 
-    def _safe_delete_form(self, form_entry):
-        """Unlink saved submissions then delete the form definition."""
+    @staticmethod
+    def _safe_delete_form(form_entry):
+        """Unlink saved submissions, then delete the form definition."""
         unlink_saved_entries(form_entry)
         form_entry.delete()
 

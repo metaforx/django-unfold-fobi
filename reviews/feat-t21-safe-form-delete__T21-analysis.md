@@ -12,18 +12,16 @@ with `form_entry=NULL`.
 
 - **Bulk action**: `safe_delete_selected` — custom admin action added to
   `actions` list. Checks `has_delete_permission(request, obj)` per form.
-  Skips forms the user doesn't own with a warning message.
+  With app-level delete permission, selected forms are deleted regardless of
+  ownership.
 - **Single delete**: `delete_model` override — unlinks before delete.
 - **`delete_queryset`**: Still overridden for compatibility with any code path
   that calls it (e.g. Django's built-in `delete_selected` if re-enabled).
 
-## Ownership rule
+## Permission rule
 
-- Superuser: can delete any form.
-- Non-superuser staff: requires `fobi.delete_formentry` permission AND
-  `obj.user_id == request.user.pk` (ownership check).
-- The permission check uses the concrete parent model's codename because
-  Django proxy models share the parent's auth permission table.
+- Delete is allowed when the user has `fobi.delete_formentry`.
+- There is no additional ownership gate in admin delete checks.
 
 ## Why not `delete_selected`
 

@@ -1,4 +1,4 @@
-"""T21: Safe form delete — unlink saved entries, ownership permissions."""
+"""T21: Safe form delete — unlink saved entries, app-level permissions."""
 
 import json
 
@@ -23,6 +23,14 @@ def staff_user(db):
     perm = Permission.objects.get(codename="delete_formentry", content_type=ct)
     user.user_permissions.add(perm)
     return user
+
+
+@pytest.fixture()
+def staff_user_no_delete(db):
+    """Non-superuser staff without delete permission on FormEntry."""
+    return User.objects.create_user(
+        username="staff_no_delete", password="staffpass", is_staff=True
+    )
 
 
 @pytest.fixture()
@@ -136,8 +144,8 @@ class TestSafeDeletePreservesData:
         assert not FormEntry.objects.filter(pk=form_entry.pk).exists()
 
 
-class TestDeleteOwnershipPermissions:
-    """Non-superuser staff can only delete own forms."""
+class TestDeletePermissions:
+    """Delete permission follows app-level auth permission only."""
 
     def test_superuser_can_delete_any_form(self, admin_user, staff_form):
         ma = _get_admin_instance()
@@ -153,18 +161,27 @@ class TestDeleteOwnershipPermissions:
         request.user = user
         assert ma.has_delete_permission(request, staff_form) is True
 
-    def test_staff_cannot_delete_foreign_form(self, staff_user, form_entry):
-        """staff_user does not own form_entry (owned by admin_user)."""
-        user = User.objects.get(pk=staff_user.pk)
+    def test_staff_without_delete_perm_cannot_delete_any_form(
+        self, staff_user_no_delete, form_entry
+    ):
+        user = User.objects.get(pk=staff_user_no_delete.pk)
         ma = _get_admin_instance()
         request = RequestFactory().get("/")
         request.user = user
         assert ma.has_delete_permission(request, form_entry) is False
 
-    def test_safe_delete_action_skips_foreign_forms(
+    def test_staff_can_delete_foreign_form_with_delete_perm(self, staff_user, form_entry):
+        """Object ownership does not gate delete when app delete perm exists."""
+        user = User.objects.get(pk=staff_user.pk)
+        ma = _get_admin_instance()
+        request = RequestFactory().get("/")
+        request.user = user
+        assert ma.has_delete_permission(request, form_entry) is True
+
+    def test_safe_delete_action_deletes_all_selected_forms_with_delete_perm(
         self, staff_user, staff_form, form_entry
     ):
-        """Bulk action skips forms the user doesn't own."""
+        """Bulk action deletes selected forms regardless of ownership."""
         user = User.objects.get(pk=staff_user.pk)
         ma = _get_admin_instance()
         request = RequestFactory().post("/")
@@ -176,8 +193,23 @@ class TestDeleteOwnershipPermissions:
         )
         ma.safe_delete_selected(request, qs)
 
-        # Own form deleted, foreign form preserved
+        # Both forms deleted because permission is app-level.
         assert not FormEntry.objects.filter(pk=staff_form.pk).exists()
+        assert not FormEntry.objects.filter(pk=form_entry.pk).exists()
+
+    def test_safe_delete_action_skips_all_forms_without_delete_perm(
+        self, staff_user_no_delete, staff_form, form_entry
+    ):
+        user = User.objects.get(pk=staff_user_no_delete.pk)
+        ma = _get_admin_instance()
+        request = RequestFactory().post("/")
+        request.user = user
+        request._messages = FakeMessages()
+
+        qs = FormEntryProxy.objects.filter(pk__in=[staff_form.pk, form_entry.pk])
+        ma.safe_delete_selected(request, qs)
+
+        assert FormEntry.objects.filter(pk=staff_form.pk).exists()
         assert FormEntry.objects.filter(pk=form_entry.pk).exists()
 
 
