@@ -11,6 +11,8 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from fobi.forms import FormEntryForm
 from fobi.utils import perform_form_entry_import, prepare_form_entry_export_data
+
+from unfold_fobi.services import unlink_saved_entries
 from unfold.admin import ModelAdmin
 from unfold.decorators import action
 from unfold.enums import ActionVariant
@@ -52,7 +54,7 @@ class FormEntryProxyAdmin(ModelAdmin):
     list_display_links = ["name"]
     compressed_fields = True
     warn_unsaved_form = True
-    actions = ["export_selected_forms", "clone_selected_forms"]
+    actions = ["export_selected_forms", "clone_selected_forms", "safe_delete_selected"]
     actions_list = ["import_form_entry_action"]
     inlines = [FormElementEntryInline, FormHandlerEntryInline]
 
@@ -396,10 +398,53 @@ class FormEntryProxyAdmin(ModelAdmin):
                 _("Cloned {count} form(s).").format(count=created),
             )
 
+    def has_delete_permission(self, request, obj=None):
+        return request.user.has_perm("fobi.delete_formentry")
+
+    @staticmethod
+    def _safe_delete_form(form_entry):
+        """Unlink saved submissions, then delete the form definition."""
+        unlink_saved_entries(form_entry)
+        form_entry.delete()
+
+    def delete_model(self, request, obj):
+        name = obj.name
+        self._safe_delete_form(obj)
+        messages.info(
+            request,
+            _('The form "{0}" was deleted successfully.').format(name),
+        )
+
     def delete_queryset(self, request, queryset):
         for obj in queryset:
-            obj.delete()
+            name = obj.name
+            self._safe_delete_form(obj)
             messages.info(
                 request,
-                _('The form "{0}" was deleted successfully.').format(obj.name),
+                _('The form "{0}" was deleted successfully.').format(name),
+            )
+
+    @admin.action(description=_("Delete selected forms (safe)"))
+    def safe_delete_selected(self, request, queryset):
+        deleted = 0
+        skipped = 0
+        for form_entry in queryset:
+            if not self.has_delete_permission(request, form_entry):
+                skipped += 1
+                continue
+            self._safe_delete_form(form_entry)
+            deleted += 1
+        if deleted:
+            messages.success(
+                request,
+                _("Deleted {count} form(s). Submitted data was preserved.").format(
+                    count=deleted
+                ),
+            )
+        if skipped:
+            messages.warning(
+                request,
+                _("Skipped {count} form(s) you do not have permission to delete.").format(
+                    count=skipped
+                ),
             )

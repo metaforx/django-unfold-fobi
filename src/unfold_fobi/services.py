@@ -104,3 +104,20 @@ def _generate_clone_name_slug(source):
         suffix += 1
 
     return name, slug
+
+
+def unlink_saved_entries(form_entry):
+    """Set form_entry=NULL on all SavedFormDataEntry rows for the given form.
+
+    This preserves submitted data while allowing the form definition to be
+    deleted without cascade-deleting or triggering protected-FK errors.
+
+    Returns the number of rows unlinked.
+    """
+    from fobi.contrib.plugins.form_handlers.db_store.models import (
+        SavedFormDataEntry,
+    )
+
+    return SavedFormDataEntry.objects.filter(
+        form_entry=form_entry
+    ).update(form_entry=None)
