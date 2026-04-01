@@ -144,16 +144,6 @@ class TestFormFieldsErrorHandling:
         response = admin_client.get("/api/fobi-form-fields/does-not-exist/")
         assert response.status_code == 404
 
-    def test_private_form_returns_404(self, db, admin_user, admin_client):
-        FormEntry.objects.create(
-            user=admin_user,
-            name="Private Form",
-            slug="private-form",
-            is_public=False,
-        )
-        response = admin_client.get("/api/fobi-form-fields/private-form/")
-        assert response.status_code == 404
-
     def test_existing_form_entry_fixture_works(self, admin_client, form_entry):
         """The shared form_entry fixture (text element) returns valid data."""
         response = admin_client.get(f"/api/fobi-form-fields/{form_entry.slug}/")
@@ -161,3 +151,96 @@ class TestFormFieldsErrorHandling:
         data = response.json()
         assert len(data["fields"]) >= 1
         assert data["fields"][0]["widget"] == "TextInput"
+
+
+class TestFormFieldsPreviewAccess:
+    """Preview access for non-public forms."""
+
+    @pytest.fixture()
+    def private_form(self, db, admin_user):
+        entry = FormEntry.objects.create(
+            user=admin_user,
+            name="Private Form",
+            slug="private-form",
+            is_public=False,
+        )
+        FormElementEntry.objects.create(
+            form_entry=entry,
+            plugin_uid="text",
+            plugin_data=json.dumps(
+                {"label": "Name", "name": "name", "required": True}
+            ),
+            position=1,
+        )
+        FormHandlerEntry.objects.get_or_create(
+            form_entry=entry, plugin_uid="db_store"
+        )
+        return entry
+
+    @pytest.fixture()
+    def staff_with_perm(self, db):
+        from django.contrib.auth.models import Permission, User
+        from django.contrib.contenttypes.models import ContentType
+        from fobi.models import FormEntry
+
+        user = User.objects.create_user(
+            username="previewer", password="pass", is_staff=True
+        )
+        ct = ContentType.objects.get_for_model(FormEntry)
+        perm = Permission.objects.get(
+            codename="view_formentry", content_type=ct
+        )
+        user.user_permissions.add(perm)
+        return user
+
+    @pytest.fixture()
+    def staff_without_perm(self, db):
+        from django.contrib.auth.models import User
+
+        return User.objects.create_user(
+            username="noperm", password="pass", is_staff=True
+        )
+
+    def test_public_form_anonymous_gets_200(self, client, multi_field_form):
+        response = client.get(f"/api/fobi-form-fields/{multi_field_form.slug}/")
+        assert response.status_code == 200
+        assert response.json()["is_preview"] is False
+
+    def test_public_form_staff_gets_200_not_preview(self, admin_client, multi_field_form):
+        response = admin_client.get(f"/api/fobi-form-fields/{multi_field_form.slug}/")
+        assert response.status_code == 200
+        assert response.json()["is_preview"] is False
+
+    def test_private_form_anonymous_gets_404(self, client, private_form):
+        response = client.get(f"/api/fobi-form-fields/{private_form.slug}/")
+        assert response.status_code == 404
+
+    def test_private_form_staff_without_perm_gets_404(
+        self, staff_without_perm, private_form
+    ):
+        from django.test import Client
+
+        c = Client()
+        c.login(username="noperm", password="pass")
+        response = c.get(f"/api/fobi-form-fields/{private_form.slug}/")
+        assert response.status_code == 404
+
+    def test_private_form_staff_with_perm_gets_200(
+        self, staff_with_perm, private_form
+    ):
+        from django.test import Client
+
+        c = Client()
+        c.login(username="previewer", password="pass")
+        response = c.get(f"/api/fobi-form-fields/{private_form.slug}/")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["is_preview"] is True
+        assert len(data["fields"]) >= 1
+
+    def test_private_form_superuser_gets_preview(
+        self, admin_client, private_form
+    ):
+        response = admin_client.get(f"/api/fobi-form-fields/{private_form.slug}/")
+        assert response.status_code == 200
+        assert response.json()["is_preview"] is True

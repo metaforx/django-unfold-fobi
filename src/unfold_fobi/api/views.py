@@ -1,10 +1,13 @@
 """DRF API views for unfold_fobi."""
 
+from django.forms.fields import EmailField
 from django.middleware.csrf import get_token
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.cache import never_cache
+from fobi.contrib.apps.drf_integration.dynamic import get_declared_fields
 from fobi.models import FormEntry
 from rest_framework.decorators import api_view
+from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 
 
@@ -57,8 +60,6 @@ def _coerce_choice_pair(choice):
 
 def _build_widget_map(form_entry):
     """Map field names to their Django widget class names."""
-    from django.forms.fields import EmailField
-
     widget_map = {}
     for element_entry in form_entry.formelemententry_set.all().order_by("position"):
         try:
@@ -93,59 +94,68 @@ def _build_widget_map(form_entry):
 @never_cache
 def get_form_fields(request, slug):
     """
-    Custom API endpoint to get form fields structure for frontend rendering.
+    Return form fields for frontend rendering with permission (preview mode).
     """
     try:
-        form_entry = FormEntry.objects.get(slug=slug, is_public=True)
+        form_entry = FormEntry.objects.get(slug=slug)
+    except FormEntry.DoesNotExist:
+        raise NotFound(_("Form not found"))
 
-        from fobi.contrib.apps.drf_integration.dynamic import get_declared_fields
-
-        fields_result = get_declared_fields(form_entry)
-
-        if isinstance(fields_result, tuple):
-            fields = fields_result[0]
+    is_preview = False
+    if not form_entry.is_public:
+        if (
+            request.user.is_authenticated
+            and request.user.has_perm("fobi.view_formentry")
+        ):
+            is_preview = True
         else:
-            fields = fields_result
+            raise NotFound(_("Form not found"))
 
-        widget_map = _build_widget_map(form_entry)
+    fields_result = get_declared_fields(form_entry)
 
-        form_structure = {
-            "id": form_entry.id,
-            "slug": form_entry.slug,
-            "title": form_entry.name,
-            "is_active": form_entry.is_active,
-            "active_date_from": form_entry.active_date_from,
-            "active_date_to": form_entry.active_date_to,
-            "success_page_title": form_entry.success_page_title or "",
-            "success_page_message": form_entry.success_page_message or "",
-            "csrf_token": get_token(request),
-            "fields": [],
+    if isinstance(fields_result, tuple):
+        fields = fields_result[0]
+    else:
+        fields = fields_result
+
+    widget_map = _build_widget_map(form_entry)
+
+    form_structure = {
+        "id": form_entry.id,
+        "slug": form_entry.slug,
+        "title": form_entry.name,
+        "is_active": form_entry.is_active,
+        "is_preview": is_preview,
+        "active_date_from": form_entry.active_date_from,
+        "active_date_to": form_entry.active_date_to,
+        "success_page_title": form_entry.success_page_title or "",
+        "success_page_message": form_entry.success_page_message or "",
+        "csrf_token": get_token(request),
+        "fields": [],
+    }
+
+    for field_name, field in fields.items():
+        field_info = {
+            "name": field_name,
+            "type": field.__class__.__name__,
+            "widget": widget_map.get(field_name),
+            "label": getattr(field, "label", field_name),
+            "required": getattr(field, "required", False),
+            "help_text": getattr(field, "help_text", ""),
         }
 
-        for field_name, field in fields.items():
-            field_info = {
-                "name": field_name,
-                "type": field.__class__.__name__,
-                "widget": widget_map.get(field_name),
-                "label": getattr(field, "label", field_name),
-                "required": getattr(field, "required", False),
-                "help_text": getattr(field, "help_text", ""),
-            }
+        if hasattr(field, "choices") and field.choices:
+            field_info["choices"] = normalize_field_choices(field, field_name)
 
-            if hasattr(field, "choices") and field.choices:
-                field_info["choices"] = normalize_field_choices(field, field_name)
+        if hasattr(field, "min_value"):
+            field_info["min_value"] = field.min_value
+        if hasattr(field, "max_value"):
+            field_info["max_value"] = field.max_value
+        if hasattr(field, "min_length"):
+            field_info["min_length"] = field.min_length
+        if hasattr(field, "max_length"):
+            field_info["max_length"] = field.max_length
 
-            if hasattr(field, "min_value"):
-                field_info["min_value"] = field.min_value
-            if hasattr(field, "max_value"):
-                field_info["max_value"] = field.max_value
-            if hasattr(field, "min_length"):
-                field_info["min_length"] = field.min_length
-            if hasattr(field, "max_length"):
-                field_info["max_length"] = field.max_length
+        form_structure["fields"].append(field_info)
 
-            form_structure["fields"].append(field_info)
-
-        return Response(form_structure)
-    except FormEntry.DoesNotExist:
-        return Response({"error": _("Form not found")}, status=404)
+    return Response(form_structure)
