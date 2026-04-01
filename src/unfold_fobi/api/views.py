@@ -1,5 +1,7 @@
 """DRF API views for unfold_fobi."""
 
+from django.apps import apps as django_apps
+from django.core.exceptions import ObjectDoesNotExist
 from django.forms.fields import EmailField
 from django.middleware.csrf import get_token
 from django.utils.translation import gettext_lazy as _
@@ -90,6 +92,29 @@ def _build_widget_map(form_entry):
     return widget_map
 
 
+def _can_preview(user, form_entry):
+    """Check if a user can preview a non-public form."""
+    if not user.is_authenticated:
+        return False
+    if user.is_superuser:
+        return True
+    if not user.has_perm("fobi.view_formentry"):
+        return False
+    if not django_apps.is_installed("unfold_fobi.contrib.sites"):
+        # if sites framework is not used we can pass further checks
+        return True
+
+    # Site-scope check
+    from unfold_fobi.contrib.sites.conf import get_sites_for_user_func
+
+    try:
+        form_sites = form_entry.site_binding.sites
+    except (AttributeError, ObjectDoesNotExist):
+        return False
+    user_sites = get_sites_for_user_func()(user)
+    return form_sites.filter(pk__in=user_sites).exists()
+
+
 @api_view(["GET"])
 @never_cache
 def get_form_fields(request, slug):
@@ -103,10 +128,7 @@ def get_form_fields(request, slug):
 
     is_preview = False
     if not form_entry.is_public:
-        if (
-            request.user.is_authenticated
-            and request.user.has_perm("fobi.view_formentry")
-        ):
+        if _can_preview(request.user, form_entry):
             is_preview = True
         else:
             raise NotFound(_("Form not found"))

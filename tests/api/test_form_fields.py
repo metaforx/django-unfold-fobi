@@ -158,6 +158,9 @@ class TestFormFieldsPreviewAccess:
 
     @pytest.fixture()
     def private_form(self, db, admin_user):
+        from django.contrib.sites.models import Site
+        from unfold_fobi.contrib.sites.services import ensure_binding
+
         entry = FormEntry.objects.create(
             user=admin_user,
             name="Private Form",
@@ -175,14 +178,23 @@ class TestFormFieldsPreviewAccess:
         FormHandlerEntry.objects.get_or_create(
             form_entry=entry, plugin_uid="db_store"
         )
+        binding, _ = ensure_binding(entry)
+        site, _ = Site.objects.get_or_create(
+            id=1, defaults={"domain": "testserver", "name": "Test"}
+        )
+        binding.sites.add(site)
         return entry
 
     @pytest.fixture()
-    def staff_with_perm(self, db):
+    def staff_with_perm(self, db, settings):
         from django.contrib.auth.models import Permission, User
         from django.contrib.contenttypes.models import ContentType
         from fobi.models import FormEntry
 
+        # Configure sites_for_user to return site 1 for this user
+        settings.UNFOLD_FOBI_SITES_FOR_USER = (
+            "tests.api.test_form_fields._sites_for_previewer"
+        )
         user = User.objects.create_user(
             username="previewer", password="pass", is_staff=True
         )
@@ -244,3 +256,147 @@ class TestFormFieldsPreviewAccess:
         response = admin_client.get(f"/api/fobi-form-fields/{private_form.slug}/")
         assert response.status_code == 200
         assert response.json()["is_preview"] is True
+
+
+class TestPreviewSiteScope:
+    """T23a: Site-scoped preview when unfold_fobi.contrib.sites is installed."""
+
+    @pytest.fixture()
+    def site_a(self, db):
+        from django.contrib.sites.models import Site
+
+        return Site.objects.get_or_create(
+            id=1, defaults={"domain": "a.example.com", "name": "Site A"}
+        )[0]
+
+    @pytest.fixture()
+    def site_b(self, db):
+        from django.contrib.sites.models import Site
+
+        return Site.objects.create(domain="b.example.com", name="Site B")
+
+    @pytest.fixture()
+    def private_form_on_site_a(self, db, admin_user, site_a):
+        from unfold_fobi.contrib.sites.services import ensure_binding
+
+        entry = FormEntry.objects.create(
+            user=admin_user,
+            name="Site A Form",
+            slug="site-a-form",
+            is_public=False,
+        )
+        FormElementEntry.objects.create(
+            form_entry=entry,
+            plugin_uid="text",
+            plugin_data=json.dumps(
+                {"label": "Name", "name": "name", "required": True}
+            ),
+            position=1,
+        )
+        FormHandlerEntry.objects.get_or_create(
+            form_entry=entry, plugin_uid="db_store"
+        )
+        binding, _ = ensure_binding(entry)
+        binding.sites.add(site_a)
+        return entry
+
+    @pytest.fixture()
+    def private_form_no_binding(self, db, admin_user):
+        entry = FormEntry.objects.create(
+            user=admin_user,
+            name="Unbound Form",
+            slug="unbound-form",
+            is_public=False,
+        )
+        FormElementEntry.objects.create(
+            form_entry=entry,
+            plugin_uid="text",
+            plugin_data=json.dumps(
+                {"label": "Name", "name": "name", "required": True}
+            ),
+            position=1,
+        )
+        FormHandlerEntry.objects.get_or_create(
+            form_entry=entry, plugin_uid="db_store"
+        )
+        return entry
+
+    @pytest.fixture()
+    def staff_on_site_a(self, db, site_a, settings):
+        from django.contrib.auth.models import Permission, User
+        from django.contrib.contenttypes.models import ContentType
+
+        # Point sites_for_user to a test helper that returns site_a for this user
+        settings.UNFOLD_FOBI_SITES_FOR_USER = (
+            "tests.api.test_form_fields._sites_for_staff_a"
+        )
+        user = User.objects.create_user(
+            username="staff_a", password="pass", is_staff=True
+        )
+        ct = ContentType.objects.get_for_model(FormEntry)
+        perm = Permission.objects.get(codename="view_formentry", content_type=ct)
+        user.user_permissions.add(perm)
+        return user
+
+    def test_staff_on_matching_site_gets_preview(
+        self, staff_on_site_a, private_form_on_site_a
+    ):
+        from django.test import Client
+
+        c = Client()
+        c.login(username="staff_a", password="pass")
+        response = c.get(f"/api/fobi-form-fields/{private_form_on_site_a.slug}/")
+        assert response.status_code == 200
+        assert response.json()["is_preview"] is True
+
+    def test_staff_on_different_site_gets_404(
+        self, staff_on_site_a, private_form_on_site_a, site_a, site_b
+    ):
+        from django.test import Client
+        from unfold_fobi.contrib.sites.services import ensure_binding
+
+        # Move form to site_b only
+        binding, _ = ensure_binding(private_form_on_site_a)
+        binding.sites.set([site_b])
+
+        c = Client()
+        c.login(username="staff_a", password="pass")
+        response = c.get(f"/api/fobi-form-fields/{private_form_on_site_a.slug}/")
+        assert response.status_code == 404
+
+    def test_form_without_binding_denied(
+        self, staff_on_site_a, private_form_no_binding
+    ):
+        from django.test import Client
+
+        c = Client()
+        c.login(username="staff_a", password="pass")
+        response = c.get(f"/api/fobi-form-fields/{private_form_no_binding.slug}/")
+        assert response.status_code == 404
+
+    def test_superuser_bypasses_site_check(
+        self, admin_client, private_form_on_site_a
+    ):
+        response = admin_client.get(
+            f"/api/fobi-form-fields/{private_form_on_site_a.slug}/"
+        )
+        assert response.status_code == 200
+        assert response.json()["is_preview"] is True
+
+
+def _sites_for_staff_a(user):
+    """Test helper: return site id=1 for staff_a, empty for others."""
+    from django.contrib.sites.models import Site
+
+    if user.username == "staff_a":
+        return Site.objects.filter(id=1)
+    return Site.objects.none()
+
+
+def _sites_for_previewer(user):
+    """Test helper: return site id=1 for previewer, empty for others."""
+    from django.contrib.sites.models import Site
+
+    if user.username == "previewer":
+        return Site.objects.filter(id=1)
+    return Site.objects.none()
