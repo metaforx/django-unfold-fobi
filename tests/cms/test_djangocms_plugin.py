@@ -16,15 +16,13 @@ class TestBasePackageIsolation:
         import pathlib
 
         base_pkg = pathlib.Path(__file__).resolve().parent.parent.parent / "src" / "unfold_fobi"
-        violations = []
-        for py in base_pkg.rglob("*.py"):
-            if "contrib" in py.parts:
-                continue
-            text = py.read_text()
-            for lineno, line in enumerate(text.splitlines(), 1):
-                if line.startswith(("from cms.", "import cms")):
-                    violations.append(f"{py.relative_to(base_pkg)}:{lineno}: {line}")
-        assert violations == [], f"CMS imports in base package:\n" + "\n".join(violations)
+        violations = [
+            f"{py.relative_to(base_pkg)}"
+            for py in base_pkg.rglob("*.py")
+            if "contrib" not in py.parts
+            and any(line.startswith(("from cms.", "import cms")) for line in py.read_text().splitlines())
+        ]
+        assert not violations, f"CMS imports in base package: {violations}"
 
     def test_admin_changelist_works_without_cms(self, admin_client):
         from django.urls import reverse
