@@ -408,23 +408,20 @@ class FormEntryProxyAdmin(ModelAdmin):
         form_entry.delete()
 
     def delete_model(self, request, obj):
-        name = obj.name
         self._safe_delete_form(obj)
-        messages.info(
-            request,
-            _('The form "{0}" was deleted successfully.').format(name),
-        )
+        messages.info(request, _('The form "{0}" was deleted successfully.').format(obj.name))
 
     def delete_queryset(self, request, queryset):
         for obj in queryset:
-            name = obj.name
             self._safe_delete_form(obj)
-            messages.info(
-                request,
-                _('The form "{0}" was deleted successfully.').format(name),
-            )
+            messages.info(request, _('The form "{0}" was deleted successfully.').format(obj.name))
 
-    @admin.action(description=_("Delete selected forms (safe)"))
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        actions.pop("delete_selected", None)
+        return actions
+
+    @admin.action(description=_("Delete selected forms"))
     def safe_delete_selected(self, request, queryset):
         deleted = 0
         skipped = 0
