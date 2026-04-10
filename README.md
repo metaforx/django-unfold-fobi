@@ -25,6 +25,10 @@ Unfold-based back offices.
 - Admin workflow enhancements (import/clone/popup behavior, staff editing).
 - Optional Sites extension (`unfold_fobi.contrib.sites`) for site-scoped forms,
   queryset scoping, and reusable admin mixins.
+- Optional django CMS plugin (`unfold_fobi.contrib.cms`) for embedding forms in
+  CMS placeholders, with site-aware form selection.
+- Fobi AppConfig overrides with `AutoField` pinning and i18n `verbose_name`
+  labels for projects using `BigAutoField`.
 
 ## Requirements
 
@@ -78,6 +82,10 @@ INSTALLED_APPS = [
     "crispy_forms",
     "fobi.contrib.themes.simple",
     "unfold_fobi",
+    # If using DEFAULT_AUTO_FIELD = "BigAutoField", use these instead of
+    # bare "fobi" and "fobi.contrib.plugins.form_handlers.db_store":
+    "unfold_fobi.fobi_app_configs.FobiConfig",
+    "unfold_fobi.fobi_app_configs.FobiDbStoreConfig",
 ]
 ```
 
@@ -166,13 +174,57 @@ These provide site assignment UI, queryset scoping, and reusable
 site-scoped permission helpers. Your project still owns user-to-site policy and
 project-specific permission decisions.
 
-### 3) DRF notes
+### 3) Optional django CMS plugin
+
+Enable only if your project uses django CMS and wants to embed Fobi forms in
+CMS placeholders.
+
+Requires `django-unfold-extra>=0.2.1`.
+
+```python
+INSTALLED_APPS += [
+    "unfold_fobi.contrib.cms",
+]
+```
+
+Then run migrations:
+
+```bash
+python manage.py migrate
+```
+
+The plugin appears as "Form" (module "Forms") in the CMS plugin picker. It
+renders the selected form using fobi's standard form rendering.
+
+When `unfold_fobi.contrib.sites` is also enabled, the form selection dropdown
+is automatically filtered by the current site and the editor's allowed sites.
+
+If `djangocms-rest` is installed, the plugin serializes the form reference as
+`{"form_entry": {"name": "...", "slug": "..."}}` instead of a bare FK integer.
+
+### 4) DRF notes
 
 - Include both Fobi DRF URLs and `unfold_fobi.api.urls`.
 - Use `GET /api/fobi-form-fields/<slug>/` to fetch per-form field metadata
   (including available field types/widgets/choices) for frontend rendering.
 - Ensure each form has the `db_store` handler enabled for persisted API
   submissions.
+
+### 5) Fobi AppConfig overrides (recommended for BigAutoField projects)
+
+If your project uses `DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"`,
+replace the bare fobi entries in `INSTALLED_APPS` with the package-provided
+configs. These pin `AutoField` (fobi lacks a BigAutoField migration) and add
+translatable `verbose_name` labels.
+
+```python
+INSTALLED_APPS = [
+    # Replace "fobi" with:
+    "unfold_fobi.fobi_app_configs.FobiConfig",
+    # Replace "fobi.contrib.plugins.form_handlers.db_store" with:
+    "unfold_fobi.fobi_app_configs.FobiDbStoreConfig",
+]
+```
 
 ## Notes
 
