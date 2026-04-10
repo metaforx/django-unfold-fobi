@@ -11,6 +11,15 @@ from .widgets import apply as apply_widgets
 from .mail_sender import apply as apply_mail_sender
 
 
+def _apply_altcha():
+    """Apply ALTCHA patch if the contrib app is enabled."""
+    try:
+        from unfold_fobi.contrib.altcha.patch import apply
+        apply()
+    except ImportError:
+        pass
+
+
 def apply_all():
     """Apply every fobi patch in the correct order."""
     apply_widgets()
@@ -18,6 +27,7 @@ def apply_all():
     apply_owner_filtering()
     apply_popup_response()
     apply_active_dates()
+    _apply_altcha()
 
 
 __all__ = [

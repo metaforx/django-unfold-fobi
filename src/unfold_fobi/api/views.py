@@ -180,4 +180,18 @@ def get_form_fields(request, slug):
 
         form_structure["fields"].append(field_info)
 
+    # Append ALTCHA field metadata for public forms only
+    if form_entry.is_public and django_apps.is_installed("unfold_fobi.contrib.altcha"):
+        from unfold_fobi.contrib.altcha.conf import get_field_name, is_enabled
+
+        if is_enabled():
+            form_structure["fields"].append({
+                "name": get_field_name(),
+                "type": "AltchaField",
+                "widget": "AltchaWidget",
+                "label": "ALTCHA",
+                "required": True,
+                "help_text": "",
+            })
+
     return Response(form_structure)
