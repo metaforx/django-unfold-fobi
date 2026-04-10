@@ -37,9 +37,9 @@ def apply():
         field_name = conf.get_field_name()
         payload = request.data.get(field_name)
 
-        ok, err = verify_payload(payload)
-        if not ok:
-            return Response({"detail": err}, status=400)
+        is_valid, error = verify_payload(payload)
+        if not is_valid:
+            return Response({"detail": error}, status=400)
 
         # Remove ALTCHA field before Fobi processing
         if hasattr(request.data, "_mutable"):

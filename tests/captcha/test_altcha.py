@@ -5,21 +5,21 @@ import json
 
 import pytest
 
+altcha = pytest.importorskip("altcha", reason="altcha package not installed")
+
 ALTCHA_SECRET = "test-altcha-secret-key-for-testing"
 
 
 def _make_valid_payload(secret=ALTCHA_SECRET):
     """Create a valid ALTCHA challenge, solve it, return base64 payload."""
-    import altcha
-
-    ch = altcha.create_challenge_v1(hmac_key=secret, max_number=100)
-    sol = altcha.solve_challenge_v1(ch.challenge, ch.salt, ch.algorithm, ch.max_number)
+    challenge = altcha.create_challenge_v1(hmac_key=secret, max_number=100)
+    solution = altcha.solve_challenge_v1(challenge.challenge, challenge.salt, challenge.algorithm, challenge.max_number)
     payload_dict = {
-        "algorithm": ch.algorithm,
-        "challenge": ch.challenge,
-        "number": sol.number,
-        "salt": ch.salt,
-        "signature": ch.signature,
+        "algorithm": challenge.algorithm,
+        "challenge": challenge.challenge,
+        "number": solution.number,
+        "salt": challenge.salt,
+        "signature": challenge.signature,
     }
     return base64.b64encode(json.dumps(payload_dict).encode()).decode()
 
@@ -89,15 +89,14 @@ class TestChallengeGeneration:
 
     def test_challenge_solvable(self, settings):
         settings.UNFOLD_FOBI_ALTCHA_HMAC_SECRET = ALTCHA_SECRET
-        import altcha
         from unfold_fobi.contrib.altcha.challenge import create_challenge
 
-        ch = create_challenge()
-        sol = altcha.solve_challenge_v1(
-            ch["challenge"], ch["salt"], ch["algorithm"], ch["maxNumber"]
+        challenge = create_challenge()
+        solution = altcha.solve_challenge_v1(
+            challenge["challenge"], challenge["salt"], challenge["algorithm"], challenge["maxNumber"]
         )
-        assert sol is not None
-        assert sol.number >= 0
+        assert solution is not None
+        assert solution.number >= 0
 
 
 class TestVerification:
@@ -108,40 +107,40 @@ class TestVerification:
         from unfold_fobi.contrib.altcha.challenge import verify_payload
 
         payload = _make_valid_payload()
-        ok, err = verify_payload(payload)
-        assert ok is True
-        assert err is None
+        is_valid, error = verify_payload(payload)
+        assert is_valid is True
+        assert error is None
 
     def test_missing_payload_fails(self, settings):
         settings.UNFOLD_FOBI_ALTCHA_HMAC_SECRET = ALTCHA_SECRET
         from unfold_fobi.contrib.altcha.challenge import verify_payload
 
-        ok, err = verify_payload(None)
-        assert ok is False
+        is_valid, error = verify_payload(None)
+        assert is_valid is False
 
     def test_invalid_payload_fails(self, settings):
         settings.UNFOLD_FOBI_ALTCHA_HMAC_SECRET = ALTCHA_SECRET
         from unfold_fobi.contrib.altcha.challenge import verify_payload
 
-        ok, err = verify_payload("not-valid-base64-payload")
-        assert ok is False
+        is_valid, error = verify_payload("not-valid-base64-payload")
+        assert is_valid is False
 
     def test_replay_rejected(self, settings):
         settings.UNFOLD_FOBI_ALTCHA_HMAC_SECRET = ALTCHA_SECRET
         from unfold_fobi.contrib.altcha.challenge import verify_payload
 
         payload = _make_valid_payload()
-        ok1, _ = verify_payload(payload)
-        assert ok1 is True
+        is_valid, _ = verify_payload(payload)
+        assert is_valid is True
 
-        ok2, err2 = verify_payload(payload)
-        assert ok2 is False
-        assert "already used" in err2
+        is_valid, error = verify_payload(payload)
+        assert is_valid is False
+        assert "already used" in error
 
     def test_wrong_secret_fails(self, settings):
         settings.UNFOLD_FOBI_ALTCHA_HMAC_SECRET = "wrong-secret"
         from unfold_fobi.contrib.altcha.challenge import verify_payload
 
         payload = _make_valid_payload()  # signed with ALTCHA_SECRET
-        ok, err = verify_payload(payload)
-        assert ok is False
+        is_valid, error = verify_payload(payload)
+        assert is_valid is False

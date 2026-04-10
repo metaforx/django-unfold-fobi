@@ -32,7 +32,7 @@ def verify_payload(payload_b64):
         return False, "Missing ALTCHA payload."
 
     try:
-        ok, err = altcha.verify_solution_v1(
+        is_valid, error = altcha.verify_solution_v1(
             payload_b64,
             conf.get_hmac_secret(),
             check_expires=True,
@@ -40,8 +40,8 @@ def verify_payload(payload_b64):
     except Exception:
         return False, "Invalid ALTCHA payload."
 
-    if not ok:
-        return False, err or "Invalid ALTCHA payload."
+    if not is_valid:
+        return False, error or "Invalid ALTCHA payload."
 
     # Replay protection
     cache = caches[conf.get_cache_alias()]
