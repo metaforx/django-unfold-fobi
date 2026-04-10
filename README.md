@@ -27,6 +27,8 @@ Unfold-based back offices.
   queryset scoping, and reusable admin mixins.
 - Optional django CMS plugin (`unfold_fobi.contrib.cms`) for embedding forms in
   CMS placeholders, with site-aware form selection.
+- Optional ALTCHA protection (`unfold_fobi.contrib.altcha`) for proof-of-work
+  anti-bot verification on public form submissions.
 - Fobi AppConfig overrides with `AutoField` pinning and i18n `verbose_name`
   labels for projects using `BigAutoField`.
 
@@ -202,7 +204,55 @@ is automatically filtered by the current site and the editor's allowed sites.
 If `djangocms-rest` is installed, the plugin serializes the form reference as
 `{"form_entry": {"name": "...", "slug": "..."}}` instead of a bare FK integer.
 
-### 4) DRF notes
+### 4) Optional ALTCHA protection
+
+Enable to require proof-of-work verification on public form submissions.
+Only public forms (`is_public=True`) are protected; non-public/preview forms
+are unaffected.
+
+Requires the `altcha` Python package (`>=2.0`).
+
+```bash
+pip install altcha
+```
+
+```python
+INSTALLED_APPS += [
+    "unfold_fobi.contrib.altcha",
+]
+
+UNFOLD_FOBI_ALTCHA_HMAC_SECRET = "your-secret-key"  # required to enable
+```
+
+Add the challenge endpoint URL:
+
+```python
+urlpatterns += [
+    path("api/", include("unfold_fobi.contrib.altcha.urls")),
+]
+```
+
+Optional settings:
+
+```python
+UNFOLD_FOBI_ALTCHA_MAX_NUMBER = 100_000       # difficulty (default: 100000)
+UNFOLD_FOBI_ALTCHA_ALGORITHM = "SHA-256"      # hash algorithm
+UNFOLD_FOBI_ALTCHA_FIELD_NAME = "altcha"      # payload field name in PUT body
+UNFOLD_FOBI_ALTCHA_CACHE_ALIAS = "default"    # cache backend for replay protection
+UNFOLD_FOBI_ALTCHA_CHALLENGE_EXPIRY = 300     # challenge TTL in seconds
+```
+
+**How it works:**
+
+1. `GET /api/fobi-form-fields/<slug>/` includes an `AltchaField` entry for
+   public forms when ALTCHA is enabled.
+2. Frontend fetches a challenge from `GET /api/altcha-challenge/`.
+3. Frontend solves the challenge client-side (e.g. using the `altcha` web
+   component) and includes the base64 payload as `"altcha"` in the PUT body.
+4. Backend verifies the payload before processing the form submission.
+   Missing, invalid, expired, or replayed payloads return `400`.
+
+### 5) DRF notes
 
 - Include both Fobi DRF URLs and `unfold_fobi.api.urls`.
 - Use `GET /api/fobi-form-fields/<slug>/` to fetch per-form field metadata
@@ -210,7 +260,7 @@ If `djangocms-rest` is installed, the plugin serializes the form reference as
 - Ensure each form has the `db_store` handler enabled for persisted API
   submissions.
 
-### 5) Fobi AppConfig overrides (recommended for BigAutoField projects)
+### 6) Fobi AppConfig overrides (recommended for BigAutoField projects)
 
 If your project uses `DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"`,
 replace the bare fobi entries in `INSTALLED_APPS` with the package-provided
