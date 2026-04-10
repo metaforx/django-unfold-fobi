@@ -281,3 +281,9 @@ msgstr "{count} Formular(e) gelöscht. Übermittelte Daten wurden beibehalten."
 msgid "A form with this name already exists."
 msgstr "Ein Formular mit diesem Namen existiert bereits."
 
+msgid "Form"
+msgstr "Formular"
+
+msgid "Form data"
+msgstr "Formulardaten"
+
