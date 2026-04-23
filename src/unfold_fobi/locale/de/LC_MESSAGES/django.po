@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: unfold_fobi\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-27 20:41+0100\n"
+"POT-Creation-Date: 2026-04-23 13:06+0000\n"
 "PO-Revision-Date: 2026-02-27 21:00+0100\n"
 "Last-Translator: \n"
 "Language-Team: German\n"
@@ -15,275 +15,326 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-msgid "Name"
-msgstr "Name"
 
+#: admin/form_entry_proxy.py:88
+msgid "A form with this name already exists."
+msgstr "Ein Formular mit diesem Namen existiert bereits."
+
+#: admin/form_entry_proxy.py:148
 msgid "Basic information"
 msgstr "Allgemeine Informationen"
 
+#: admin/form_entry_proxy.py:159
 msgid "Visibility"
 msgstr "Sichtbarkeit"
 
+#: admin/form_entry_proxy.py:161
 msgid "Success page"
 msgstr "Erfolgsseite"
 
+#: admin/form_entry_proxy.py:163
 msgid "Appearance"
 msgstr "Darstellung"
 
+#: admin/form_entry_proxy.py:165
 msgid "Ownership"
 msgstr "Besitz"
 
+#: admin/form_entry_proxy.py:169
 msgid "Active dates"
 msgstr "Aktive Zeiträume"
 
+#: admin/form_entry_proxy.py:175
 msgid "Advanced"
 msgstr "Erweitert"
 
+#: admin/form_entry_proxy.py:184 apps.py:10 context_processors.py:5
+#: contrib/cms/cms_plugins.py:45 fobi_app_configs.py:27
 msgid "Forms"
 msgstr "Formulare"
 
+#: admin/form_entry_proxy.py:242
+msgid "Add element"
+msgstr "Element hinzufügen"
+
+#: admin/form_entry_proxy.py:279
+msgid "Add handler"
+msgstr "Aktion hinzufügen"
+
+#: admin/form_entry_proxy.py:321
 msgid "Export selected forms (JSON)"
 msgstr "Ausgewählte Formulare exportieren (JSON)"
 
+#: admin/form_entry_proxy.py:332
+msgid "Import form (JSON)"
+msgstr "Formular importieren (JSON)"
+
+#: admin/form_entry_proxy.py:354
+#, python-brace-format
+msgid "Imported {count} form(s): {names}."
+msgstr "{count} Formular(e) importiert: {names}."
+
+#: admin/form_entry_proxy.py:370 admin/form_entry_proxy.py:371
+#: templates/admin/unfold_fobi/formentryproxy/import_action.html:4
+#: templates/admin/unfold_fobi/formentryproxy/import_action.html:8
+msgid "Import form from JSON"
+msgstr "Formular aus JSON importieren"
+
+#: admin/form_entry_proxy.py:377
 msgid "Clone selected forms"
 msgstr "Ausgewählte Formulare klonen"
 
+#: admin/form_entry_proxy.py:391
 #, python-brace-format
 msgid "Skipped {count} form(s) because cloning is disabled."
 msgstr "{count} Formular(e) übersprungen, da das Klonen deaktiviert ist."
 
+#: admin/form_entry_proxy.py:398
 #, python-brace-format
 msgid "Cloned {count} form(s)."
 msgstr "{count} Formular(e) geklont."
 
+#: admin/form_entry_proxy.py:412 admin/form_entry_proxy.py:417
 #, python-brace-format
 msgid "The form \"{0}\" was deleted successfully."
 msgstr "Das Formular \"{0}\" wurde erfolgreich gelöscht."
 
+#: admin/form_entry_proxy.py:424
+msgid "Delete selected forms"
+msgstr "Ausgewählte Formulare löschen"
+
+#: admin/form_entry_proxy.py:437
+#, python-brace-format
+msgid "Deleted {count} form(s). Submitted data was preserved."
+msgstr "{count} Formular(e) gelöscht. Übermittelte Daten wurden beibehalten."
+
+#: admin/form_entry_proxy.py:444
+#, python-brace-format
+msgid "Skipped {count} form(s) you do not have permission to delete."
+msgstr "{count} Formular(e) übersprungen, da keine Löschberechtigung vorhanden."
+
+#: admin/inlines.py:67 admin/inlines.py:91
+msgid "Form element"
+msgstr "Formular-Element"
+
+#: admin/inlines.py:68
+msgid "Form elements"
+msgstr "Formular-Elemente"
+
+#: admin/inlines.py:80
+msgid "Label"
+msgstr "Bezeichnung"
+
+#: admin/inlines.py:98
+msgid "Required field"
+msgstr "Pflichtfeld"
+
+#: admin/inlines.py:108 admin/inlines.py:196
+msgid "Actions"
+msgstr "Aktionen"
+
+#: admin/inlines.py:132 admin/inlines.py:213
+msgid "Edit"
+msgstr "Bearbeiten"
+
+#: admin/inlines.py:142 admin/inlines.py:231
+msgid "Delete"
+msgstr "Löschen"
+
+#: admin/inlines.py:162 admin/inlines.py:178
+msgid "Form handler"
+msgstr "Formular-Aktion"
+
+#: admin/inlines.py:163
+msgid "Form handlers"
+msgstr "Formular-Aktionen"
+
+#: admin/inlines.py:186
+msgid "Preview"
+msgstr "Vorschau"
+
+#: admin/inlines.py:252
+msgid "View entries"
+msgstr "Einträge anzeigen"
+
+#: admin/inlines.py:260
+msgid "Export entries"
+msgstr "Einträge exportieren"
+
+#: admin/saved_data_entry.py:33
+msgid "Submitted data"
+msgstr "Übermittelte Daten"
+
+#: admin/saved_data_entry.py:102
+msgid "Data"
+msgstr "Daten"
+
+#: api/views.py:127 api/views.py:134
+msgid "Form not found"
+msgstr "Formular nicht gefunden"
+
+#: context_processors.py:6
 msgid "Create form"
 msgstr "Formular erstellen"
 
+#: context_processors.py:7
 msgid "Edit form"
 msgstr "Formular bearbeiten"
 
+#: context_processors.py:8 views.py:19
 msgid "Import form"
 msgstr "Formular importieren"
 
+#: context_processors.py:9
 msgid "Create wizard"
 msgstr "Assistent erstellen"
 
+#: context_processors.py:10
 msgid "Edit wizard"
 msgstr "Assistent bearbeiten"
 
+#: context_processors.py:11 views.py:13
 msgid "Wizards"
 msgstr "Assistenten"
 
+#: context_processors.py:12
 msgid "Import wizard"
 msgstr "Assistent importieren"
 
+#: context_processors.py:13
 msgid "Export form"
 msgstr "Formular exportieren"
 
+#: context_processors.py:14
 msgid "Export wizard"
 msgstr "Assistent exportieren"
 
+#: context_processors.py:26 templates/override_simple_theme/base_edit.html:5
 msgid "Django administration"
 msgstr "Django-Verwaltung"
 
+#: contrib/altcha/apps.py:9
+msgid "ALTCHA protection"
+msgstr "ALTCHA-Schutz"
+
+#: contrib/cms/apps.py:9
+msgid "Fobi CMS integration"
+msgstr "Fobi CMS-Integration"
+
+#: contrib/cms/cms_plugins.py:46 contrib/cms/models.py:11
+#: contrib/sites/models.py:13
+msgid "Form"
+msgstr "Formular"
+
+#: contrib/cms/models.py:16
+msgid "Fobi form plugin"
+msgstr "Fobi-Formular-Plugin"
+
+#: contrib/cms/models.py:17
+msgid "Fobi form plugins"
+msgstr "Fobi-Formular-Plugins"
+
+#: contrib/sites/admin.py:101
+msgid "Publication sites"
+msgstr "Veröffentlichungsseiten"
+
+#: contrib/sites/admin.py:128 contrib/sites/admin.py:131
+#: contrib/sites/models.py:19
+msgid "Sites"
+msgstr "Websites"
+
+#: contrib/sites/apps.py:9 contrib/sites/models.py:24
+msgid "Form site bindings"
+msgstr "Formular-Website-Zuordnungen"
+
+#: contrib/sites/models.py:23
+msgid "Form site binding"
+msgstr "Formular-Website-Zuordnung"
+
+#: fobi_app_configs.py:32
+msgid "Form data"
+msgstr "Formulardaten"
+
+#: fobi_themes.py:18
 msgid "Django Unfold admin style"
 msgstr "Django Unfold Administrationsstil"
 
+#: forms/import_json.py:50 forms/import_json.py:54
+#, python-brace-format
+msgid "Invalid JSON file: {err}"
+msgstr "Ungültige JSON-Datei: {err}"
+
+#: forms/import_json.py:65
+msgid "Invalid JSON payload: expected an object or an array."
+msgstr "Ungültiger JSON-Inhalt: Objekt oder Array erwartet."
+
+#: forms/import_json.py:70
+msgid "Invalid JSON payload: expected at least one form entry."
+msgstr "Ungültiger JSON-Inhalt: Mindestens ein Formulareintrag erwartet."
+
+#: forms/import_json.py:74
+msgid "Invalid JSON payload: array items must be form entry objects."
+msgstr "Ungültiger JSON-Inhalt: Array-Elemente müssen Formulareintrags-Objekte sein."
+
+#: forms/widgets.py:34
+msgid "Internal name of the field"
+msgstr "Interner Name des Feldes"
+
+#: forms/widgets.py:37
+msgid "Displayed name of the field"
+msgstr "Angezeigter Name des Feldes"
+
+#: models.py:8 models.py:9
 msgid "Forms (builder)"
 msgstr "Formulare (Baukasten)"
 
+#: patches/active_dates.py:34
+msgid "This form is not currently accepting submissions."
+msgstr "Dieses Formular nimmt derzeit keine Eingaben entgegen."
+
+#: patches/mail_sender.py:97
+msgid "Choose email field"
+msgstr "E-Mail-Feld auswählen"
+
+#: patches/mail_sender.py:98
+msgid "Select one of the email fields defined on this form."
+msgstr "Wählen Sie eines der in diesem Formular definierten E-Mail-Felder aus."
+
+#: patches/mail_sender.py:103 patches/mail_sender.py:106
+msgid "No email fields are available on this form. Add an email field first."
+msgstr ""
+"Für dieses Formular sind keine E-Mail-Felder verfügbar. Fügen Sie zuerst ein "
+"E-Mail-Feld hinzu."
+
+#: services.py:92
 #, python-brace-format
 msgid "Copy of {name}"
 msgstr "Kopie von {name}"
 
+#: services.py:96
 #, python-brace-format
 msgid "{base} ({suffix})"
 msgstr "{base} ({suffix})"
 
-msgid "Create form entry"
-msgstr "Formulareintrag erstellen"
+#: templates/admin/unfold_fobi/formentryproxy/import_action.html:10
+msgid "Upload a JSON file previously exported via the export action."
+msgstr "Laden Sie eine zuvor über die Export-Aktion exportierte JSON-Datei hoch."
 
-msgid "Create form wizard"
-msgstr "Formularassistent erstellen"
-
-msgid "Elements"
-msgstr "Elemente"
-
-msgid "Handlers"
-msgstr "Handler"
-
-msgid "Properties"
-msgstr "Eigenschaften"
-
-msgid "Available Form Fields"
-msgstr "Verfügbare Formularfelder"
-
-msgid "Add"
-msgstr "Hinzufügen"
-
-msgid "Change form elements"
-msgstr "Formularelemente ändern"
-
-msgid "Available Form Handlers"
-msgstr "Verfügbare Formular-Aktionen"
-
-msgid "Change form handlers"
-msgstr "Formular-Aktionen ändern"
-
-msgid "Change form properties"
-msgstr "Formulareigenschaften ändern"
-
+#: templates/fobi/generic/add_form_element_entry_ajax.html:5
+#: templates/fobi/generic/add_form_handler_entry_ajax.html:5
+#: templates/fobi/generic/edit_form_element_entry_ajax.html:5
+#: templates/fobi/generic/edit_form_handler_entry_ajax.html:5
+#: templates/override_simple_theme/snippets/form_edit_ajax.html:43
 msgid "Save"
 msgstr "Speichern"
 
-msgid "Handler"
-msgstr "Aktion"
+# From django-unfold (not in this project's source, but needed for translation)
+msgid "Select action"
+msgstr "Aktion auswählen"
 
-msgid "Info"
-msgstr "Info"
+msgid "Select action to run"
+msgstr "Auszuführende Aktion auswählen"
 
-msgid "Actions"
-msgstr "Aktionen"
-
-msgid "Edit"
-msgstr "Bearbeiten"
-
-msgid "Delete"
-msgstr "Löschen"
-
-msgid "Errors occurred while trying to change the elements ordering!"
-msgstr "Beim Ändern der Elementreihenfolge sind Fehler aufgetreten!"
-
-msgid "Form not found"
-msgstr "Formular nicht gefunden"
-
-msgid "Active from"
-msgstr "Aktiv ab"
-
-msgid "Active until"
-msgstr "Aktiv bis"
-
-msgid "Inactive form page title"
-msgstr "Titel der Inaktiv-Seite des Formulars"
-
-msgid "Inactive form page body"
-msgstr "Text der Inaktiv-Seite des Formulars"
-
-msgid "Custom message title to display if form is inactive."
-msgstr "Benutzerdefinierter Nachrichtentitel, der angezeigt wird, wenn das Formular inaktiv ist."
-
-msgid "Custom message text to display if form is inactive."
-msgstr "Benutzerdefinierter Nachrichtentext, der angezeigt wird, wenn das Formular inaktiv ist."
-
-msgid "Date and time when the form becomes active in the format: 'YYYY-MM-DD HH:MM'. Leave it blank to activate immediately."
-msgstr "Datum und Uhrzeit, ab wann das Formular aktiv ist, im Format: 'YYYY-MM-DD HH:MM'. Leer lassen, um es sofort zu aktivieren."
-
-msgid "Date and time when the form becomes inactive in the format: 'YYYY-MM-DD HH:MM'. Leave it blank to keep active forever."
-msgstr "Datum und Uhrzeit, ab wann das Formular inaktiv ist, im Format: 'YYYY-MM-DD HH:MM'. Leer lassen, um es dauerhaft aktiv zu halten."
-
-msgid "Updated"
-msgstr "Aktualisiert"
-
-msgid "Public?"
-msgstr "Öffentlich"
-
-msgid "Makes your form visible to the public."
-msgstr "Formular ist ohne Login abrufbar."
-
-msgid "Cloneable?"
-msgstr "Kopierbar"
-
-msgid "Makes your form cloneable by other users."
-msgstr "Formular kann von Editoren als Vorlage verwendet werden."
-
-msgid "Form handler"
-msgstr "Formular-Aktion"
-
-msgid "Form handlers"
-msgstr "Formular-Aktionen"
-
-msgid "Form element"
-msgstr "Formular-Element"
-
-msgid "Form elements"
-msgstr "Formular-Elemente"
-
-msgid "Add element"
-msgstr "Element hinzufügen"
-
-msgid "Add handler"
-msgstr "Aktion hinzufügen"
-
-msgid "Textarea"
-msgstr "Textbereich"
-
-msgid "Boolean"
-msgstr "Ja/Nein"
-
-msgid "Mail the sender"
-msgstr "Benachrichtigung Sender"
-
-msgid "From name"
-msgstr "Absendername"
-
-msgid "From email"
-msgstr "Absender-E-Mail"
-
-msgid "To name"
-msgstr "Empfängername"
-
-msgid "Form field name to email"
-msgstr "Formularfeldname für E-Mail"
-
-msgid "Name of the form field to be used as email."
-msgstr "Name des Formularfeldes, das als E-Mail verwendet werden soll."
-
-msgid "Choose email field"
-msgstr "E-Mail-Feld auswählen"
-
-msgid "Select one of the email fields defined on this form."
-msgstr "Wählen Sie eines der in diesem Formular definierten E-Mail-Felder aus."
-
-msgid "No email fields are available on this form. Add an email field first."
-msgstr "Für dieses Formular sind keine E-Mail-Felder verfügbar. Fügen Sie zuerst ein E-Mail-Feld hinzu."
-
-msgid "Subject"
-msgstr "Betreff"
-
-msgid "Body"
-msgstr "Nachricht"
-
-msgid "Internal name of the field"
-msgstr "Interner Name des Feldes"
-
-msgid "Displayed name of the field"
-msgstr "Angezeigter Name des Feldes"
-
-msgid "Required field"
-msgstr "Pflichtfeld"
-
-msgid "Submitted data"
-msgstr "Übermittelte Daten"
-
-msgid "Data"
-msgstr "Daten"
-
-msgid "Delete selected forms"
-msgstr "Ausgewählte Formulare löschen"
-
-msgid "Deleted {count} form(s). Submitted data was preserved."
-msgstr "{count} Formular(e) gelöscht. Übermittelte Daten wurden beibehalten."
-
-msgid "A form with this name already exists."
-msgstr "Ein Formular mit diesem Namen existiert bereits."
-
-msgid "Form"
-msgstr "Formular"
-
-msgid "Form data"
-msgstr "Formulardaten"
-
+# Fix typo in django-fobi German locale (CSB -> CSV)
+msgid "Export data to CSV/XLS"
+msgstr "Daten als CSV/XLS exportieren"
