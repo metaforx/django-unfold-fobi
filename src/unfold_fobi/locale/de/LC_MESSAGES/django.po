@@ -316,6 +316,27 @@ msgstr "Kopie von {name}"
 msgid "{base} ({suffix})"
 msgstr "{base} ({suffix})"
 
+#: templates/admin/unfold_fobi/edit_inline/form_elements_tabular.html:11
+msgid "Save this form first to add form elements."
+msgstr "Speichern Sie dieses Formular zuerst, um Formular-Elemente hinzuzufügen."
+
+#: templates/admin/unfold_fobi/edit_inline/form_elements_tabular.html:14
+msgid "Use Save and continue editing, then open the Form elements tab."
+msgstr ""
+"Verwenden Sie \"Speichern und weiter bearbeiten\" und öffnen Sie danach den "
+"Tab \"Formular-Elemente\"."
+
+#: templates/admin/unfold_fobi/edit_inline/form_handlers_tabular.html:11
+msgid "Save this form first to add form handlers."
+msgstr ""
+"Speichern Sie dieses Formular zuerst, um Formular-Aktionen hinzuzufügen."
+
+#: templates/admin/unfold_fobi/edit_inline/form_handlers_tabular.html:14
+msgid "Use Save and continue editing, then open the Form handlers tab."
+msgstr ""
+"Verwenden Sie \"Speichern und weiter bearbeiten\" und öffnen Sie danach den "
+"Tab \"Formular-Aktionen\"."
+
 #: templates/admin/unfold_fobi/formentryproxy/import_action.html:10
 msgid "Upload a JSON file previously exported via the export action."
 msgstr "Laden Sie eine zuvor über die Export-Aktion exportierte JSON-Datei hoch."
