@@ -1,0 +1,19 @@
+{% load i18n unfold %}
+
+{% include "admin/edit_inline/tabular.html" %}
+
+{% if add %}
+    <div class="mt-4 w-full" x-show="activeTab == '{{ inline_admin_formset.formset.prefix|slugify }}'">
+        {% component "unfold/components/card.html" with class="w-full" %}
+            <div class="flex min-h-40 flex-col items-center justify-center gap-3 text-center">
+                <span class="material-symbols-outlined text-4xl text-primary-600 dark:text-primary-500">info</span>
+                <p class="text-base font-medium text-font-important-light dark:text-font-important-dark">
+                    {% trans "Save this form first to add form handlers." %}
+                </p>
+                <p class="text-sm text-font-subtle-light dark:text-font-subtle-dark">
+                    {% trans "Use Save and continue editing, then open the Form handlers tab." %}
+                </p>
+            </div>
+        {% endcomponent %}
+    </div>
+{% endif %}

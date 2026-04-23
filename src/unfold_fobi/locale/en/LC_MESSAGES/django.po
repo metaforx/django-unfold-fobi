@@ -228,3 +228,15 @@ msgstr ""
 
 msgid "Data"
 msgstr ""
+
+msgid "Save this form first to add form elements."
+msgstr ""
+
+msgid "Use Save and continue editing, then open the Form elements tab."
+msgstr ""
+
+msgid "Save this form first to add form handlers."
+msgstr ""
+
+msgid "Use Save and continue editing, then open the Form handlers tab."
+msgstr ""

@@ -49,6 +49,7 @@ class FormElementEntryInline(TabularInline):
     """Inline showing form elements with sortable drag-and-drop and action links."""
 
     model = FormElementEntry
+    template = "admin/unfold_fobi/edit_inline/form_elements_tabular.html"
     fields = (
         "plugin_data_preview",
         "plugin_name",
@@ -156,6 +157,7 @@ class FormHandlerEntryInline(TabularInline):
     """Read-only inline showing form handlers with links to fobi edit views."""
 
     model = FormHandlerEntry
+    template = "admin/unfold_fobi/edit_inline/form_handlers_tabular.html"
     fields = ("handler_name", "handler_data_preview", "handler_actions")
     readonly_fields = ("handler_name", "handler_data_preview", "handler_actions")
     extra = 0

@@ -10,6 +10,7 @@ from helpers import (
     assert_fieldsets_contain_group,
     assert_fieldsets_group_has_fields,
     get_admin_add_url,
+    get_admin_edit_url,
 )
 
 
@@ -19,6 +20,29 @@ class TestAddViewLoads:
     def test_add_view_returns_200(self, admin_client):
         response = admin_client.get(get_admin_add_url())
         assert response.status_code == 200
+
+    def test_add_view_has_form_elements_save_notice_contract(self, admin_client):
+        response = admin_client.get(get_admin_add_url())
+        content = response.content.decode()
+        assert "Save this form first to add form elements." in content
+        assert (
+            "Use Save and continue editing, then open the Form elements tab."
+            in content
+        )
+        assert "Save this form first to add form handlers." in content
+        assert (
+            "Use Save and continue editing, then open the Form handlers tab."
+            in content
+        )
+        assert content.index("tabular-table") < content.index(
+            "Save this form first to add form elements."
+        )
+
+    def test_change_view_does_not_render_add_notice(self, admin_client, form_entry):
+        response = admin_client.get(get_admin_edit_url(form_entry.pk))
+        content = response.content.decode()
+        assert "Save this form first to add form elements." not in content
+        assert "Save this form first to add form handlers." not in content
 
 
 class TestAddViewFieldsets:
