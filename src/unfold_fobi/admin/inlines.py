@@ -260,6 +260,12 @@ class FormHandlerEntryInline(TabularInline):
                     )
                     icon_name = "visibility"
                 elif str(label) == str(_("Export entries")):
+                    action_url = (
+                        reverse(
+                            "admin:unfold_fobi_savedformdataentry_export"
+                        )
+                        + f"?form_entry_id={obj.form_entry_id}"
+                    )
                     icon_name = "download"
                 actions.append(
                     _build_action(
