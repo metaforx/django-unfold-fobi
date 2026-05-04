@@ -1,7 +1,10 @@
 import json
 
 from django.contrib import admin
+from django.core.exceptions import PermissionDenied
+from django.http import HttpResponseBadRequest
 from django.template.loader import render_to_string
+from django.urls import path
 from django.utils.html import escape
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
@@ -51,6 +54,26 @@ class SavedFormDataEntryAdminIntegrationMixin:
         if not request.user.is_superuser:
             return False
         return super().has_delete_permission(request, obj)
+
+    def get_urls(self):
+        return [
+            path(
+                "export/",
+                self.admin_site.admin_view(self.export_for_form_entry),
+                name="unfold_fobi_savedformdataentry_export",
+            ),
+        ] + super().get_urls()
+
+    def export_for_form_entry(self, request):
+        if not self.has_view_permission(request):
+            raise PermissionDenied
+        raw_id = request.GET.get("form_entry_id")
+        try:
+            form_entry_id = int(raw_id)
+        except (TypeError, ValueError):
+            return HttpResponseBadRequest("Missing or invalid form_entry_id.")
+        queryset = self.get_queryset(request).filter(form_entry_id=form_entry_id)
+        return self.export_data(request, queryset)
 
     # --- Pretty rendering ---
     @staticmethod
