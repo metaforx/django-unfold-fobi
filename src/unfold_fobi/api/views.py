@@ -152,6 +152,8 @@ def get_form_fields(request, slug):
         "active_date_to": form_entry.active_date_to,
         "success_page_title": form_entry.success_page_title or "",
         "success_page_message": form_entry.success_page_message or "",
+        "inactive_page_title": form_entry.inactive_page_title or "",
+        "inactive_page_message": form_entry.inactive_page_message or "",
         "csrf_token": get_token(request),
         "fields": [],
     }
