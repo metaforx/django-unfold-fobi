@@ -2,7 +2,7 @@
 
 import warnings
 
-__version__ = "0.1.15"
+__version__ = "0.1.16"
 
 # Python 3.12 emits SyntaxWarning for invalid escape sequences in older fobi
 # releases (fobi.base uses "\s" in non-raw strings). Suppress only this known
