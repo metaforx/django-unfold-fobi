@@ -175,6 +175,7 @@ class FormWizardHandlerEntryInlineAdmin(TabularInline):
 class FormEntryAdmin(ProxyOnlyFobiAdminMixin, FobiFormEntryAdmin, ModelAdmin):
     """FormEntry admin using django-unfold."""
 
+    search_fields = ["name", "slug"]
     inlines = [FormElementEntryInlineAdmin, FormHandlerEntryInlineAdmin]
 
     def get_urls(self):
@@ -189,9 +190,7 @@ class FormEntryAdmin(ProxyOnlyFobiAdminMixin, FobiFormEntryAdmin, ModelAdmin):
             return redirect("fobi.edit_form_entry", form_entry_id=object_id)
 
         # Find and replace the change view
-        change_url_name = (
-            f"{self.model._meta.app_label}_{self.model._meta.model_name}_change"
-        )
+        change_url_name = f"{self.model._meta.app_label}_{self.model._meta.model_name}_change"
         for i, url_pattern in enumerate(urls):
             if hasattr(url_pattern, "name") and url_pattern.name == change_url_name:
                 urls[i] = path(
@@ -211,36 +210,28 @@ class FormEntryAdmin(ProxyOnlyFobiAdminMixin, FobiFormEntryAdmin, ModelAdmin):
 
 
 @admin.register(FormWizardEntry)
-class FormWizardEntryAdmin(
-    ProxyOnlyFobiAdminMixin, FobiFormWizardEntryAdmin, ModelAdmin
-):
+class FormWizardEntryAdmin(ProxyOnlyFobiAdminMixin, FobiFormWizardEntryAdmin, ModelAdmin):
     """FormWizardEntry admin using django-unfold."""
 
     inlines = [FormWizardFormEntryInlineAdmin, FormWizardHandlerEntryInlineAdmin]
 
 
 @admin.register(FormFieldsetEntry)
-class FormFieldsetEntryAdmin(
-    ProxyOnlyFobiAdminMixin, FobiFormFieldsetEntryAdmin, ModelAdmin
-):
+class FormFieldsetEntryAdmin(ProxyOnlyFobiAdminMixin, FobiFormFieldsetEntryAdmin, ModelAdmin):
     """FormFieldsetEntry admin using django-unfold."""
 
     pass
 
 
 @admin.register(FormElementEntry)
-class FormElementEntryAdmin(
-    ProxyOnlyFobiAdminMixin, FobiFormElementEntryAdmin, ModelAdmin
-):
+class FormElementEntryAdmin(ProxyOnlyFobiAdminMixin, FobiFormElementEntryAdmin, ModelAdmin):
     """FormElementEntry admin using django-unfold."""
 
     pass
 
 
 @admin.register(FormHandlerEntry)
-class FormHandlerEntryAdmin(
-    ProxyOnlyFobiAdminMixin, FobiFormHandlerEntryAdmin, ModelAdmin
-):
+class FormHandlerEntryAdmin(ProxyOnlyFobiAdminMixin, FobiFormHandlerEntryAdmin, ModelAdmin):
     """FormHandlerEntry admin using django-unfold."""
 
     pass
@@ -261,9 +252,7 @@ class FormHandlerAdmin(ProxyOnlyFobiAdminMixin, FobiFormHandlerAdmin, ModelAdmin
 
 
 @admin.register(FormWizardHandler)
-class FormWizardHandlerAdmin(
-    ProxyOnlyFobiAdminMixin, FobiFormWizardHandlerAdmin, ModelAdmin
-):
+class FormWizardHandlerAdmin(ProxyOnlyFobiAdminMixin, FobiFormWizardHandlerAdmin, ModelAdmin):
     """FormWizardHandler admin using django-unfold."""
 
     pass
