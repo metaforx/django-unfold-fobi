@@ -13,6 +13,20 @@ from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 
 
+def _serialize_initial(value):
+    """Return a JSON-friendly initial value for API responses."""
+    if callable(value):
+        return None
+    if value is None:
+        return None
+    if hasattr(value, "isoformat"):
+        try:
+            return value.isoformat()
+        except Exception:
+            return value
+    return value
+
+
 def normalize_field_choices(field, field_name):
     try:
         optgroups = field.widget.optgroups(field_name, field.initial)
@@ -159,6 +173,7 @@ def get_form_fields(request, slug):
     }
 
     for field_name, field in fields.items():
+        widget_attrs = getattr(getattr(field, "widget", None), "attrs", {})
         field_info = {
             "name": field_name,
             "type": field.__class__.__name__,
@@ -167,6 +182,14 @@ def get_form_fields(request, slug):
             "required": getattr(field, "required", False),
             "help_text": getattr(field, "help_text", ""),
         }
+
+        placeholder = widget_attrs.get("placeholder")
+        if placeholder not in (None, ""):
+            field_info["placeholder"] = placeholder
+
+        initial = _serialize_initial(getattr(field, "initial", None))
+        if initial is not None:
+            field_info["initial"] = initial
 
         if hasattr(field, "choices") and field.choices:
             field_info["choices"] = normalize_field_choices(field, field_name)
