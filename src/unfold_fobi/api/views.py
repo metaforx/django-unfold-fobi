@@ -1,5 +1,6 @@
 """DRF API views for unfold_fobi."""
 
+import datetime
 from django.apps import apps as django_apps
 from django.core.exceptions import ObjectDoesNotExist
 from django.forms.fields import EmailField
@@ -16,14 +17,11 @@ from rest_framework.response import Response
 def _serialize_initial(value):
     """Return a JSON-friendly initial value for API responses."""
     if callable(value):
-        return None
+        value = value()
     if value is None:
         return None
-    if hasattr(value, "isoformat"):
-        try:
-            return value.isoformat()
-        except Exception:
-            return value
+    if isinstance(value, (datetime.date, datetime.datetime)):
+        return value.isoformat()
     return value
 
 
