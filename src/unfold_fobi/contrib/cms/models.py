@@ -7,7 +7,7 @@ class FobiFormPluginModel(CMSPlugin):
     """CMS plugin that references a Fobi form entry."""
 
     form_entry = models.ForeignKey(
-        "fobi.FormEntry",
+        "unfold_fobi.FormEntryProxy",
         verbose_name=_("Form"),
         on_delete=models.PROTECT,
     )

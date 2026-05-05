@@ -46,6 +46,7 @@ class FobiFormPlugin(UnfoldCMSPluginBase, IntegrationProcessor):
     name = _("Form")
     render_template = "unfold_fobi/cms/form_plugin.html"
     can_redirect = False
+    raw_id_fields = ["form_entry"]
 
     if FobiFormPluginSerializer is not None:
         serializer_class = FobiFormPluginSerializer
