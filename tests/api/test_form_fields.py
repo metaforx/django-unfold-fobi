@@ -117,6 +117,49 @@ class TestFormFieldsMetadata:
         values = [c["value"] for c in f["choices"]]
         assert "r" in values
 
+    @pytest.fixture()
+    def metadata_form(self, db, admin_user):
+        entry = FormEntry.objects.create(
+            user=admin_user,
+            name="Metadata Form",
+            slug="metadata-form",
+            is_public=True,
+        )
+        FormElementEntry.objects.create(
+            form_entry=entry,
+            plugin_uid="text",
+            plugin_data=json.dumps(
+                {
+                    "label": "Full Name",
+                    "name": "full_name",
+                    "required": True,
+                    "placeholder": "Enter your name",
+                }
+            ),
+            position=1,
+        )
+        FormElementEntry.objects.create(
+            form_entry=entry,
+            plugin_uid="date",
+            plugin_data=json.dumps(
+                {
+                    "label": "Initial Date",
+                    "name": "initial",
+                    "required": False,
+                    "initial": "2026-04-16",
+                }
+            ),
+            position=2,
+        )
+        FormHandlerEntry.objects.get_or_create(form_entry=entry, plugin_uid="db_store")
+        return entry
+
+    def test_includes_placeholder_and_initial(self, admin_client, metadata_form):
+        fields = _get_fields(admin_client, metadata_form.slug)
+
+        assert fields["full_name"]["placeholder"] == "Enter your name"
+        assert fields["initial"]["initial"] == "2026-04-16"
+
 
 class TestFormFieldsWidgetDisambiguation:
     """Widget key is correct for every registered fobi field plugin."""

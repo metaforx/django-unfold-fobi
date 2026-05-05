@@ -1,5 +1,6 @@
 """DRF API views for unfold_fobi."""
 
+import datetime
 from django.apps import apps as django_apps
 from django.core.exceptions import ObjectDoesNotExist
 from django.forms.fields import EmailField
@@ -11,6 +12,17 @@ from fobi.models import FormEntry
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
+
+
+def _serialize_initial(value):
+    """Return a JSON-friendly initial value for API responses."""
+    if callable(value):
+        value = value()
+    if value is None:
+        return None
+    if isinstance(value, (datetime.date, datetime.datetime)):
+        return value.isoformat()
+    return value
 
 
 def normalize_field_choices(field, field_name):
@@ -137,8 +149,10 @@ def get_form_fields(request, slug):
 
     if isinstance(fields_result, tuple):
         fields = fields_result[0]
+        fields_metadata = fields_result[1]
     else:
         fields = fields_result
+        fields_metadata = {}
 
     widget_map = _build_widget_map(form_entry)
 
@@ -159,6 +173,8 @@ def get_form_fields(request, slug):
     }
 
     for field_name, field in fields.items():
+        widget_attrs = getattr(getattr(field, "widget", None), "attrs", {})
+        metadata = fields_metadata.get(field_name, {})
         field_info = {
             "name": field_name,
             "type": field.__class__.__name__,
@@ -167,6 +183,14 @@ def get_form_fields(request, slug):
             "required": getattr(field, "required", False),
             "help_text": getattr(field, "help_text", ""),
         }
+
+        placeholder = widget_attrs.get("placeholder") or metadata.get("placeholder")
+        if placeholder not in (None, ""):
+            field_info["placeholder"] = placeholder
+
+        initial = _serialize_initial(getattr(field, "initial", None) or metadata.get("initial"))
+        if initial is not None:
+            field_info["initial"] = initial
 
         if hasattr(field, "choices") and field.choices:
             field_info["choices"] = normalize_field_choices(field, field_name)
