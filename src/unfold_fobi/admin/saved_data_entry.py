@@ -1,8 +1,8 @@
 import json
 
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.core.exceptions import PermissionDenied
-from django.http import HttpResponseBadRequest
+from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from django.template.loader import render_to_string
 from django.urls import path
 from django.utils.html import escape
@@ -71,9 +71,27 @@ class SavedFormDataEntryAdminIntegrationMixin:
         try:
             form_entry_id = int(raw_id)
         except (TypeError, ValueError):
-            return HttpResponseBadRequest("Missing or invalid form_entry_id.")
+            return HttpResponseBadRequest(_("Missing or invalid form_entry_id."))
         queryset = self.get_queryset(request).filter(form_entry_id=form_entry_id)
         return self.export_data(request, queryset)
+
+    def export_data(self, request, queryset):
+        form_entry_ids = list(
+            queryset.values_list("form_entry_id", flat=True).distinct()
+        )
+        if len(form_entry_ids) > 1:
+            messages.error(
+                request,
+                _(
+                    "Export across multiple forms is not supported. "
+                    "Filter the list by a single form (use the form filter "
+                    "in the sidebar) and try again."
+                ),
+            )
+            return HttpResponseRedirect(request.get_full_path())
+        return super().export_data(request, queryset)
+
+    export_data.short_description = _("Export data to CSV/XLS")
 
     # --- Pretty rendering ---
     @staticmethod

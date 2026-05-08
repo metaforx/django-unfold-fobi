@@ -161,11 +161,24 @@ msgstr "Einträge anzeigen"
 msgid "Export entries"
 msgstr "Einträge exportieren"
 
-#: admin/saved_data_entry.py:33
+#: admin/saved_data_entry.py:36
 msgid "Submitted data"
 msgstr "Übermittelte Daten"
 
-#: admin/saved_data_entry.py:102
+#: admin/saved_data_entry.py:74
+msgid "Missing or invalid form_entry_id."
+msgstr "Fehlende oder ungültige form_entry_id."
+
+#: admin/saved_data_entry.py:86
+msgid ""
+"Export across multiple forms is not supported. Filter the list by a single "
+"form (use the form filter in the sidebar) and try again."
+msgstr ""
+"Export über mehrere Formulare hinweg ist nicht möglich. Filtern Sie die "
+"Liste nach einem einzelnen Formular (nutzen Sie den Formular-Filter in der "
+"Seitenleiste) und versuchen Sie es erneut."
+
+#: admin/saved_data_entry.py:143
 msgid "Data"
 msgstr "Daten"
 
