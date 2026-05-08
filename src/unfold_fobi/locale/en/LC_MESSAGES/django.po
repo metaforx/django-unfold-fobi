@@ -226,6 +226,14 @@ msgstr ""
 msgid "Submitted data"
 msgstr ""
 
+msgid "Missing or invalid form_entry_id."
+msgstr ""
+
+msgid ""
+"Export across multiple forms is not supported. Filter the list by a single "
+"form (use the form filter in the sidebar) and try again."
+msgstr ""
+
 msgid "Data"
 msgstr ""
 

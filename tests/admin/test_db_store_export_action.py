@@ -1,10 +1,20 @@
-"""T27 – db_store "Export entries" inline button: regression tests.
+"""T27/T28 – db_store export action: regression tests.
 
-Asserts the inline button targets the project-owned admin endpoint (not
-upstream Fobi's owner-filtered view), the endpoint correctly delegates to
-the same ``export_data`` admin action that powers the changelist's bulk
-action, permissions are enforced, input is validated, and the endpoint
-honors the project's opt-in site scoping via ``self.get_queryset(request)``.
+T27 (inline button):
+- Asserts the inline button targets the project-owned admin endpoint
+  (not upstream Fobi's owner-filtered view), the endpoint correctly
+  delegates to the same ``export_data`` admin action that powers the
+  changelist's bulk action, permissions are enforced, input is
+  validated, and the endpoint honors the project's opt-in site scoping
+  via ``self.get_queryset(request)``.
+
+T28 (mixed-form guard):
+- Asserts the changelist bulk action rejects querysets spanning more
+  than one ``form_entry`` parent and otherwise delegates to upstream
+  unchanged. The mixin override is on the shared ``export_data``
+  method; T27 patching swaps it out at the consumer-class level, so
+  T28 patches one level up (``BaseSavedFormDataEntryAdmin``) to keep
+  the override in the codepath under test.
 
 The underlying ``DataExporter`` uses PostgreSQL-only ``DISTINCT ON``;
 Fobi's SQLite fallback only catches ``NotImplementedError`` (not Django's
@@ -338,3 +348,180 @@ class TestExportEndpointSiteScopeInheritance:
         )
         assert response.status_code == 200
         assert set(captured["ids"]) == {entry.pk for entry in saved_entries}
+
+
+# ---------------------------------------------------------------------------
+# T28 – mixed-form guard on the changelist bulk export action.
+# ---------------------------------------------------------------------------
+
+
+@contextmanager
+def _capture_super_export_data(monkeypatch):
+    """Patch upstream ``BaseSavedFormDataEntryAdmin.export_data``.
+
+    T27's ``_capture_export_data`` swaps the consumer admin's
+    ``export_data`` at the class level, which masks the T28 mixin
+    override. Patching one level up (the upstream class) keeps the
+    override in the codepath under test: the mixin's ``super()`` call
+    lands on this fake instead of the real ``DataExporter``-backed
+    method.
+    """
+    from fobi.contrib.plugins.form_handlers.db_store.admin import (
+        BaseSavedFormDataEntryAdmin,
+    )
+
+    captured = {"calls": 0, "queryset_ids": []}
+
+    def fake_super_export(self, request, queryset):
+        captured["calls"] += 1
+        captured["queryset_ids"] = list(queryset.values_list("pk", flat=True))
+        response = HttpResponse(b"stub", content_type="text/csv")
+        response["Content-Disposition"] = (
+            "attachment; filename=db_store_export_data.csv"
+        )
+        return response
+
+    monkeypatch.setattr(
+        BaseSavedFormDataEntryAdmin, "export_data", fake_super_export, raising=True
+    )
+    yield captured
+
+
+def _build_request(method, path, user):
+    """Hand-built request with messages storage attached."""
+    from django.contrib.messages.storage.fallback import FallbackStorage
+    from django.test import RequestFactory
+
+    request = getattr(RequestFactory(), method)(path)
+    request.user = user
+    request.session = {}
+    request._messages = FallbackStorage(request)
+    return request
+
+
+@pytest.fixture()
+def saved_entries_two_forms(db, admin_user, form_entry, saved_entries):
+    """Two saved entries on ``form_entry`` plus one saved entry on a second form."""
+    from fobi.contrib.plugins.form_handlers.db_store.models import SavedFormDataEntry
+    from fobi.models import FormEntry
+
+    other_form = FormEntry.objects.create(
+        user=admin_user, name="Second Form", slug="second-form"
+    )
+    other_entry = SavedFormDataEntry.objects.create(
+        form_entry=other_form,
+        user=admin_user,
+        saved_data=json.dumps({"q": "v"}),
+        form_data_headers=json.dumps({"q": "Q"}),
+    )
+    return {"primary": saved_entries, "other": other_entry}
+
+
+class TestMixedFormGuard:
+    """Bulk ``export_data`` rejects mixed-form querysets and otherwise delegates."""
+
+    def _registered_admin(self):
+        from django.contrib import admin as django_admin
+        from fobi.contrib.plugins.form_handlers.db_store.models import (
+            SavedFormDataEntry,
+        )
+
+        return django_admin.site._registry[SavedFormDataEntry]
+
+    def test_mixed_form_queryset_redirects_and_skips_super(
+        self, monkeypatch, admin_user, saved_entries_two_forms
+    ):
+        from fobi.contrib.plugins.form_handlers.db_store.models import (
+            SavedFormDataEntry,
+        )
+
+        ids = [
+            saved_entries_two_forms["primary"][0].pk,
+            saved_entries_two_forms["other"].pk,
+        ]
+        queryset = SavedFormDataEntry.objects.filter(pk__in=ids)
+        request = _build_request("post", "/admin/saved-form-data-entry/", admin_user)
+
+        with _capture_super_export_data(monkeypatch) as captured:
+            response = self._registered_admin().export_data(request, queryset)
+
+        assert response.status_code == 302
+        assert captured["calls"] == 0
+        emitted = [str(m) for m in request._messages]
+        assert len(emitted) == 1
+        assert "multiple forms" in emitted[0].lower()
+
+    def test_mixed_form_redirect_preserves_query_string(
+        self, monkeypatch, admin_user, form_entry, saved_entries_two_forms
+    ):
+        from fobi.contrib.plugins.form_handlers.db_store.models import (
+            SavedFormDataEntry,
+        )
+
+        ids = [
+            saved_entries_two_forms["primary"][0].pk,
+            saved_entries_two_forms["other"].pk,
+        ]
+        queryset = SavedFormDataEntry.objects.filter(pk__in=ids)
+        path = (
+            f"/admin/saved-form-data-entry/"
+            f"?form_entry__id__exact={form_entry.pk}&q=foo"
+        )
+        request = _build_request("post", path, admin_user)
+
+        with _capture_super_export_data(monkeypatch):
+            response = self._registered_admin().export_data(request, queryset)
+
+        assert response.status_code == 302
+        assert f"form_entry__id__exact={form_entry.pk}" in response["Location"]
+        assert "q=foo" in response["Location"]
+
+    def test_single_form_queryset_delegates_to_super(
+        self, monkeypatch, admin_user, saved_entries
+    ):
+        from fobi.contrib.plugins.form_handlers.db_store.models import (
+            SavedFormDataEntry,
+        )
+
+        queryset = SavedFormDataEntry.objects.filter(
+            pk__in=[entry.pk for entry in saved_entries]
+        )
+        request = _build_request("post", "/admin/saved-form-data-entry/", admin_user)
+
+        with _capture_super_export_data(monkeypatch) as captured:
+            response = self._registered_admin().export_data(request, queryset)
+
+        assert response.status_code == 200
+        assert captured["calls"] == 1
+        assert set(captured["queryset_ids"]) == {entry.pk for entry in saved_entries}
+
+    def test_empty_queryset_delegates_to_super(
+        self, monkeypatch, admin_user
+    ):
+        from fobi.contrib.plugins.form_handlers.db_store.models import (
+            SavedFormDataEntry,
+        )
+
+        queryset = SavedFormDataEntry.objects.none()
+        request = _build_request("post", "/admin/saved-form-data-entry/", admin_user)
+
+        with _capture_super_export_data(monkeypatch) as captured:
+            response = self._registered_admin().export_data(request, queryset)
+
+        assert response.status_code == 200
+        assert captured["calls"] == 1
+        assert captured["queryset_ids"] == []
+
+    def test_inline_endpoint_path_unaffected_by_guard(
+        self, monkeypatch, admin_client, form_entry, saved_entries
+    ):
+        """Inline endpoint always passes a single-form queryset, so the guard
+        is a no-op there. End-to-end check that hits the override (no
+        consumer-class patching that would mask it)."""
+        url = reverse(EXPORT_URL_NAME) + f"?form_entry_id={form_entry.pk}"
+        with _capture_super_export_data(monkeypatch) as captured:
+            response = admin_client.get(url)
+
+        assert response.status_code == 200
+        assert captured["calls"] == 1
+        assert set(captured["queryset_ids"]) == {entry.pk for entry in saved_entries}
