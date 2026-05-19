@@ -16,7 +16,6 @@ class FobiFormPluginSerializer(serializers.ModelSerializer):
     class Meta:
         model = FobiFormPluginModel
         exclude = (
-            "id",
             "placeholder",
             "language",
             "position",
