@@ -262,7 +262,7 @@ Optional settings (all unset = full upstream toolbar, no overrides):
 
 ```python
 # Restrict which buttons appear (subset of the names below).
-# Available: p, underlined, bold, italic, strike, link,
+# Available: p, underline, bold, italic, strike, link,
 #            heading1, heading2, heading3, heading4,
 #            quote, code, bullet, number, indent, outdent, undo, redo.
 UNFOLD_FOBI_CONTENT_TEXT_TOOLBAR_BUTTONS = [

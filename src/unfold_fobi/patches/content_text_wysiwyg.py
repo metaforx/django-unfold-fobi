@@ -5,6 +5,8 @@ widens the bleach allowlist so Trix's output survives sanitization. Must run
 after "apply_widgets" so our wrappers go on top of its ones.
 """
 
+import functools
+
 from django.conf import settings
 
 _TRIX_ALLOWED_TAGS = [
@@ -52,6 +54,7 @@ def apply():
     # --- Patch ContentTextForm.__init__ for direct instantiation paths ---
     original_init = content_text_form_class.__init__
 
+    @functools.wraps(original_init)
     def patched_init(self, *args, **kwargs):
         original_init(self, *args, **kwargs)
         force_wysiwyg(self)
