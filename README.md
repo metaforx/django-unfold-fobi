@@ -252,7 +252,35 @@ UNFOLD_FOBI_ALTCHA_CHALLENGE_EXPIRY = 300     # challenge TTL in seconds
 4. Backend verifies the payload before processing the form submission.
    Missing, invalid, expired, or replayed payloads return `400`.
 
-### 5) DRF notes
+### 5) Content Text WYSIWYG editor
+
+The Fobi `content_text` plugin renders as an Unfold-styled Trix WYSIWYG editor
+out of the box. Bleach is widened to keep Trix's output (`p`, `h1`–`h3`, `div`,
+`s`, `u`, etc.) on save. No setup required.
+
+Optional settings (all unset = full upstream toolbar, no overrides):
+
+```python
+# Restrict which buttons appear (subset of the names below).
+# Available: p, underline, bold, italic, strike, link,
+#            heading1, heading2, heading3, heading4,
+#            quote, code, bullet, number, indent, outdent, undo, redo.
+UNFOLD_FOBI_CONTENT_TEXT_TOOLBAR_BUTTONS = [
+    "bold", "italic", "link", "heading2", "heading3", "bullet", "number",
+]
+
+# Ship fully custom toolbar markup. The partial must wrap its content in
+# <template id="trix-toolbar">…</template>.
+UNFOLD_FOBI_CONTENT_TEXT_TOOLBAR_TEMPLATE = "myproject/trix_toolbar.html"
+
+# Override the bleach allowlist used by ContentTextForm.clean_text. When set,
+# the package leaves these alone; pair with the toolbar buttons you keep so
+# saved markup matches what the editor can produce.
+FOBI_PLUGIN_CONTENT_TEXT_ALLOWED_TAGS = ["a", "b", "br", "em", "li", "ol", "p", "strong", "ul"]
+FOBI_PLUGIN_CONTENT_TEXT_ALLOWED_ATTRIBUTES = {"a": ["href", "title", "target", "rel"]}
+```
+
+### 6) DRF notes
 
 - Include both Fobi DRF URLs and `unfold_fobi.api.urls`.
 - Use `GET /api/fobi-form-fields/<slug>/` to fetch per-form field metadata
@@ -260,7 +288,7 @@ UNFOLD_FOBI_ALTCHA_CHALLENGE_EXPIRY = 300     # challenge TTL in seconds
 - Ensure each form has the `db_store` handler enabled for persisted API
   submissions.
 
-### 6) Fobi AppConfig overrides (recommended for BigAutoField projects)
+### 7) Fobi AppConfig overrides (recommended for BigAutoField projects)
 
 If your project uses `DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"`,
 replace the bare fobi entries in `INSTALLED_APPS` with the package-provided
