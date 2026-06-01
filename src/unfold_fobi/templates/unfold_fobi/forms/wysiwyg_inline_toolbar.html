@@ -7,7 +7,7 @@ when set.
 {% include toolbar_template %}
 {{ toolbar_buttons|json_script:toolbar_buttons_id }}
 
-<input type="hidden" name="{{ widget.name }}" id="wysiwyg-{{ widget.name }}"{% if widget.value != None %} value="{{ widget.value }}"{% endif %} {% include "django/forms/widgets/attrs.html" %}>
+<input type="hidden" name="{{ widget.name }}" id="wysiwyg-{{ widget.name }}"{% if widget.value != None %} value="{{ widget.value }}"{% endif %}>
 
 <div class="max-w-4xl relative">
     <trix-toolbar id="trix-toolbar-{{ widget.name }}"></trix-toolbar>
