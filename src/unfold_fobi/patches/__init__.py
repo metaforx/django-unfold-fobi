@@ -1,10 +1,11 @@
 """Monkey-patches applied to django-fobi at startup.
 
-Each submodule exposes an idempotent ``apply()`` function called from
-``UnfoldFobiConfig.ready()``.
+Each submodule exposes an idempotent "apply()" function called from
+"UnfoldFobiConfig.ready()".
 """
 
 from .active_dates import apply as apply_active_dates
+from .content_text_wysiwyg import apply as apply_content_text_wysiwyg
 from .owner_filtering import apply as apply_owner_filtering
 from .popup_response import apply as apply_popup_response
 from .widgets import apply as apply_widgets
@@ -23,6 +24,8 @@ def _apply_altcha():
 def apply_all():
     """Apply every fobi patch in the correct order."""
     apply_widgets()
+    # After apply_widgets so our wrappers nest on top of its BasePlugins.
+    apply_content_text_wysiwyg()
     apply_mail_sender()
     apply_owner_filtering()
     apply_popup_response()
@@ -33,6 +36,7 @@ def apply_all():
 __all__ = [
     "apply_active_dates",
     "apply_all",
+    "apply_content_text_wysiwyg",
     "apply_mail_sender",
     "apply_owner_filtering",
     "apply_popup_response",

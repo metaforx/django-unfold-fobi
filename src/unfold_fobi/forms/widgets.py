@@ -3,7 +3,9 @@
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Fieldset, Layout
 from django import forms
+from django.conf import settings
 from django.utils.translation import gettext_lazy as _
+from unfold.contrib.forms.widgets import WysiwygWidget
 from unfold.widgets import (
     UnfoldAdminCheckboxSelectMultiple,
     UnfoldAdminDateWidget,
@@ -25,6 +27,29 @@ from unfold.widgets import (
     UnfoldBooleanSwitchWidget,
 )
 
+# Unfold's stock toolbar partial; override via UNFOLD_FOBI_CONTENT_TEXT_TOOLBAR_TEMPLATE.
+DEFAULT_CONTENT_TEXT_TOOLBAR_TEMPLATE = "unfold/forms/helpers/toolbar.html"
+
+
+class InlineToolbarWysiwygWidget(WysiwygWidget):
+    """WysiwygWidget that renders "<trix-toolbar>" inline to bypass the
+    load-order race when Fobi's element-edit page renders "form.media" twice.
+    """
+
+    template_name = "unfold_fobi/forms/wysiwyg_inline_toolbar.html"
+
+    def get_context(self, name, value, attrs):
+        context = super().get_context(name, value, attrs)
+        context["toolbar_template"] = getattr(
+            settings,
+            "UNFOLD_FOBI_CONTENT_TEXT_TOOLBAR_TEMPLATE",
+            DEFAULT_CONTENT_TEXT_TOOLBAR_TEMPLATE,
+        )
+        buttons = getattr(settings, "UNFOLD_FOBI_CONTENT_TEXT_TOOLBAR_BUTTONS", None)
+        context["toolbar_buttons"] = list(buttons) if buttons is not None else None
+        context["toolbar_buttons_id"] = f"trix-toolbar-buttons-{name}"
+        return context
+
 
 def _apply_field_help_texts(form_instance):
     """Add concise guidance for common Fobi element metadata fields."""
@@ -41,9 +66,9 @@ class _SplitDateTimeStringValueMixin:
     """
     Ensure MultiWidget date/time inputs return a single string.
 
-    Django's ``DateTimeField`` expects a string, but ``SplitDateTimeWidget`` and
-    subclasses return a list. That causes ``DateTimeField.to_python`` to call
-    ``strip`` on a list and explode. We join non-empty parts so the field
+    Django's "DateTimeField" expects a string, but "SplitDateTimeWidget" and
+    subclasses return a list. That causes "DateTimeField.to_python" to call
+    "strip" on a list and explode. We join non-empty parts so the field
     receives the expected string value.
     """
 
@@ -63,7 +88,7 @@ class _SplitDateTimeStringValueMixin:
 class UnfoldAdminSplitDateTimeWidgetCompat(
     _SplitDateTimeStringValueMixin, UnfoldAdminSplitDateTimeWidget
 ):
-    """Unfold split datetime widget that returns a string for Django's DateTimeField."""
+    """Unfold "split datetime widget" that returns a string for Django's DateTimeField."""
 
 
 class UnfoldAdminSplitDateTimeVerticalWidgetCompat(
@@ -100,7 +125,7 @@ def apply_unfold_widgets_to_form(form_instance):
     _apply_field_help_texts(form_instance)
 
     def set_widget(field, widget_class):
-        """Replace widget while preserving attrs/choices when possible."""
+        """Replace the widget while preserving attrs/choices when possible."""
         old_widget = getattr(field, "widget", None)
         new_widget = widget_class() if isinstance(widget_class, type) else widget_class
 

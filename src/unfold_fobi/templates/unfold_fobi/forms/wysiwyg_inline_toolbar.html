@@ -1,0 +1,47 @@
+{% comment %}
+Renders <trix-toolbar> inline beside the editor to bypass Trix.config
+load-order races. Filters buttons by UNFOLD_FOBI_CONTENT_TEXT_TOOLBAR_BUTTONS
+when set.
+{% endcomment %}
+
+{% include toolbar_template %}
+{{ toolbar_buttons|json_script:toolbar_buttons_id }}
+
+<input type="hidden" name="{{ widget.name }}" id="wysiwyg-{{ widget.name }}"{% if widget.value != None %} value="{{ widget.value }}"{% endif %} {% include "django/forms/widgets/attrs.html" %}>
+
+<div class="max-w-4xl relative">
+    <trix-toolbar id="trix-toolbar-{{ widget.name }}"></trix-toolbar>
+    <script>
+        (() => {
+            const source = document.querySelector('template[id="trix-toolbar"]');
+            const target = document.getElementById("trix-toolbar-{{ widget.name }}");
+            if (!source || !target || target.children.length > 0) return;
+            target.innerHTML = source.innerHTML;
+            source.remove();
+
+            const data = document.getElementById("{{ toolbar_buttons_id }}");
+            const allowed = data ? JSON.parse(data.textContent) : null;
+            if (!allowed) return;
+
+            const aliases = {
+                href: "link",
+                increaseNestingLevel: "indent",
+                decreaseNestingLevel: "outdent",
+            };
+            const allowedSet = new Set(allowed);
+
+            target.querySelectorAll("button[data-trix-attribute], button[data-trix-action]").forEach((btn) => {
+                const raw = btn.dataset.trixAttribute || btn.dataset.trixAction;
+                if (!allowedSet.has(aliases[raw] || raw)) btn.remove();
+            });
+            target.querySelectorAll("[data-trix-button-group]").forEach((group) => {
+                if (!group.querySelector("button")) group.remove();
+            });
+            if (!allowedSet.has("link")) {
+                target.querySelectorAll("[data-trix-dialogs]").forEach((el) => el.remove());
+            }
+        })();
+    </script>
+
+    <trix-editor input="wysiwyg-{{ widget.name }}" toolbar="trix-toolbar-{{ widget.name }}" {% include "django/forms/widgets/attrs.html" %}></trix-editor>
+</div>
