@@ -7,7 +7,6 @@ from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from unfold.contrib.forms.widgets import WysiwygWidget
 from unfold.widgets import (
-    UnfoldAdminCheckboxSelectMultiple,
     UnfoldAdminDateWidget,
     UnfoldAdminEmailInputWidget,
     UnfoldAdminFileFieldWidget,
@@ -26,6 +25,14 @@ from unfold.widgets import (
     UnfoldAdminURLInputWidget,
     UnfoldBooleanSwitchWidget,
 )
+
+try:
+    # django-unfold >= 0.94 dropped this alias; falls back to the Widget-suffixed class.
+    from unfold.widgets import UnfoldAdminCheckboxSelectMultiple
+except ImportError:
+    from unfold.widgets import (
+        UnfoldAdminCheckboxSelectMultipleWidget as UnfoldAdminCheckboxSelectMultiple,
+    )
 
 # Unfold's stock toolbar partial; override via UNFOLD_FOBI_CONTENT_TEXT_TOOLBAR_TEMPLATE.
 DEFAULT_CONTENT_TEXT_TOOLBAR_TEMPLATE = "unfold/forms/helpers/toolbar.html"

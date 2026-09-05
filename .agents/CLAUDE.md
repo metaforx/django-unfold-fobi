@@ -29,6 +29,12 @@ If there is any conflict, `UNFOLD_FOBI_PLAN.md` goals win.
 - Never push or merge a feature branch automatically.
 - Push/merge only when explicitly requested by the human reviewer.
 
+## Code Comments
+
+- One line per comment/docstring; more only if truly needed.
+- Comment what the code does — only if not already obvious from it.
+- Never explain why in detail: no rationale, no history, no alternatives.
+
 ## Non-Goals
 
 - No changes to public form rendering/submission outside admin builder scope.
