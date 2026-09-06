@@ -198,6 +198,14 @@ def apply_unfold_widgets_to_form(form_instance):
         # Check if field is a Textarea
         if hasattr(field, "widget") and isinstance(field.widget, forms.Textarea):
             set_widget(field, UnfoldAdminTextareaWidget)
+        # Check if field is a CheckboxSelectMultiple
+        elif hasattr(field, "widget") and isinstance(
+            field.widget, forms.CheckboxSelectMultiple
+        ):
+            set_widget(field, UnfoldAdminCheckboxSelectMultiple)
+        # Check if field is a RadioSelect
+        elif hasattr(field, "widget") and isinstance(field.widget, forms.RadioSelect):
+            set_widget(field, UnfoldAdminRadioSelectWidget)
         # Map field types to Unfold widgets
         elif field_type in widget_map:
             set_widget(field, widget_map[field_type])

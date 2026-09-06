@@ -5,7 +5,10 @@ from pathlib import Path
 
 import unfold.widgets as unfold_widgets
 from django import forms
-from unfold.widgets import UnfoldAdminCheckboxSelectMultipleWidget
+from unfold.widgets import (
+    UnfoldAdminCheckboxSelectMultipleWidget,
+    UnfoldAdminRadioSelectWidget,
+)
 
 from unfold_fobi.forms import widgets
 
@@ -17,15 +20,11 @@ def test_import_smoke():
     assert callable(apply_unfold_widgets_to_form)
 
 
-class _CustomMultiChoiceField(forms.MultipleChoiceField):
-    """MultipleChoiceField subclass outside ``widget_map``, to exercise the CheckboxSelectMultiple shim."""
-
-
 def test_checkbox_select_multiple_mapping():
     """CheckboxSelectMultiple maps to Unfold's styled checkbox widget."""
 
     class DemoForm(forms.Form):
-        colors = _CustomMultiChoiceField(
+        colors = forms.MultipleChoiceField(
             choices=[("r", "Red"), ("g", "Green")],
             widget=forms.CheckboxSelectMultiple,
         )
@@ -36,6 +35,21 @@ def test_checkbox_select_multiple_mapping():
     assert isinstance(
         form.fields["colors"].widget, UnfoldAdminCheckboxSelectMultipleWidget
     )
+
+
+def test_radio_select_mapping():
+    """RadioSelect maps to Unfold's styled radio widget."""
+
+    class DemoForm(forms.Form):
+        color = forms.ChoiceField(
+            choices=[("r", "Red"), ("g", "Green")],
+            widget=forms.RadioSelect,
+        )
+
+    form = DemoForm()
+    widgets.apply_unfold_widgets_to_form(form)
+
+    assert isinstance(form.fields["color"].widget, UnfoldAdminRadioSelectWidget)
 
 
 def test_shim_resolves_correctly():
