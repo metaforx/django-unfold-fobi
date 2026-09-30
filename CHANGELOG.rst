@@ -6,7 +6,7 @@ All notable changes to django-unfold-fobi are documented here.
 This project adheres to `Semantic Versioning <https://semver.org/>`_.
 
 
-0.2.2 (2026-09-30)
+0.2.3 (2026-09-30)
 ==================
 
 Bug Fixes:
@@ -15,6 +15,12 @@ Bug Fixes:
 * Replace the deprecated ``hide_title = True`` with ``show_title = False`` on
   the form element and form handler inlines, silencing the django-unfold
   deprecation warning.
+
+
+0.2.2
+=====
+
+Skipped due to a packaging issue. See 0.2.3.
 
 
 0.2.1 (2026-09-05)
