@@ -70,7 +70,7 @@ class FormElementEntryInline(TabularInline):
     tab = True
     ordering_field = "position"
     hide_ordering_field = True
-    hide_title = True
+    show_title = False
 
     def has_add_permission(self, request, obj=None):
         return False
@@ -164,7 +164,7 @@ class FormHandlerEntryInline(TabularInline):
     verbose_name = _("Form handler")
     verbose_name_plural = _("Form handlers")
     tab = True
-    hide_title = True
+    show_title = False
 
     def has_add_permission(self, request, obj=None):
         return False
